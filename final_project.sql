@@ -3290,7 +3290,7 @@ $$
 language plpgsql; 
 
 -- 
-call fact_report_monthly_prc(202302);
+call fact_report_monthly_prc(202305);
 
 
 
@@ -3321,11 +3321,39 @@ select d.funding_name
 from dim_funding_structure d 
 join fact_backdate_funding_monthly f 
 on d.funding_id = f.funding_id 
+and f.month_key = 202305
 order by d.sortorder ;
 
 -- report 2
 select 
+	f.month_key 
+	, f.area_cde 
+	, f.email 
+	, f.tongdiem as "Tổng điểm"
+	, f.rank_final 
+	, f.ltn_avg 
+	, f.rank_ltn_avg 
+	, f.psdn_avg 
+	, f.rank_psdn_avg 
+	, f.approval_rate_avg 
+	, f.rank_approval_rate_avg 
+	, f.npl_truoc_wo_luy_ke 
+	, f.rank_npl_truoc_wo_luy_ke 
+	, f.diem_quy_mo as "Điểm Quy Mô"
+	, f.rank_ptkd 
+	, f.cir 
+	, f.rank_cir 
+	, f.margin 
+	, f.rank_margin 
+	, f.hs_von 
+	, f.rank_hs_von 
+	, f.hsbq_nhan_su 
+	, f.rank_hsbq_nhan_su 
+	, f.diem_fin as "Điểm FIN"
+	, f.rank_fin
 from fact_backdate_asm_monthly f
+where month_key = 202305
+order by f.rank_final ;
 
 
 --
