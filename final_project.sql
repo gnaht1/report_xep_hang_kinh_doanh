@@ -3321,7 +3321,7 @@ select d.funding_name
 from dim_funding_structure d 
 join fact_backdate_funding_monthly f 
 on d.funding_id = f.funding_id 
-and f.month_key = 202305
+and f.month_key = 202302
 order by d.sortorder ;
 
 -- report 2
