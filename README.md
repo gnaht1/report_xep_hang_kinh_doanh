@@ -1,10 +1,16 @@
 Báo cáo Xếp hạng Kinh doanh
 1. Ngữ cảnh
+
+
 Nhận yêu cầu của phòng tài chính để làm 2 báo cáo này và chạy số hằng ngày, ghi kết quả vào file Excel trên Google Drive.
 
 2. Thực hiện
+
+
 Flowchart:
 ![flowchart_process](flowchart_report.png)
+
+
 Mô tả từng bước thực hiện:
 
 2.1.  Luồng Input Data:
