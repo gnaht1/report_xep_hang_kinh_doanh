@@ -98,6 +98,22 @@ INSERT INTO area_mapping (area_cde, area_name) VALUES
     ('F', 'Nam Trung Bộ'),
     ('G', 'Tây Nam Bộ'),
     ('H', 'Đông Nam Bộ');
+   
+ALTER TABLE public.area_mapping ADD city_list varchar NULL;
+
+UPDATE area_mapping
+SET city_list = CASE area_cde
+	WHEN 'B' THEN '''Hà Giang'', ''Tuyên Quang'', ''Phú Thọ'', ''Thái Nguyên'', ''Bắc Kạn'', ''Cao Bằng'', ''Lạng Sơn'', ''Bắc Giang'', ''Quảng Ninh'''
+	WHEN 'C' THEN '''Lào Cai'', ''Yên Bái'', ''Điện Biên'', ''Sơn La'', ''Hòa Bình'''
+	WHEN 'D' THEN '''Hà Nội'', ''Hải Phòng'', ''Vĩnh Phúc'', ''Bắc Ninh'', ''Hưng Yên'', ''Hải Dương'', ''Thái Bình'', ''Nam Định'', ''Ninh Bình'', ''Hà Nam'''
+	WHEN 'E' THEN '''Thanh Hoá'', ''Nghệ An'', ''Hà Tĩnh'', ''Quảng Bình'', ''Quảng Trị'', ''Huế'''
+	WHEN 'F' THEN '''Đà Nẵng'', ''Quảng Nam'', ''Quảng Ngãi'', ''Bình Định'', ''Phú Yên'', ''Khánh Hoà'', ''Ninh Thuận'', ''Bình Thuận'', ''Kon Tum'', ''Gia Lai'', ''Đắk Lắk'', ''Đắk Nông'', ''Lâm Đồng'''
+	WHEN 'G' THEN '''Cần Thơ'', ''Long An'', ''Đồng Tháp'', ''Tiền Giang'', ''An Giang'', ''Bến Tre'', ''Vĩnh Long'', ''Trà Vinh'', ''Hậu Giang'', ''Kiên Giang'', ''Sóc Trăng'', ''Bạc Liêu'', ''Cà Mau'''
+	WHEN 'H' THEN '''Hồ Chí Minh'', ''Bà Rịa - Vũng Tàu'', ''Bình Dương'', ''Bình Phước'', ''Đồng Nai'', ''Tây Ninh'''
+	ELSE ''
+END;
+
+
 --------------------------------------------------
 create table log_tracking(
 	id serial primary key 
@@ -621,6 +637,15 @@ declare
     v_ltn_column VARCHAR;
 	v_psdn_column varchar;
 	v_approved_rate_column varchar;
+
+	v_city_list TEXT;
+	v_area_cde VARCHAR;
+	v_cir numeric;
+	v_margin numeric;
+	v_hst_von numeric;
+	v_hsbqns numeric;
+
+
 
 begin 
 	-- ---------------------
@@ -2952,8 +2977,285 @@ begin
 	and f.month_key = p_rp_month;
 
 	-- npl_truoc_wo_luy_ke
+	FOR v_area_cde, v_city_list IN
+        SELECT area_cde, city_list
+        FROM area_mapping
+		order by area_cde
+    LOOP
 	
+		EXECUTE format('
+				WITH dunonhom345 AS (
+					SELECT SUM(f.outstanding_principal) AS npl
+					FROM fact_kpi_month f
+					WHERE f.kpi_month = CAST(%L AS BIGINT)
+					AND f.max_bucket IN (3, 4, 5)
+					AND f.pos_city IN (%s)
+				),
+				writeoff_lk AS (
+					SELECT SUM(f.write_off_balance_principal) AS wo_lk
+					FROM fact_kpi_month f
+					WHERE f.write_off_month BETWEEN %s AND CAST(%L AS BIGINT)
+					AND f.pos_city IN (%s)
+					
+				),
+				dunotong AS (
+					SELECT SUM(f.outstanding_principal) AS duno_tong
+					FROM fact_kpi_month f
+					WHERE f.kpi_month = CAST(%L AS BIGINT)
+					AND f.pos_city IN (%s)
+				)
+				UPDATE fact_backdate_asm_monthly
+				SET npl_truoc_wo_luy_ke = (
+					SELECT (npl + wo_lk)::NUMERIC / NULLIF(duno_tong + wo_lk, 0)
+					FROM dunonhom345, writeoff_lk, dunotong
+				)
+				WHERE month_key = CAST(%L AS BIGINT)
+				AND area_cde = %L;
+			',
+				p_rp_month,
+				v_city_list,
+				v_start_rp_month,
+				p_rp_month,
+				v_city_list,
+				p_rp_month,
+				v_city_list,
+				p_rp_month,
+				v_area_cde
+			);
+	END LOOP;
+
+	-- rank_npl_truoc_wo_luy_ke
+	UPDATE fact_backdate_asm_monthly f
+	SET rank_npl_truoc_wo_luy_ke = k.rank_npl_truoc_wo_luy_ke
+	FROM (
+		SELECT email, rank() OVER (ORDER BY npl_truoc_wo_luy_ke asc) AS rank_npl_truoc_wo_luy_ke
+		FROM fact_backdate_asm_monthly
+		WHERE month_key = p_rp_month
+	) k
+	WHERE f.email = k.email
+	and f.month_key = p_rp_month;
 	
+	-- Điểm Quy Mô
+	UPDATE fact_backdate_asm_monthly
+    SET diem_quy_mo = ranked.rank_ltn_avg + ranked.rank_psdn_avg + ranked.rank_approval_rate_avg + ranked.rank_npl_truoc_wo_luy_ke
+    FROM (
+        SELECT
+            email,
+			rank_ltn_avg,
+			rank_psdn_avg,
+			rank_approval_rate_avg,
+			rank_npl_truoc_wo_luy_ke,
+            month_key
+        FROM fact_backdate_asm_monthly
+        WHERE month_key = CAST(p_rp_month AS BIGINT)
+    ) ranked
+    WHERE fact_backdate_asm_monthly.email = ranked.email
+        AND fact_backdate_asm_monthly.month_key = ranked.month_key;
+
+	-- rank_ptkd
+	update fact_backdate_asm_monthly f
+	set rank_ptkd = k.rank_ptkd
+	from 
+	(
+		select email, rank() over(order by diem_quy_mo asc) as rank_ptkd
+		from fact_backdate_asm_monthly
+		where month_key = p_rp_month
+	) k
+	where f.email = k.email
+	and f.month_key = p_rp_month;
+
+	-- cir
+	FOR v_area_cde IN
+        SELECT area_cde FROM area_mapping ORDER BY area_cde
+    LOOP
+        v_cir := CASE v_area_cde
+            WHEN 'B' THEN v_cir_dbb
+            WHEN 'C' THEN v_cir_tbb
+            WHEN 'D' THEN v_cir_dbsh
+            WHEN 'E' THEN v_cir_btb
+            WHEN 'F' THEN v_cir_ntb
+            WHEN 'G' THEN v_cir_tnb
+            WHEN 'H' THEN v_cir_dnb
+            ELSE NULL
+        END;
+
+        EXECUTE format('
+            UPDATE fact_backdate_asm_monthly
+            SET cir = %L
+            WHERE month_key = CAST(%L AS BIGINT)
+            AND area_cde = %L;
+        ', v_cir, p_rp_month, v_area_cde);
+    end loop;
+	
+	-- rank_cir
+	update fact_backdate_asm_monthly f
+	set rank_cir = k.rank_cir
+	from 
+	(
+		select email, dense_rank() over(order by cir asc) as rank_cir
+		from fact_backdate_asm_monthly
+		where month_key = p_rp_month
+	) k
+	where f.email = k.email
+	and f.month_key = p_rp_month;
+
+	-- margin
+	FOR v_area_cde IN
+        SELECT area_cde FROM area_mapping ORDER BY area_cde
+    LOOP
+        v_margin := CASE v_area_cde
+            WHEN 'B' THEN v_margin_dbb
+            WHEN 'C' THEN v_margin_tbb
+            WHEN 'D' THEN v_margin_dbsh
+            WHEN 'E' THEN v_margin_btb
+            WHEN 'F' THEN v_margin_ntb
+            WHEN 'G' THEN v_margin_tnb
+            WHEN 'H' THEN v_margin_dnb
+            ELSE NULL
+        END;
+
+        EXECUTE format('
+            UPDATE fact_backdate_asm_monthly
+            SET margin = %L
+            WHERE month_key = CAST(%L AS BIGINT)
+            AND area_cde = %L;
+        ', v_margin, p_rp_month, v_area_cde);
+    end loop;
+
+	-- rank_margin
+	update fact_backdate_asm_monthly f
+	set rank_margin = k.rank_margin
+	from 
+	(
+		select email, dense_rank() over(order by margin desc) as rank_margin
+		from fact_backdate_asm_monthly
+		where month_key = p_rp_month
+	) k
+	where f.email = k.email
+	and f.month_key = p_rp_month;
+
+	-- Hiệu suất trên/vốn (%)
+	FOR v_area_cde IN
+		SELECT area_cde FROM area_mapping ORDER BY area_cde
+	LOOP
+		v_hst_von := CASE v_area_cde
+			WHEN 'B' THEN v_hst_von_dbb
+			WHEN 'C' THEN v_hst_von_tbb
+			WHEN 'D' THEN v_hst_von_dbsh
+			WHEN 'E' THEN v_hst_von_btb
+			WHEN 'F' THEN v_hst_von_ntb
+			WHEN 'G' THEN v_hst_von_tnb
+			WHEN 'H' THEN v_hst_von_dnb
+			ELSE NULL
+		END;
+
+		EXECUTE format('
+			UPDATE fact_backdate_asm_monthly
+			SET hs_von = %L
+			WHERE month_key = CAST(%L AS BIGINT)
+			AND area_cde = %L;
+		', v_hst_von, p_rp_month, v_area_cde);
+	end loop;
+
+	-- rank_hs_von
+	update fact_backdate_asm_monthly f
+	set rank_hs_von = k.rank_hs_von
+	from 
+	(
+		select email, dense_rank() over(order by hs_von desc) as rank_hs_von
+		from fact_backdate_asm_monthly
+		where month_key = p_rp_month
+	) k
+	where f.email = k.email
+	and f.month_key = p_rp_month;
+
+	-- hsbq_nhan_su
+	FOR v_area_cde IN
+		SELECT area_cde FROM area_mapping ORDER BY area_cde
+	loop
+		v_hsbqns := CASE v_area_cde
+			WHEN 'B' THEN v_hsbqns_dbb
+			WHEN 'C' THEN v_hsbqns_tbb
+			WHEN 'D' THEN v_hsbqns_dbsh
+			WHEN 'E' THEN v_hsbqns_btb
+			WHEN 'F' THEN v_hsbqns_ntb
+			WHEN 'G' THEN v_hsbqns_tnb
+			WHEN 'H' THEN v_hsbqns_dnb
+			ELSE NULL
+		END;
+
+		EXECUTE format('
+			UPDATE fact_backdate_asm_monthly
+			SET hsbq_nhan_su = %L
+			WHERE month_key = CAST(%L AS BIGINT)
+			AND area_cde = %L;
+		', v_hsbqns, p_rp_month, v_area_cde);
+	end loop;
+
+	-- rank_hsbq_nhan_su
+	update fact_backdate_asm_monthly f
+	set rank_hsbq_nhan_su = k.rank_hsbq_nhan_su
+	from 
+	(
+		select email, dense_rank() over(order by hsbq_nhan_su desc) as rank_hsbq_nhan_su
+		from fact_backdate_asm_monthly
+		where month_key = p_rp_month
+	) k
+	where f.email = k.email
+	and f.month_key = p_rp_month;
+
+	-- diem_fin
+	UPDATE fact_backdate_asm_monthly
+	SET diem_fin = ranked.diem_fin
+	FROM (
+		SELECT
+			email,
+			rank_cir + rank_margin + rank_hs_von + rank_hsbq_nhan_su AS diem_fin,
+			month_key
+		FROM fact_backdate_asm_monthly
+		WHERE month_key = CAST(p_rp_month AS BIGINT)
+	) ranked
+	WHERE fact_backdate_asm_monthly.email = ranked.email
+	AND fact_backdate_asm_monthly.month_key = ranked.month_key;
+
+	-- rank_fin
+	update fact_backdate_asm_monthly f
+	set rank_fin = k.rank_fin
+	from 
+	(
+		select email, rank() over(order by diem_fin asc) as rank_fin
+		from fact_backdate_asm_monthly
+		where month_key = p_rp_month
+	) k
+	where f.email = k.email
+	and f.month_key = p_rp_month;
+
+	-- tongdiem
+	UPDATE fact_backdate_asm_monthly
+    SET tongdiem = diem.diem_quy_mo + diem.diem_fin
+    FROM (
+        SELECT
+            email,
+			diem_quy_mo,
+			diem_fin,
+            month_key
+        FROM fact_backdate_asm_monthly
+        WHERE month_key = CAST(p_rp_month AS BIGINT)
+    ) diem
+    WHERE fact_backdate_asm_monthly.email = diem.email
+        AND fact_backdate_asm_monthly.month_key = diem.month_key;
+
+	-- rank_final
+	update fact_backdate_asm_monthly f
+	set rank_final = k.rank_final
+	from 
+	(
+		select email, rank() over(order by tongdiem asc) as rank_final
+		from fact_backdate_asm_monthly
+		where month_key = p_rp_month
+	) k
+	where f.email = k.email
+	and f.month_key = p_rp_month;
 
 
 
@@ -2997,8 +3299,10 @@ CREATE INDEX fact_txn_month_account_code_annalysis_code_trans_date_idx ON public
 CREATE INDEX fact_kpi_month_pos_city_monthkey_idx ON public.fact_kpi_month (pos_city,kpi_month);
 CREATE INDEX fact_kpi_month_kpi_month_maxbucket_poscity_idx ON public.fact_kpi_month (kpi_month,pos_city,max_bucket);
 CREATE INDEX fact_kpi_month_kpi_month_maxbucket_idx ON public.fact_kpi_month (kpi_month,max_bucket);
+CREATE INDEX fact_kpi_month_pos_city_writeoff_month_idx ON public.fact_kpi_month (pos_city,write_off_month);
 
---
+
+-- report 1 
 select d.funding_name 
 	, f.tpb_head as "Head"
 	, f.tpb_mienbac as "Miền Bắc"
@@ -3018,6 +3322,11 @@ from dim_funding_structure d
 join fact_backdate_funding_monthly f 
 on d.funding_id = f.funding_id 
 order by d.sortorder ;
+
+-- report 2
+select 
+from fact_backdate_asm_monthly f
+
 
 --
 select * from fact_backdate_asm_monthly 
