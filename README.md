@@ -31,7 +31,7 @@ Mô tả từng bước thực hiện:
 * Ghi nhận thời gian bắt đầu, kết thúc và các lỗi (nếu có) trong quá trình xử lý.
 
 2.5.  Tạo Bảng area_mapping:
-* Mapping (ánh xạ) area_code với danh sách tỉnh tương ứng.
+* Mapping area_code với danh sách tỉnh tương ứng.
 
 2.6.  Viết Stored Procedure:
 * Khi truyền tham số tháng cần chạy lại:
