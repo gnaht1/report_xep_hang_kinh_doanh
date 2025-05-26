@@ -3352,7 +3352,7 @@ select
 	, f.diem_fin as "Điểm FIN"
 	, f.rank_fin
 from fact_backdate_asm_monthly f
-where month_key = 202305
+where month_key = 202302
 order by f.rank_final ;
 
 
