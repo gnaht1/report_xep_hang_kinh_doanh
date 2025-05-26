@@ -53,5 +53,46 @@ Mô tả từng bước thực hiện:
 2.10. Upload lên Google Drive:
 * Tự động tải file Excel đã hoàn thiện lên Google Drive.
 
+3. Kỹ năng và đạt được sau khi hoàn thành project
 
+Hoàn thành dự án này giúp nâng cao các kỹ năng công cụ (tool skills), kỹ năng công nghệ (tech skills), và hiểu biết trong các lĩnh vực (domain) sau:
+
+3.1. Kỹ năng Công cụ (Tool Skills)
+
+* PostgreSQL/DBeaver: Thành thạo sử dụng PostgreSQL để truy vấn dữ liệu và DBeaver để quản lý, import/export dữ liệu từ Excel.
+
+* Excel: Kỹ năng xử lý và xuất dữ liệu sang file Excel thông qua tự động hóa bằng Python.
+* Python IDE (VS Code/PyCharm): Sử dụng môi trường phát triển để viết, debug và chạy script Python hiệu quả.
+
+3.2. Kỹ năng Công nghệ (Tech Skills)
+
+* SQL:
+    * Viết và tối ưu hóa các câu query SQL phức tạp để trích xuất dữ liệu từ PostgreSQL (ví dụ: truy vấn bảng fact_backdate_asm_monthly với các cột xếp hạng và KPI).
+
+    * Xử lý dữ liệu lớn với các điều kiện lọc và sắp xếp.
+
+    * Sử dụng Stored Procedure để tự động hóa quy trình.
+
+* Python:
+    * Sử dụng thư viện psycopg2 để kết nối và truy vấn cơ sở dữ liệu PostgreSQL.
+    * Xử lý dữ liệu với pandas để tạo DataFrame và xuất ra file Excel.
+    * Quản lý lỗi và kết nối cơ sở dữ liệu thông qua try-except và đảm bảo đóng kết nối an toàn.
+
+* Database Management:
+    * Hiểu cách truy xuất và quản lý dữ liệu trong các bảng fact để phục vụ báo cáo.
+    * Kỹ năng xử lý các cột dữ liệu phức tạp như KPI tài chính và xếp hạng.
+
+3.3. Lĩnh vực (Domain)
+
+* Tài chính (Finance):
+    * Hiểu sâu về các chỉ số KPI tài chính (ví dụ: tongdiem, ltn_avg, approval_rate_avg, npl_truoc_wo_luy_ke) và báo cáo xếp hạng ASM.
+    * Nắm bắt cách tổ chức dữ liệu để phục vụ báo cáo tài chính và đánh giá hiệu suất.
+
+* Quản lý Dữ liệu (Data Management):
+    * Kỹ năng trích xuất, kiểm tra và xử lý dữ liệu từ cơ sở dữ liệu để đảm bảo tính chính xác.
+
+    * Áp dụng quy trình ETL trong việc chuyển đổi dữ liệu thô thành báo cáo có định dạng.
+
+
+Dự án này giúp nâng cao khả năng sử dụng SQL và Python trong việc tự động hóa báo cáo tài chính, đồng thời cải thiện hiểu biết về quản lý dữ liệu và quy trình tài chính trong doanh nghiệp.
 
