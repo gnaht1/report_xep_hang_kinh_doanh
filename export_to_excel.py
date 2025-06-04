@@ -40,6 +40,10 @@ def export_postgres_to_excel(db_params, query, output_file):
         print("Loading data into DataFrame...")
         df = pd.DataFrame(data, columns=columns)
 
+        # Convert tongdiem to integer type
+        if "Tổng điểm" in df.columns:
+            df["Tổng điểm"] = df["Tổng điểm"].astype(int)
+
         if "psdn_avg" in df.columns:
             df["psdn_avg"] = (
                 df["psdn_avg"]
@@ -84,8 +88,8 @@ def export_postgres_to_excel(db_params, query, output_file):
         worksheet = writer.sheets["Report"]
 
         # Define styles
-        header_font = Font(name="Times New Roman", size=12, bold=True)
-        cell_font = Font(name="Times New Roman", size=11)
+        header_font = Font(name="Calibri", size=12, bold=True)
+        cell_font = Font(name="Calibri", size=11)
         header_fill = PatternFill(
             start_color="ADD8E6", end_color="ADD8E6", fill_type="solid"
         )  # Light blue for column headers
@@ -107,16 +111,45 @@ def export_postgres_to_excel(db_params, query, output_file):
         tai_chinh_fill = PatternFill(
             start_color="FFA500", end_color="FFA500", fill_type="solid"
         )  # Orange
-        white_font = Font(name="Times New Roman", size=14, bold=True, color="FFFFFF")
+        white_font = Font(name="Calibri", size=14, bold=True, color="FFFFFF")
+
+        # New fill for special headers (Green)
+        green_fill = PatternFill(
+            start_color="00AA00", end_color="00AA00", fill_type="solid"
+        )
+
+        # New fills for additional custom formatting
+        light_green_fill = PatternFill(
+            start_color="90EE90", end_color="90EE90", fill_type="solid"
+        )  # Light green for "Tổng điểm"
+        blue_fill = PatternFill(
+            start_color="0070C0", end_color="0070C0", fill_type="solid"
+        )  # Blue for "rank_final"
+        light_blue_fill = PatternFill(
+            start_color="BDD7EE", end_color="BDD7EE", fill_type="solid"
+        )  # Light blue for "Điểm Quy Mô" and "Điểm FIN"
 
         # Step 6: Format the column headers
         for col_num, column_title in enumerate(df.columns, 1):
             cell = worksheet.cell(row=2, column=col_num)
             cell.value = column_title
             cell.font = header_font
-            cell.fill = header_fill
             cell.border = border
             cell.alignment = center_alignment
+
+            # Apply special formatting based on column title
+            if column_title in ["rank_ptkd", "rank_fin"]:
+                cell.fill = green_fill
+                cell.font = Font(name="Calibri", size=12, bold=True, color="FFFFFF")
+            elif column_title == "Tổng điểm":
+                cell.fill = light_green_fill
+            elif column_title == "rank_final":
+                cell.fill = blue_fill
+                cell.font = Font(name="Calibri", size=12, bold=True, color="FFFFFF")
+            elif column_title in ["Điểm Quy Mô", "Điểm FIN"]:
+                cell.fill = light_blue_fill
+            else:
+                cell.fill = header_fill
 
         # Step 7: Format data rows
         for row_num in range(3, len(df) + 3):  # Data starts from row 3
@@ -260,7 +293,7 @@ if __name__ == "__main__":
     """
 
     # Output Excel file path
-    output_file = "output7_data_formatted.xlsx"
+    output_file = "output11_data_formatted.xlsx"
 
     # Call the function
     export_postgres_to_excel(db_params, query, output_file)
