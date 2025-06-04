@@ -40,18 +40,6 @@ def export_postgres_to_excel(db_params, query, output_file):
         print("Loading data into DataFrame...")
         df = pd.DataFrame(data, columns=columns)
 
-        # Step 4.1: Preprocess ltn_avg to round to 2 decimal places and handle whole numbers
-        # if "ltn_avg" in df.columns:
-        #     df["ltn_avg"] = (
-        #         df["ltn_avg"]
-        #         .astype(float)
-        #         .apply(
-        #             lambda x: int(round(x, 2))
-        #             if round(x, 2).is_integer()
-        #             else round(x, 2)
-        #         )
-        #     )
-
         if "psdn_avg" in df.columns:
             df["psdn_avg"] = (
                 df["psdn_avg"]
@@ -83,14 +71,8 @@ def export_postgres_to_excel(db_params, query, output_file):
             "npl_truoc_wo_luy_ke",
         ]:
             if col in df.columns:
-                df[col] = (
-                    df[col].astype(float)
-                    # .apply(
-                    #     lambda x: int(round(x, 2))
-                    #     if round(x, 2).is_integer()
-                    #     else round(x, 2)
-                    # )
-                )
+                df[col] = df[col].astype(float)
+
         # Step 5: Create Excel writer
         writer = pd.ExcelWriter(output_file, engine="openpyxl")
         df.to_excel(
@@ -106,7 +88,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         cell_font = Font(name="Times New Roman", size=11)
         header_fill = PatternFill(
             start_color="ADD8E6", end_color="ADD8E6", fill_type="solid"
-        )  # Light blue
+        )  # Light blue for column headers
         alternate_fill = PatternFill(
             start_color="F5F5F5", end_color="F5F5F5", fill_type="solid"
         )  # Light gray
@@ -118,8 +100,16 @@ def export_postgres_to_excel(db_params, query, output_file):
         )
         center_alignment = Alignment(horizontal="center", vertical="center")
         left_alignment = Alignment(horizontal="left", vertical="center")
+        # New fills for Quy Mô and Tài Chính
+        quy_mo_fill = PatternFill(
+            start_color="0000FF", end_color="0000FF", fill_type="solid"
+        )  # Blue
+        tai_chinh_fill = PatternFill(
+            start_color="FFA500", end_color="FFA500", fill_type="solid"
+        )  # Orange
+        white_font = Font(name="Times New Roman", size=12, bold=True, color="FFFFFF")
 
-        # Step 6: Format the header
+        # Step 6: Format the column headers
         for col_num, column_title in enumerate(df.columns, 1):
             cell = worksheet.cell(row=2, column=col_num)
             cell.value = column_title
@@ -172,15 +162,6 @@ def export_postgres_to_excel(db_params, query, output_file):
                         cell.number_format = (
                             "#,##0" if isinstance(cell.value, int) else "#,##0.0"
                         )
-
-                    # elif df.columns[col_num - 1] in [
-                    #     "cir",
-                    #     "margin",
-                    #     "hs_von",
-                    #     "approval_rate_avg",
-                    #     "npl_truoc_wo_luy_ke",
-                    # ]:
-                    #     cell.number_format = "0.00%"  # Percentage with 2 decimal places
                 else:
                     cell.alignment = left_alignment
 
@@ -195,18 +176,29 @@ def export_postgres_to_excel(db_params, query, output_file):
             worksheet.column_dimensions[column_letter].width = adjusted_width
 
         # Step 9: Set row heights
-        worksheet.row_dimensions[2].height = 30  # Header row
+        worksheet.row_dimensions[1].height = 20  # Group header row
+        worksheet.row_dimensions[2].height = 30  # Column header row
         for row_num in range(3, len(df) + 3):
             worksheet.row_dimensions[row_num].height = 20  # Data rows
 
-        # Step 10: Add title
-        title_cell = worksheet.cell(row=1, column=1)
-        title_cell.value = "Báo Cáo Xếp Hạng ASM Tháng 02/2023"
-        title_cell.font = Font(name="Times New Roman", size=14, bold=True)
-        title_cell.alignment = Alignment(horizontal="center", vertical="center")
-        worksheet.merge_cells(
-            start_row=1, start_column=1, end_row=1, end_column=len(df.columns)
-        )
+        # Step 10: Add merged column headers
+        # Merged column header for "Quy Mô" (columns G to P, i.e., 7 to 16) in row 1
+        quy_mo_cell = worksheet.cell(row=1, column=6)
+        quy_mo_cell.value = "Quy Mô"
+        quy_mo_cell.font = white_font
+        quy_mo_cell.alignment = center_alignment
+        quy_mo_cell.fill = quy_mo_fill
+        quy_mo_cell.border = border
+        worksheet.merge_cells(start_row=1, start_column=6, end_row=1, end_column=15)
+
+        # Merged column header for "Tài Chính" (columns Q to Z, i.e., 17 to 26) in row 1
+        tai_chinh_cell = worksheet.cell(row=1, column=16)
+        tai_chinh_cell.value = "Tài Chính"
+        tai_chinh_cell.font = white_font
+        tai_chinh_cell.alignment = center_alignment
+        tai_chinh_cell.fill = tai_chinh_fill
+        tai_chinh_cell.border = border
+        worksheet.merge_cells(start_row=1, start_column=16, end_row=1, end_column=25)
 
         # Step 11: Save the file
         writer.close()  # Close the writer to save the file
@@ -268,7 +260,7 @@ if __name__ == "__main__":
     """
 
     # Output Excel file path
-    output_file = "output2_data_formatted.xlsx"
+    output_file = "output6_data_formatted.xlsx"
 
     # Call the function
     export_postgres_to_excel(db_params, query, output_file)
