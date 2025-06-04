@@ -102,11 +102,10 @@ def export_postgres_to_excel(db_params, query, output_file):
                 cell = worksheet.cell(row=row_num, column=col_num)
                 cell.font = cell_font
                 cell.border = border
-                # Apply yellow fill to column G, overriding alternate fill
+                # Apply yellow fill to column G only
                 if col_num == 7:  # Column G
                     cell.fill = yellow_fill
-                elif row_num % 2 == 0:
-                    cell.fill = alternate_fill
+
                 # Align columns
                 if df.columns[col_num - 1] in [
                     "Head",
@@ -129,12 +128,18 @@ def export_postgres_to_excel(db_params, query, output_file):
         # Step 8: Adjust column widths
         for col_num, column in enumerate(df.columns, 1):
             column_letter = get_column_letter(col_num)
-            max_length = max(
-                max((len(str(val)) for val in df[column]), default=10),
-                len(column) if column else 10,  # Handle empty column header
-            )
-            adjusted_width = min(max_length + 2, 50)  # Max width 50
-            worksheet.column_dimensions[column_letter].width = adjusted_width
+            # Set narrower width for column G (blank column)
+            if col_num == 7:  # Column G
+                worksheet.column_dimensions[
+                    column_letter
+                ].width = 3  # Reduced width for separator column
+            else:
+                max_length = max(
+                    max((len(str(val)) for val in df[column]), default=10),
+                    len(column) if column else 10,  # Handle empty column header
+                )
+                adjusted_width = min(max_length + 2, 50)  # Max width 50
+                worksheet.column_dimensions[column_letter].width = adjusted_width
 
         # Step 9: Set row heights
         worksheet.row_dimensions[1].height = 20  # Group header row
