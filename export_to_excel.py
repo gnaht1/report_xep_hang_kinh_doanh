@@ -107,7 +107,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         tai_chinh_fill = PatternFill(
             start_color="FFA500", end_color="FFA500", fill_type="solid"
         )  # Orange
-        white_font = Font(name="Times New Roman", size=12, bold=True, color="FFFFFF")
+        white_font = Font(name="Times New Roman", size=14, bold=True, color="FFFFFF")
 
         # Step 6: Format the column headers
         for col_num, column_title in enumerate(df.columns, 1):
@@ -184,7 +184,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         # Step 10: Add merged column headers
         # Merged column header for "Quy Mô" (columns G to P, i.e., 7 to 16) in row 1
         quy_mo_cell = worksheet.cell(row=1, column=6)
-        quy_mo_cell.value = "Quy Mô"
+        quy_mo_cell.value = "QUY MÔ"
         quy_mo_cell.font = white_font
         quy_mo_cell.alignment = center_alignment
         quy_mo_cell.fill = quy_mo_fill
@@ -193,7 +193,7 @@ def export_postgres_to_excel(db_params, query, output_file):
 
         # Merged column header for "Tài Chính" (columns Q to Z, i.e., 17 to 26) in row 1
         tai_chinh_cell = worksheet.cell(row=1, column=16)
-        tai_chinh_cell.value = "Tài Chính"
+        tai_chinh_cell.value = "TÀI CHÍNH"
         tai_chinh_cell.font = white_font
         tai_chinh_cell.alignment = center_alignment
         tai_chinh_cell.fill = tai_chinh_fill
@@ -260,7 +260,7 @@ if __name__ == "__main__":
     """
 
     # Output Excel file path
-    output_file = "output6_data_formatted.xlsx"
+    output_file = "output7_data_formatted.xlsx"
 
     # Call the function
     export_postgres_to_excel(db_params, query, output_file)
