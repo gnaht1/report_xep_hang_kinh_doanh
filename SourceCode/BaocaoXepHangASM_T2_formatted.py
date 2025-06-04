@@ -90,6 +90,9 @@ def export_postgres_to_excel(db_params, query, output_file):
         # Define styles
         header_font = Font(name="Calibri", size=12, bold=True)
         cell_font = Font(name="Calibri", size=11)
+        cell_bold_font = Font(
+            name="Calibri", size=11, bold=True
+        )  # Bold font for data cells
         header_fill = PatternFill(
             start_color="ADD8E6", end_color="ADD8E6", fill_type="solid"
         )  # Light blue for column headers
@@ -103,6 +106,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             bottom=Side(style="thin"),
         )
         center_alignment = Alignment(horizontal="center", vertical="center")
+        right_alignment = Alignment(horizontal="right", vertical="center")
         left_alignment = Alignment(horizontal="left", vertical="center")
         # New fills for Quy Mô and Tài Chính
         quy_mo_fill = PatternFill(
@@ -135,7 +139,11 @@ def export_postgres_to_excel(db_params, query, output_file):
             cell.value = column_title
             cell.font = header_font
             cell.border = border
-            cell.alignment = center_alignment
+            # Apply right alignment for specific columns
+            if column_title in ["Tổng điểm", "Điểm Quy Mô", "Điểm FIN"]:
+                cell.alignment = right_alignment
+            else:
+                cell.alignment = center_alignment
 
             # Apply special formatting based on column title
             if column_title in ["rank_ptkd", "rank_fin"]:
@@ -143,6 +151,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                 cell.font = Font(name="Calibri", size=12, bold=True, color="FFFFFF")
             elif column_title == "Tổng điểm":
                 cell.fill = light_green_fill
+                cell.font = Font(name="Calibri", size=12, bold=True)  # Ensure bold
             elif column_title == "rank_final":
                 cell.fill = blue_fill
                 cell.font = Font(name="Calibri", size=12, bold=True, color="FFFFFF")
@@ -155,14 +164,23 @@ def export_postgres_to_excel(db_params, query, output_file):
         for row_num in range(3, len(df) + 3):  # Data starts from row 3
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
-                cell.font = cell_font
+                # Apply bold font for specific columns
+                if df.columns[col_num - 1] in [
+                    "Tổng điểm",
+                    "rank_final",
+                    "rank_ptkd",
+                    "rank_fin",
+                ]:
+                    cell.font = cell_bold_font
+                else:
+                    cell.font = cell_font
                 cell.border = border
                 # Apply alternate row colors
                 if row_num % 2 == 0:
                     cell.fill = alternate_fill
                 # Align numeric columns to right, others to left
                 if df.columns[col_num - 1] in [
-                    "tongdiem",
+                    "Tổng điểm",
                     "rank_final",
                     "ltn_avg",
                     "rank_ltn_avg",
@@ -172,7 +190,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     "rank_approval_rate_avg",
                     "npl_truoc_wo_luy_ke",
                     "rank_npl_truoc_wo_luy_ke",
-                    "diem_quy_mo",
+                    "Điểm Quy Mô",
                     "rank_ptkd",
                     "cir",
                     "rank_cir",
@@ -182,21 +200,21 @@ def export_postgres_to_excel(db_params, query, output_file):
                     "rank_hs_von",
                     "hsbq_nhan_su",
                     "rank_hsbq_nhan_su",
-                    "diem_fin",
+                    "Điểm FIN",
                     "rank_fin",
                 ]:
-                    cell.alignment = Alignment(horizontal="right", vertical="center")
-                    # Format numbers
-                    if df.columns[col_num - 1] in ["ltn_avg", "hsbq_nhan_su"]:
-                        cell.number_format = (
-                            "#,##0" if isinstance(cell.value, int) else "#,##0.00"
-                        )
-                    elif df.columns[col_num - 1] == "psdn_avg":
-                        cell.number_format = (
-                            "#,##0" if isinstance(cell.value, int) else "#,##0.0"
-                        )
+                    cell.alignment = right_alignment
                 else:
                     cell.alignment = left_alignment
+                # Format numbers
+                if df.columns[col_num - 1] in ["ltn_avg", "hsbq_nhan_su"]:
+                    cell.number_format = (
+                        "#,##0" if isinstance(cell.value, int) else "#,##0.00"
+                    )
+                elif df.columns[col_num - 1] == "psdn_avg":
+                    cell.number_format = (
+                        "#,##0" if isinstance(cell.value, int) else "#,##0.0"
+                    )
 
         # Step 8: Adjust column widths
         for col_num, column in enumerate(df.columns, 1):
@@ -215,7 +233,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             worksheet.row_dimensions[row_num].height = 20  # Data rows
 
         # Step 10: Add merged column headers
-        # Merged column header for "Quy Mô" (columns G to P, i.e., 7 to 16) in row 1
+        # Merged column header for "Quy Mô"
         quy_mo_cell = worksheet.cell(row=1, column=6)
         quy_mo_cell.value = "QUY MÔ"
         quy_mo_cell.font = white_font
@@ -224,7 +242,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         quy_mo_cell.border = border
         worksheet.merge_cells(start_row=1, start_column=6, end_row=1, end_column=15)
 
-        # Merged column header for "Tài Chính" (columns Q to Z, i.e., 17 to 26) in row 1
+        # Merged column header for "Tài Chính"
         tai_chinh_cell = worksheet.cell(row=1, column=16)
         tai_chinh_cell.value = "TÀI CHÍNH"
         tai_chinh_cell.font = white_font
@@ -293,7 +311,7 @@ if __name__ == "__main__":
     """
 
     # Output Excel file path
-    output_file = "output11_data_formatted.xlsx"
+    output_file = "BaocaoXepHangASM_T2_formatted_py.xlsx"
 
     # Call the function
     export_postgres_to_excel(db_params, query, output_file)
