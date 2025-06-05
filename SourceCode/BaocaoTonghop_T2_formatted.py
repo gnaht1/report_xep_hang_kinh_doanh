@@ -9,7 +9,9 @@ from openpyxl.utils import get_column_letter
 def export_postgres_to_excel(db_params, query, output_file):
     """
     Export data from PostgreSQL to an Excel file with custom formatting.
-    Divide 'Head', 'Miền Bắc', 'Miền Trung', 'Miền Nam' columns by 1,000,000 and apply custom number format.
+    Divide 'Head', 'Miền Bắc', 'Miền Trung', 'Miền Nam', and 'Total' columns by 1,000,000,
+    except for Excel rows 31 to 34 (DataFrame indices 28 to 31). Apply custom number format
+    to these columns, except rows 31 to 34, and to 'Total' only for rows 3 to 30.
 
     Parameters:
     - db_params (dict): Database connection parameters (host, port, dbname, user, password).
@@ -41,20 +43,33 @@ def export_postgres_to_excel(db_params, query, output_file):
 
         # Step 4: Create a pandas DataFrame
         print("Loading data into DataFrame...")
+        print(f"Columns retrieved: {columns}")
         df = pd.DataFrame(data, columns=columns)
+        if df.empty:
+            print("Warning: Query returned no data. Creating empty Excel file.")
+            df = pd.DataFrame(columns=columns)
 
-        # Step 4.1: Divide specified columns by 1,000,000
-        columns_to_divide = ["Head", "Miền Bắc", "Miền Trung", "Miền Nam"]
+        # Step 4.1: Divide specified columns by 1,000,000, except Excel rows 31 to 34
+        columns_to_divide = ["Head", "Miền Bắc", "Miền Trung", "Miền Nam", "Total"]
+        # Excel rows 31 to 34 = DataFrame indices 28 to 31 (row 31 - 3 = 28)
+        mask = ~df.index.isin(range(28, 32))  # Exclude indices 28 to 31
         for col in columns_to_divide:
             if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors="coerce") / 1000000
+                df.loc[mask, col] = (
+                    pd.to_numeric(df.loc[mask, col], errors="coerce") / 1000000
+                )
             else:
                 print(f"Warning: '{col}' column not found in query results.")
+
+        # Debug: Print rows 31 to 34 (indices 28 to 31) to verify values
+        if len(df) >= 29:  # Ensure rows exist
+            print("Values for Excel rows 31 to 34 (DataFrame indices 28 to 31):")
+            print(df.loc[28 : min(31, len(df) - 1), columns_to_divide])
 
         # Step 4.2: Add blank column before "Đông Bắc Bộ"
         if "Đông Bắc Bộ" in df.columns:
             blank_column_index = df.columns.get_loc("Đông Bắc Bộ")
-            df.insert(blank_column_index, "", "")  # Empty header and values
+            df.insert(blank_column_index, "", "")
         else:
             print(
                 "Warning: 'Đông Bắc Bộ' column not found. Skipping blank column insertion."
@@ -62,9 +77,7 @@ def export_postgres_to_excel(db_params, query, output_file):
 
         # Step 5: Create Excel writer
         writer = pd.ExcelWriter(output_file, engine="openpyxl")
-        df.to_excel(
-            writer, sheet_name="Report", index=False, startrow=1
-        )  # Start from row 2
+        df.to_excel(writer, sheet_name="Report", index=False, startrow=1)
 
         # Get workbook and worksheet
         workbook = writer.book
@@ -108,17 +121,24 @@ def export_postgres_to_excel(db_params, query, output_file):
             for col in columns_to_divide
             if col in df.columns
         }
-        for row_num in range(3, len(df) + 3):  # Data starts from row 3
+        print(f"Formatted columns: {formatted_columns}")
+        total_col_index = formatted_columns.get("Total")
+        formatted_col_indices = list(formatted_columns.values())
+        for row_num in range(3, len(df) + 3):
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
                 cell.font = cell_font
                 cell.border = border
-                if col_num == 7:  # Column G (blank column)
+                if col_num == 7:
                     cell.fill = yellow_fill
-                if (
-                    col_num in formatted_columns.values()
-                ):  # Apply number format to specified columns
-                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                if col_num in formatted_col_indices:
+                    # Excel rows 31 to 34 = row_num 31 to 34
+                    if 31 <= row_num <= 34:
+                        cell.number_format = numbers.FORMAT_GENERAL
+                    elif col_num == total_col_index and 3 <= row_num <= 30:
+                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                    elif col_num != total_col_index and row_num not in range(31, 35):
+                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
 
                 # Align columns
                 column_name = df.columns[col_num - 1]
@@ -128,6 +148,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     "Miền Nam",
                     "Miền Trung",
                     "Total",
+                    "TOTAL",
                     "Đông Bắc Bộ",
                     "Tây Bắc Bộ",
                     "ĐB Sông Hồng",
@@ -143,7 +164,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         # Step 8: Adjust column widths
         for col_num, column in enumerate(df.columns, 1):
             column_letter = get_column_letter(col_num)
-            if col_num == 7:  # Column G
+            if col_num == 7:
                 worksheet.column_dimensions[column_letter].width = 3
             else:
                 max_length = max(
@@ -189,6 +210,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         print(f"Database Error: {db_error}")
     except Exception as error:
         print(f"General Error: {error}")
+        raise
     finally:
         if cursor:
             cursor.close()
@@ -223,7 +245,7 @@ if __name__ == "__main__":
         , f.kvml_ntb as "Nam Trung Bộ"
         , f.kvml_tnb as "Tây Nam Bộ"
         , f.kvml_dnb as "Đông Nam Bộ"
-        , f.kvml_total as "Total"
+        , f.kvml_total as "TOTAL"
         , f.month_key as "Month"
     from dim_funding_structure d 
     join fact_backdate_funding_monthly f 
