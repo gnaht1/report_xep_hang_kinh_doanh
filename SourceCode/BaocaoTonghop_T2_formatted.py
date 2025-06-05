@@ -136,9 +136,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                         df.loc[31, col] = round(raw_val / 1_000_000, 2)
 
         # === Step 4.2: Add a blank column before "Đông Bắc Bộ" ===
-        blank_col_inserted_name = (
-            "BLANK_COL_TEMP_NAME_FOR_LOC"  # Use a unique temp name
-        )
+        blank_col_inserted_name = "BLANK_COL_TEMP_NAME_FOR_LOC"
         if "Đông Bắc Bộ" in df.columns:
             blank_column_df_idx = df.columns.get_loc("Đông Bắc Bộ")
             df.insert(blank_column_df_idx, blank_col_inserted_name, "")
@@ -166,6 +164,9 @@ def export_postgres_to_excel(db_params, query, output_file):
         green_fill = PatternFill(
             start_color="00FF00", end_color="00FF00", fill_type="solid"
         )
+        gray_fill = PatternFill(
+            start_color="D3D3D3", end_color="D3D3D3", fill_type="solid"
+        )  # LightGray
         bold_first_col_font = Font(name="Calibri", size=11, bold=True, color="000000")
         highlight0_font = Font(name="Calibri", size=11, bold=True, color="000000")
         highlight0_fill = PatternFill(
@@ -177,13 +178,13 @@ def export_postgres_to_excel(db_params, query, output_file):
         fill_27 = PatternFill(
             start_color="F07A17", end_color="F07A17", fill_type="solid"
         )
-        bold_row_font = Font(name="Calibri", size=11, bold=True, color="000000")
-        border = Border(
-            left=Side(style="thin"),
-            right=Side(style="thin"),
-            top=Side(style="thin"),
-            bottom=Side(style="thin"),
-        )
+        bold_row_font = Font(
+            name="Calibri", size=11, bold=True, color="000000"
+        )  # General bold font for data cells
+
+        # No border style - remove all border applications
+        # border = Border(left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin"))
+
         center_alignment = Alignment(horizontal="center", vertical="center")
         left_alignment = Alignment(horizontal="left", vertical="center")
         right_alignment = Alignment(horizontal="right", vertical="center")
@@ -205,33 +206,26 @@ def export_postgres_to_excel(db_params, query, output_file):
             cell = worksheet.cell(row=2, column=col_num)
             if column_title_from_df == "funding_name":
                 cell.value = ""
-            elif (
-                column_title_from_df == blank_col_inserted_name
-            ):  # Header for inserted blank column
+            elif column_title_from_df == blank_col_inserted_name:
                 cell.value = ""
             else:
                 cell.value = column_title_from_df
-            cell.font = header_font
-            cell.border = border
+
+            cell.font = header_font  # header_font is already bold
             cell.alignment = center_alignment
-            if col_num == blank_col_excel_idx:
+            # cell.border = border # No border
+
+            if column_title_from_df in [
+                "TOTAL",
+                "Month",
+            ]:  # Note: "TOTAL" is uppercase as in DF
+                cell.fill = gray_fill
+            elif col_num == blank_col_excel_idx:
                 cell.fill = yellow_fill
             else:
                 cell.fill = header_fill
 
-        # === Step 7: Determine column indices for formatting logic (using df column names) ===
-        # These are used to map df column names to Excel column numbers if needed, but direct df_index/col_num is often clearer.
-        cols_idx_existing_map = {
-            name: i + 1
-            for i, name in enumerate(df.columns)
-            if name in columns_to_divide_existing
-        }
-        cols_idx_new_map = {
-            name: i + 1
-            for i, name in enumerate(df.columns)
-            if name in columns_to_divide_new
-        }
-        # ... other mappings if strictly needed, but direct checks on column_name and df_index are preferred.
+        # === Step 7: (No changes, mappings are for reference if needed) ===
 
         # === Step 8: Format data cells (rows start at Excel row 3) ===
         special_indices_for_formatting_A = {1, 7, 12, 19, 20, 25}
@@ -243,15 +237,34 @@ def export_postgres_to_excel(db_params, query, output_file):
                 cell = worksheet.cell(row=row_num_excel, column=col_num_excel)
                 actual_df_column_name = df.columns[col_num_excel - 1]
 
+                # Apply default font, will be overridden by specific rules if necessary
+                cell.font = cell_font
+                # cell.border = border # No border
+                cell.alignment = left_alignment  # Default alignment, can be overridden
+
+                # --- Special column styling for "TOTAL" and "Month" (Fill and Font) ---
+                # This applies first for these columns, other rules can override number format or alignment.
+                if actual_df_column_name == "TOTAL" or actual_df_column_name == "Month":
+                    cell.fill = gray_fill
+                    cell.font = bold_row_font  # Make data cells bold
+                    if actual_df_column_name == "TOTAL":
+                        cell.alignment = right_alignment  # Default for TOTAL data
+                    else:  # For "Month"
+                        cell.alignment = (
+                            left_alignment  # Or center if preferred: center_alignment
+                        )
+
                 # --- Rule 0: df_index == 0, Excel cols B-N (2-14) ---
                 if df_index == 0 and 2 <= col_num_excel <= 14:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.fill = PatternFill(
                         start_color="F68216", end_color="F68216", fill_type="solid"
                     )
-                    cell.font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+                    cell.font = Font(
+                        name="Calibri", size=11, bold=True, color="FFFFFF"
+                    )  # This font overrides gray_fill's font
                     cell.alignment = right_alignment
-                    cell.border = border
+                    # cell.border = border # No border
                     continue
 
                 # --- Rule: Special indices (1,7,12,19,20,25), Excel cols B-N (2-14) ---
@@ -259,11 +272,13 @@ def export_postgres_to_excel(db_params, query, output_file):
                     df_index in special_indices_for_formatting_B_N
                     and 2 <= col_num_excel <= 14
                 ):
+                    # If this column is "TOTAL" or "Month", gray_fill was already applied.
+                    # This special_rows_fill will override it. Font will be bold_row_font.
                     cell.fill = special_rows_fill
-                    cell.font = bold_row_font
+                    cell.font = bold_row_font  # Ensure bold font from special_rows or gray_fill rule
                     cell.number_format = special_rows_number_format
                     cell.alignment = right_alignment
-                    cell.border = border
+                    # cell.border = border # No border
                     continue
 
                 # --- USER REQUESTED: df_index 4 OR (6-25), Excel cols H-N (8-14) ---
@@ -272,24 +287,31 @@ def export_postgres_to_excel(db_params, query, output_file):
                 ):
                     cell.number_format = special_rows_number_format
                     cell.alignment = right_alignment
-                    cell.font = cell_font  # Default font
-                    cell.border = border
-                    if (
-                        col_num_excel == blank_col_excel_idx
-                    ):  # If this cell IS the blank column
-                        cell.fill = yellow_fill
+                    # Font and Fill: if it's TOTAL/Month, it got gray_fill & bold_row_font. Otherwise, default cell_font.
+                    # This rule primarily sets number_format and alignment.
+                    if not (
+                        actual_df_column_name == "TOTAL"
+                        or actual_df_column_name == "Month"
+                    ):
+                        cell.font = cell_font  # Default font if not TOTAL/Month
+                    # cell.border = border # No border
+                    if col_num_excel == blank_col_excel_idx:
+                        cell.fill = yellow_fill  # Overrides gray_fill if blank is TOTAL/Month (unlikely)
                     continue
 
                 # --- Rule: Col B (Excel col 2), if not caught by above specific B-N rules ---
                 elif col_num_excel == 2:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    cell.font = cell_font
-                    cell.border = border
-                    # Row 26/27 formatting excludes col B-E, so this continue is fine.
-                    # Blank column fill also won't apply here unless col B is the blank one.
+                    # Font: if it's TOTAL/Month (col B can't be Month as per query, can be TOTAL), it's bold. Else, cell_font.
+                    if not (
+                        actual_df_column_name == "TOTAL"
+                        or actual_df_column_name == "Month"
+                    ):
+                        cell.font = cell_font
+                    # cell.border = border # No border
                     if col_num_excel == blank_col_excel_idx:
-                        cell.fill = yellow_fill  # Should be rare for col B
+                        cell.fill = yellow_fill
                     continue
 
                 # --- Rule: Col A (Excel col 1), df_index == 0 ---
@@ -297,7 +319,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     cell.font = highlight0_font
                     cell.fill = highlight0_fill
                     cell.alignment = left_alignment
-                    cell.border = border
+                    # cell.border = border # No border
                     continue
 
                 # --- Rule: Col A (Excel col 1), special_indices_for_formatting_A ---
@@ -307,33 +329,31 @@ def export_postgres_to_excel(db_params, query, output_file):
                     cell.font = bold_first_col_font
                     cell.fill = green_fill
                     cell.alignment = left_alignment
-                    cell.border = border
+                    # cell.border = border # No border
                     continue
 
-                # --- General formatting for cells that didn't hit a 'continue' ---
-                cell.font = cell_font
-                cell.border = border
-                cell.alignment = left_alignment  # Default alignment, overridden by number formats below
-
+                # --- General cell formatting (already set font, alignment, no border) ---
+                # Now, apply yellow fill for the blank column if it wasn't handled by a continue rule
                 if col_num_excel == blank_col_excel_idx:
-                    cell.fill = yellow_fill  # Ensures blank column is yellow if no other fill was set by a continue rule
+                    cell.fill = yellow_fill  # Ensures blank column is yellow
 
-                # --- Number formatting for remaining cells ---
-                # These apply only if a 'continue' wasn't hit from a more specific rule above.
+                # --- Number formatting for remaining cells (if not continued) ---
+                # These apply to cells that didn't hit a specific 'continue' block.
+                # Font and Fill for TOTAL/Month columns are already set.
+                # These rules will primarily set number_format and potentially override alignment for these columns.
+
                 if actual_df_column_name == "Head":
                     if df_index in [28, 29, 30, 31]:
                         cell.number_format = numbers.FORMAT_GENERAL
                     else:
                         cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                elif (
-                    actual_df_column_name == "Total" and df_index <= 25
-                ):  # For existing 'Total'
+                elif actual_df_column_name == "Total" and df_index <= 25:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
                 elif actual_df_column_name in columns_to_divide_existing or (
                     actual_df_column_name == "Total" and df_index in [26, 27]
-                ):  # Miền Bắc, Nam, Trung, and Total for 26,27
+                ):
                     if actual_df_column_name == "Total":
                         if df_index == 26:
                             cell.number_format = (
@@ -343,12 +363,11 @@ def export_postgres_to_excel(db_params, query, output_file):
                             cell.number_format = (
                                 '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                             )
-                        # Total for df_index 28-31 handled by specific df_index rules below
                     elif actual_df_column_name in [
                         "Miền Bắc",
                         "Miền Nam",
                         "Miền Trung",
-                    ]:  # Existing regions
+                    ]:
                         if df_index in [28, 29, 30, 31]:
                             cell.number_format = numbers.FORMAT_GENERAL
                         else:
@@ -356,26 +375,22 @@ def export_postgres_to_excel(db_params, query, output_file):
                                 '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                             )
                     cell.alignment = right_alignment
-                elif actual_df_column_name == "TOTAL" and df_index in [
-                    28,
-                    29,
-                    30,
-                ]:  # Uppercase TOTAL for specific rows
-                    cell.number_format = (
-                        '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'  # Already /100
-                    )
-                    cell.alignment = right_alignment
+                elif actual_df_column_name == "TOTAL" and df_index in [28, 29, 30]:
+                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
+                    cell.alignment = right_alignment  # Already set by TOTAL/Month rule, but explicit is fine
                 elif (
                     actual_df_column_name in columns_to_divide_new
                     and df_index not in [26, 28, 29, 30, 31]
-                ):  # New region columns
+                ):
                     if actual_df_column_name == "TOTAL":
                         cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     else:
                         cell.number_format = (
                             '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                         )
-                    cell.alignment = right_alignment
+                    cell.alignment = (
+                        right_alignment  # For TOTAL, already set. For others, sets it.
+                    )
                 elif (
                     df_index == 28
                     and actual_df_column_name in columns_to_format_indices_28_30
@@ -402,9 +417,9 @@ def export_postgres_to_excel(db_params, query, output_file):
                 ):
                     cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                # else: default left_alignment already set
 
                 # --- Row-specific fill/font overrides (apply last for these rows if conditions met) ---
+                # These can override the gray fill for TOTAL/Month if a cell falls into these conditions.
                 if df_index == 26:
                     if not (
                         2 <= col_num_excel <= 5 or col_num_excel == blank_col_excel_idx
@@ -457,8 +472,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                 end_row=1,
                 end_column=col_total_idx,
             )
-            for c_mg in range(col_head_idx, col_total_idx + 1):
-                worksheet.cell(row=1, column=c_mg).border = border
+            # for c_mg in range(col_head_idx, col_total_idx + 1): worksheet.cell(row=1, column=c_mg).border = border # No border
 
         col_dbb_idx = (
             df.columns.get_loc("Đông Bắc Bộ") + 1 if "Đông Bắc Bộ" in df.columns else -1
@@ -482,24 +496,12 @@ def export_postgres_to_excel(db_params, query, output_file):
                 end_row=1,
                 end_column=col_kvml_total_idx,
             )
-            for c_mg in range(col_dbb_idx, col_kvml_total_idx + 1):
-                worksheet.cell(row=1, column=c_mg).border = border
+            # for c_mg in range(col_dbb_idx, col_kvml_total_idx + 1): worksheet.cell(row=1, column=c_mg).border = border # No border
 
-        if (
-            blank_col_excel_idx != -1
-        ):  # Ensure border for blank column in merged header row if not part of a merge
-            b_in_m1 = (
-                (col_head_idx <= blank_col_excel_idx <= col_total_idx)
-                if col_head_idx != -1 and col_total_idx != -1
-                else False
-            )
-            b_in_m2 = (
-                (col_dbb_idx <= blank_col_excel_idx <= col_kvml_total_idx)
-                if col_dbb_idx != -1 and col_kvml_total_idx != -1
-                else False
-            )
-            if not b_in_m1 and not b_in_m2:
-                worksheet.cell(row=1, column=blank_col_excel_idx).border = border
+        # if blank_col_excel_idx != -1: # No border for blank column in merged header row
+        #    b_in_m1 = (col_head_idx <= blank_col_excel_idx <= col_total_idx) if col_head_idx!=-1 and col_total_idx!=-1 else False
+        #    b_in_m2 = (col_dbb_idx <= blank_col_excel_idx <= col_kvml_total_idx) if col_dbb_idx!=-1 and col_kvml_total_idx!=-1 else False
+        #    if not b_in_m1 and not b_in_m2: worksheet.cell(row=1, column=blank_col_excel_idx).border = border # No border
 
         # === Step 12: Save the file ===
         writer.close()
@@ -529,7 +531,7 @@ if __name__ == "__main__":
         "port": "5432",
         "dbname": "final_project",
         "user": "postgres",
-        "password": "1234",  # Replace with actual password
+        "password": "1234",
     }
     query = """
     SELECT 
@@ -544,5 +546,5 @@ if __name__ == "__main__":
     WHERE f.month_key = 202302
     ORDER BY d.sortorder;
     """
-    output_file = "output_data_formatted_v3.xlsx"
+    output_file = "output_data_2.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
