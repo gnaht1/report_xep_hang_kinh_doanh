@@ -301,7 +301,28 @@ def export_postgres_to_excel(db_params, query, output_file):
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
 
-                # --- Format column B (Excel column 2) with integer format, thousand separators, parentheses for negatives, dash for zero ---
+                # --- 0) Additional formatting for DataFrame index 0, columns B->N ---
+                # If this is the first row (df_index == 0) and the column is between B (2) and N (14),
+                # and the cell does not already have a background fill, then apply:
+                #   - Number format: (* #,##0);(* (#,##0);(* "-"_);(@_)
+                #   - Background color: #F68216
+                #   - Font: white, bold
+                #   - Alignment: right
+                if df_index == 0 and 2 <= col_num <= 14:
+                    # Check if cell already has a fill (skip if it does)
+                    if not (cell.fill and cell.fill.fill_type):
+                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
+                        cell.fill = PatternFill(
+                            start_color="F68216", end_color="F68216", fill_type="solid"
+                        )
+                        cell.font = Font(
+                            name="Calibri", size=11, bold=True, color="FFFFFF"
+                        )
+                        cell.alignment = right_alignment
+                    # Skip other formatting rules for this cell
+                    continue
+
+                # --- 1) Format column B (Excel column 2) with integer format, thousand separators, parentheses for negatives, dash for zero ---
                 if col_num == 2:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
@@ -310,7 +331,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     cell.border = border
                     continue  # Skip other formatting rules for column B
 
-                # --- Highlight DataFrame index 0, first column with bold and light blue background ---
+                # --- 2) Highlight DataFrame index 0, first column with bold and light blue background ---
                 if df_index == 0 and col_num == 1:
                     cell.font = highlight0_font
                     cell.fill = highlight0_fill
@@ -318,7 +339,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     cell.alignment = left_alignment
                     continue  # Skip other formatting for this cell
 
-                # --- Highlight first column for specified DataFrame indices with bold text and green background ---
+                # --- 3) Highlight first column for specified DataFrame indices with bold text and green background ---
                 if df_index in special_indices and col_num == 1:
                     cell.font = bold_first_col_font
                     cell.fill = green_fill
@@ -349,6 +370,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     pass
 
                 # 2) "Total" (capital T) for df indices 0–25: integer format
+                # Note: "total" lowercase, if present, will be treated separately; ensure correct column is "Total"
                 if column_name == "Total" and df_index <= 25:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
