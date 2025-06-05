@@ -4,17 +4,23 @@ from psycopg2 import Error
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, numbers
 from openpyxl.utils import get_column_letter
+import math
 
 
 def export_postgres_to_excel(db_params, query, output_file):
     """
     Export data from PostgreSQL to an Excel file with custom formatting.
-    Divide 'Head', 'Miền Bắc', 'Miền Trung', 'Miền Nam', and 'Total' columns by 1,000,000,
-    except for Excel rows 31 to 34 (DataFrame indices 28 to 31). Apply custom number format
-    to these columns, except rows 31 to 34, and to 'Total' only for rows 3 to 30.
-    Divide columns 'Đông Bắc Bộ' to 'Đông Nam Bộ' by 1,000,000 and apply accounting format
-    with 2 decimal places for DataFrame indices 0, 1, 2 to 5, and 6 to 27
-    (Excel rows 3, 4, 5 to 8, and 9 to 30).
+    Divide 'Head', 'Miền Bắc', 'Miền Trung', 'Miền Nam' by 1,000,000, except for Excel
+    rows 31 to 34 (DataFrame indices 28 to 31). Divide 'Total' by 1,000,000, except for
+    indices 26 and 28 to 31 (Excel rows 29 and 31 to 34). Apply custom number format with
+    2 decimal places to these columns, except rows 31 to 34.
+    Divide columns 'Đông Bắc Bộ' to 'Đông Nam Bộ' and 'TOTAL' by 1,000,000 and apply
+    accounting format with 2 decimal places for 'Đông Bắc Bộ' to 'Đông Nam Bộ' and
+    integer format for 'TOTAL' for DataFrame indices 0, 1, 2 to 5, 6 to 27, excluding
+    index 26 (Excel rows 3, 4, 5 to 8, 9 to 30, excluding row 29).
+    For DataFrame index 28 (Excel row 31), format columns 'Head' to 'Đông Nam Bộ' as
+    float rounded to 2 decimal places, with 2-decimal-place accounting format in Excel
+    using minus sign for negatives (e.g., -13.37).
 
     Parameters:
     - db_params (dict): Database connection parameters (host, port, dbname, user, password).
@@ -51,9 +57,8 @@ def export_postgres_to_excel(db_params, query, output_file):
         columns_to_divide_existing = [
             "Head",
             "Miền Bắc",
-            "Miền Trung",
             "Miền Nam",
-            "Total",
+            "Miền Trung",
         ]
         mask_existing = ~df.index.isin(range(28, 32))  # Exclude indices 28 to 31
         for col in columns_to_divide_existing:
@@ -64,7 +69,21 @@ def export_postgres_to_excel(db_params, query, output_file):
             else:
                 print(f"Warning: '{col}' column not found in query results.")
 
-        # New columns: Đông Bắc Bộ to Đông Nam Bộ
+        # Handle 'Total' column separately to exclude index 26
+        if "Total" in df.columns:
+            mask_total_except_26_and_28_to_31 = ~df.index.isin(
+                [26] + list(range(28, 32))
+            )  # Exclude index 26 and 28 to 31
+            df.loc[mask_total_except_26_and_28_to_31, "Total"] = (
+                pd.to_numeric(
+                    df.loc[mask_total_except_26_and_28_to_31, "Total"], errors="coerce"
+                )
+                / 1000000
+            ).round(2)  # Round to 2 decimal places
+        else:
+            print("Warning: 'Total' column not found in query results.")
+
+        # New columns: Đông Bắc Bộ to Đông Nam Bộ and TOTAL
         columns_to_divide_new = [
             "Đông Bắc Bộ",
             "Tây Bắc Bộ",
@@ -73,10 +92,14 @@ def export_postgres_to_excel(db_params, query, output_file):
             "Nam Trung Bộ",
             "Tây Nam Bộ",
             "Đông Nam Bộ",
+            "TOTAL",
         ]
         rows_to_divide_new = (
             [0, 1] + list(range(2, 6)) + list(range(6, 28))
         )  # Indices 0, 1, 2 to 5, 6 to 27
+        rows_to_divide_new = [
+            i for i in rows_to_divide_new if i != 26
+        ]  # Exclude index 26
         valid_rows = [i for i in rows_to_divide_new if i < len(df)]
         for col in columns_to_divide_new:
             if col in df.columns:
@@ -88,12 +111,47 @@ def export_postgres_to_excel(db_params, query, output_file):
             else:
                 print(f"Warning: '{col}' column not found in query results.")
 
+        # Format index 28 for columns Head to Đông Nam Bộ as float rounded to 2 decimal places
+        columns_to_format_index_28 = [
+            "Head",
+            "Miền Bắc",
+            "Miền Nam",
+            "Miền Trung",
+            "Total",
+            "Đông Bắc Bộ",
+            "Tây Bắc Bộ",
+            "ĐB Sông Hồng",
+            "Bắc Trung Bộ",
+            "Nam Trung Bộ",
+            "Tây Nam Bộ",
+            "Đông Nam Bộ",
+        ]
+        if 28 in df.index:
+            for col in columns_to_format_index_28:
+                if col in df.columns:
+                    value = pd.to_numeric(df.loc[28, col], errors="coerce")
+                    df.loc[28, col] = (
+                        round(value, 2) if not pd.isna(value) else value
+                    )  # Round to 2 decimal places, preserve NaN
+                else:
+                    print(f"Warning: '{col}' column not found for index 28 formatting.")
+
         # Debug: Print values for specified rows in new columns
         if valid_rows:
             print(
-                "Values for DataFrame indices 0, 1, 2 to 5, 6 to 27 (Excel rows 3, 4, 5 to 8, 9 to 30):"
+                "Values for DataFrame indices 0, 1, 2 to 5, 6 to 27, excluding 26 (Excel rows 3, 4, 5 to 8, 9 to 30, excluding 29):"
             )
             print(df.loc[valid_rows, columns_to_divide_new])
+
+        # Debug: Print index 26 if it exists
+        if 26 in df.index:
+            print("Values for DataFrame index 26 (Excel row 29):")
+            print(df.loc[[26], ["Total"] + columns_to_divide_new])
+
+        # Debug: Print index 28 if it exists
+        if 28 in df.index:
+            print("Values for DataFrame index 28 (Excel row 31):")
+            print(df.loc[[28], columns_to_format_index_28])
 
         # Step 4.2: Add blank column before "Đông Bắc Bộ"
         if "Đông Bắc Bộ" in df.columns:
@@ -155,12 +213,19 @@ def export_postgres_to_excel(db_params, query, output_file):
             for col in columns_to_divide_new
             if col in df.columns
         }
+        formatted_columns_index_28 = {
+            col: df.columns.get_loc(col) + 1
+            for col in columns_to_format_index_28
+            if col in df.columns
+        }
         total_col_index = formatted_columns_existing.get("Total")
+        total_upper_col_index = formatted_columns_new.get("TOTAL")
         formatted_col_indices_existing = list(formatted_columns_existing.values())
         formatted_col_indices_new = list(formatted_columns_new.values())
+        formatted_col_indices_index_28 = list(formatted_columns_index_28.values())
         formatted_rows_new = [
             i + 3 for i in rows_to_divide_new
-        ]  # Excel rows 3, 4, 5 to 8, 9 to 30
+        ]  # Excel rows 3, 4, 5 to 8, 9 to 30, excluding 29
         for row_num in range(3, len(df) + 3):
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
@@ -179,9 +244,15 @@ def export_postgres_to_excel(db_params, query, output_file):
                 # New columns
                 elif col_num in formatted_col_indices_new:
                     if row_num in formatted_rows_new:
-                        cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'  # 2 decimal places
+                        if col_num == total_upper_col_index:
+                            cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'  # Integer format for TOTAL
+                        else:
+                            cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'  # 2 decimal places
                     else:
                         cell.number_format = numbers.FORMAT_GENERAL
+                # Index 28 columns (Head to Đông Nam Bộ)
+                if col_num in formatted_col_indices_index_28 and row_num == 31:
+                    cell.number_format = '_(* #,##0.00_);_(* -#,##0.00_);_(* "-"??_);_(@_)'  # 2 decimal places with minus sign for negatives
                 # Align columns
                 column_name = df.columns[col_num - 1]
                 if column_name in [
@@ -295,5 +366,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data6.xlsx"
+    output_file = "output_data3.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
