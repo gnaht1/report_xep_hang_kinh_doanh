@@ -12,9 +12,11 @@ def export_postgres_to_excel(db_params, query, output_file):
     """
     Export data from PostgreSQL to an Excel file with custom formatting.
     """
+
     connection = None
     cursor = None
     writer = None
+
     try:
         # Step 1: Connect to PostgreSQL
         print("Connecting to PostgreSQL...")
@@ -38,7 +40,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             df = pd.DataFrame(columns=columns)
 
         # --- CLEAR values at DataFrame index 27 for all columns except the first one ---
-        # Index 27 corresponds to the 28th row (0-based). We leave the first column intact.
+        # Index 27 corresponds to the 28th row (0-based). Leave the first column intact.
         if 27 in df.index:
             for col in df.columns[1:]:
                 # Cast to object dtype first to avoid dtype mismatch when setting empty string
@@ -191,6 +193,13 @@ def export_postgres_to_excel(db_params, query, output_file):
         bold_first_col_font = Font(
             name="Calibri", size=11, bold=True, color="000000"
         )  # Bold font for first column
+
+        # New style for DataFrame index 0, first column: light blue background
+        highlight0_font = Font(name="Calibri", size=11, bold=True, color="000000")
+        highlight0_fill = PatternFill(
+            start_color="6495ED", end_color="6495ED", fill_type="solid"
+        )
+
         border = Border(
             left=Side(style="thin"),
             right=Side(style="thin"),
@@ -272,12 +281,21 @@ def export_postgres_to_excel(db_params, query, output_file):
         ]  # Excel rows to format for new columns
 
         # === Step 8: Format data cells (rows start at Excel row 3) ===
-        # We will also format the first column for DataFrame indices [1, 7, 12, 19, 20, 28]
+        # Add index 0 to special formatting: first column bold with light blue background
         special_indices = {1, 7, 12, 19, 20, 25}
+
         for row_num in range(3, len(df) + 3):
             df_index = row_num - 3  # corresponding DataFrame index
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
+
+                # --- Highlight DataFrame index 0, first column with bold and light blue background ---
+                if df_index == 0 and col_num == 1:
+                    cell.font = highlight0_font
+                    cell.fill = highlight0_fill
+                    cell.border = border
+                    cell.alignment = left_alignment
+                    continue  # Skip other formatting for this cell
 
                 # --- Highlight first column for specified DataFrame indices with bold text and green background ---
                 if df_index in special_indices and col_num == 1:
@@ -485,5 +503,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data5.xlsx"
+    output_file = "output_data7.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
