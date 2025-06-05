@@ -181,8 +181,10 @@ def export_postgres_to_excel(db_params, query, output_file):
         # === Define cell styles ===
         header_font = Font(name="Calibri", size=12, bold=True, color="000000")
         cell_font = Font(name="Calibri", size=11, color="000000")
+
+        # Change header background color in row 2 to #bdcfef
         header_fill = PatternFill(
-            start_color="ADD8E6", end_color="ADD8E6", fill_type="solid"
+            start_color="BDCFEF", end_color="BDCFEF", fill_type="solid"
         )
         yellow_fill = PatternFill(
             start_color="FFFF00", end_color="FFFF00", fill_type="solid"
@@ -233,6 +235,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             if col_num == 7:
                 cell.fill = yellow_fill
             else:
+                # Apply the new header fill (#bdcfef) to all other header cells
                 cell.fill = header_fill
 
         # === Step 7: Determine column indices for formatting logic ===
