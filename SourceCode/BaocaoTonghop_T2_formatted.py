@@ -202,6 +202,15 @@ def export_postgres_to_excel(db_params, query, output_file):
             start_color="6495ED", end_color="6495ED", fill_type="solid"
         )
 
+        # Additional row-specific fills for index 26 and 27
+        fill_26 = PatternFill(
+            start_color="E3B825", end_color="E3B825", fill_type="solid"
+        )
+        fill_27 = PatternFill(
+            start_color="F07A17", end_color="F07A17", fill_type="solid"
+        )
+        bold_row_font = Font(name="Calibri", size=11, bold=True, color="000000")
+
         border = Border(
             left=Side(style="thin"),
             right=Side(style="thin"),
@@ -327,13 +336,14 @@ def export_postgres_to_excel(db_params, query, output_file):
                     else:
                         cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    continue
+                    # Continue to next loop iteration; further formatting (row 26/27 fill) will be applied below
+                    pass
 
                 # 2) "Total" (capital T) for df indices 0–25: integer format
                 if column_name == "Total" and df_index <= 25:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 3) Existing region columns (Miền Bắc, Miền Nam, Miền Trung, and "Total" for certain df_indices)
                 if col_num in cols_idx_existing:
@@ -357,13 +367,13 @@ def export_postgres_to_excel(db_params, query, output_file):
                                 '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                             )
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 4) Column "TOTAL" (uppercase) for df_index in [28, 29, 30]: integer format
                 if column_name == "TOTAL" and df_index in [28, 29, 30]:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 5) New region columns (Đông Bắc Bộ, Tây Bắc Bộ, …) for indices != 28–31
                 if col_num in cols_idx_new and df_index not in [28, 29, 30, 31]:
@@ -380,7 +390,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     else:
                         cell.number_format = numbers.FORMAT_GENERAL
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 6) DataFrame index 28 (Excel row 31): two-decimal special for numeric columns
                 if col_num in cols_idx_28 and row_num == 31:
@@ -388,28 +398,55 @@ def export_postgres_to_excel(db_params, query, output_file):
                         '_(* #,##0.00_);_(* -#,##0.00_);_(* "-"_);_(@_)'
                     )
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 7) DataFrame index 29 (Excel row 32): one-decimal with minus sign for numeric columns
                 if col_num in cols_idx_29 and row_num == 32:
                     cell.number_format = '_(* #,##0.0_);_(* -#,##0.0_);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 8) DataFrame index 30 (Excel row 33): one-decimal with minus sign for numeric columns
                 if col_num in cols_idx_30 and row_num == 33:
                     cell.number_format = '_(* #,##0.0_);_(* -#,##0.0_);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 9) DataFrame index 31 (Excel row 34): two-decimal number format for all numeric columns
                 if df_index == 31 and column_name in columns_to_divide_index_31:
                     cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    continue
+                    pass
 
                 # 10) Default alignment for other cells
-                cell.alignment = left_alignment
+                if not (  # If none of the above number-format conditions applied
+                    column_name == "Head"
+                    or (column_name == "Total" and df_index <= 25)
+                    or col_num in cols_idx_existing
+                    or (column_name == "TOTAL" and df_index in [28, 29, 30])
+                    or (col_num in cols_idx_new and df_index not in [28, 29, 30, 31])
+                    or (col_num in cols_idx_28 and row_num == 31)
+                    or (col_num in cols_idx_29 and row_num == 32)
+                    or (col_num in cols_idx_30 and row_num == 33)
+                    or (df_index == 31 and column_name in columns_to_divide_index_31)
+                ):
+                    cell.alignment = left_alignment
+
+                # === Additional formatting for DataFrame index 26 ===
+                # Apply background color #E3B825 and bold text except columns B->E (2-5) and any already-colored column (e.g., column 7).
+                if df_index == 26:
+                    if col_num not in [2, 3, 4, 5, 7]:
+                        cell.fill = fill_26
+                        # Ensure text is bold
+                        cell.font = bold_row_font
+
+                # === Additional formatting for DataFrame index 27 ===
+                # Apply background color #F07A17 and bold text except columns B->E (2-5) and any already-colored column (e.g., column 7).
+                if df_index == 27:
+                    if col_num not in [2, 3, 4, 5, 7]:
+                        cell.fill = fill_27
+                        # Ensure text is bold
+                        cell.font = bold_row_font
 
         # === Step 9: Adjust column widths ===
         for col_num, column in enumerate(df.columns, start=1):
@@ -506,5 +543,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data7.xlsx"
+    output_file = "output_data8.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
