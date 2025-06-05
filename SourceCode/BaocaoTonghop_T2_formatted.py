@@ -41,7 +41,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         # Index 27 corresponds to the 28th row (0-based). We leave the first column intact.
         if 27 in df.index:
             for col in df.columns[1:]:
-                # Cast to object dtype first to avoid dtype mismatch
+                # Cast to object dtype first to avoid dtype mismatch when setting empty string
                 df[col] = df[col].astype(object)
                 df.at[27, col] = ""  # Clear the cell content
 
@@ -185,6 +185,12 @@ def export_postgres_to_excel(db_params, query, output_file):
         yellow_fill = PatternFill(
             start_color="FFFF00", end_color="FFFF00", fill_type="solid"
         )
+        green_fill = PatternFill(
+            start_color="00FF00", end_color="00FF00", fill_type="solid"
+        )  # Green background for specified rows
+        bold_first_col_font = Font(
+            name="Calibri", size=11, bold=True, color="000000"
+        )  # Bold font for first column
         border = Border(
             left=Side(style="thin"),
             right=Side(style="thin"),
@@ -266,9 +272,22 @@ def export_postgres_to_excel(db_params, query, output_file):
         ]  # Excel rows to format for new columns
 
         # === Step 8: Format data cells (rows start at Excel row 3) ===
+        # We will also format the first column for DataFrame indices [1, 7, 12, 19, 20, 28]
+        special_indices = {1, 7, 12, 19, 20, 25}
         for row_num in range(3, len(df) + 3):
+            df_index = row_num - 3  # corresponding DataFrame index
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
+
+                # --- Highlight first column for specified DataFrame indices with bold text and green background ---
+                if df_index in special_indices and col_num == 1:
+                    cell.font = bold_first_col_font
+                    cell.fill = green_fill
+                    cell.border = border
+                    cell.alignment = left_alignment
+                    continue  # Skip other formatting for this cell
+
+                # Apply default font and border for other cells
                 cell.font = cell_font
                 cell.border = border
 
@@ -277,17 +296,6 @@ def export_postgres_to_excel(db_params, query, output_file):
                     cell.fill = yellow_fill
 
                 column_name = df.columns[col_num - 1]
-                df_index = row_num - 3  # corresponding DataFrame index
-
-                # --- Apply integer format for df_index == 26 as before ---
-                if df_index == 26:
-                    numeric_cols_all = set(
-                        columns_to_divide_existing + ["Total"] + columns_to_divide_new
-                    )
-                    if column_name in numeric_cols_all:
-                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
-                        cell.alignment = right_alignment
-                        continue
 
                 # 1) "Head" column: integer format except indices 28–31
                 if column_name == "Head":
@@ -308,9 +316,11 @@ def export_postgres_to_excel(db_params, query, output_file):
 
                 # 3) Existing region columns (Miền Bắc, Miền Nam, Miền Trung, and "Total" for certain df_indices)
                 if col_num in cols_idx_existing:
-                    # For "Total" when df_index == 26 → integer format (already handled above)
+                    # For "Total" when df_index == 26 → integer format
+                    if column_name == "Total" and df_index == 26:
+                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     # For "Total" when df_index == 27 → two-decimal format
-                    if column_name == "Total" and df_index == 27:
+                    elif column_name == "Total" and df_index == 27:
                         cell.number_format = (
                             '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                         )
@@ -475,5 +485,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data2.xlsx"
+    output_file = "output_data5.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
