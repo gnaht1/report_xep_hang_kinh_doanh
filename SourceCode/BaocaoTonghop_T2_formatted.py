@@ -10,22 +10,6 @@ import math
 def export_postgres_to_excel(db_params, query, output_file):
     """
     Export data from PostgreSQL to an Excel file with custom formatting.
-    Divide 'Head', 'Miền Bắc', 'Miền Trung', 'Miền Nam' by 1,000,000, except for Excel
-    rows 31 to 34 (DataFrame indices 28 to 31). Divide 'Total' by 1,000,000, except for
-    indices 26 and 28 to 31 (Excel rows 29 and 31 to 34). Apply custom number format with
-    2 decimal places to these columns, except rows 31 to 34.
-    Divide columns 'Đông Bắc Bộ' to 'Đông Nam Bộ' and 'TOTAL' by 1,000,000 and apply
-    accounting format with 2 decimal places for 'Đông Bắc Bộ' to 'Đông Nam Bộ' and
-    integer format for 'TOTAL' for DataFrame indices 0, 1, 2 to 5, 6 to 27, excluding
-    index 26 (Excel rows 3, 4, 5 to 8, 9 to 30, excluding row 29).
-    For DataFrame index 28 (Excel row 31), format columns 'Head' to 'Đông Nam Bộ' as
-    float rounded to 2 decimal places, with 2-decimal-place accounting format in Excel
-    using minus sign for negatives (e.g., -13.37).
-
-    Parameters:
-    - db_params (dict): Database connection parameters (host, port, dbname, user, password).
-    - query (str): SQL query to fetch data.
-    - output_file (str): Path to the output Excel file.
     """
     connection = None
     cursor = None
@@ -202,7 +186,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             cell.alignment = center_alignment
             cell.fill = yellow_fill if col_num == 7 else header_fill
 
-        # Step 7: Format data rows
+        # Step 7: Format data rows, with “Head” & “Total” using integer format for specified rows
         formatted_columns_existing = {
             col: df.columns.get_loc(col) + 1
             for col in columns_to_divide_existing
@@ -218,61 +202,96 @@ def export_postgres_to_excel(db_params, query, output_file):
             for col in columns_to_format_index_28
             if col in df.columns
         }
-        total_col_index = formatted_columns_existing.get("Total")
-        total_upper_col_index = formatted_columns_new.get("TOTAL")
+        total_col_index_existing = formatted_columns_existing.get("Total")
+        total_col_index_new = formatted_columns_new.get("TOTAL")
         formatted_col_indices_existing = list(formatted_columns_existing.values())
         formatted_col_indices_new = list(formatted_columns_new.values())
         formatted_col_indices_index_28 = list(formatted_columns_index_28.values())
         formatted_rows_new = [
             i + 3 for i in rows_to_divide_new
         ]  # Excel rows 3, 4, 5 to 8, 9 to 30, excluding 29
+
         for row_num in range(3, len(df) + 3):
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
                 cell.font = cell_font
                 cell.border = border
+
+                # Highlight the blank column
                 if col_num == 7:
                     cell.fill = yellow_fill
-                # Existing columns
-                if col_num in formatted_col_indices_existing:
+
+                # Determine column name and corresponding DataFrame index
+                column_name = df.columns[col_num - 1]
+                df_index = row_num - 3  # Excel row 3 → df index 0
+
+                # 1) Special formatting for “Head” (integer format)
+                if column_name == "Head":
+                    # skip formatting for rows 31–34 (df indices 28–31)
                     if 31 <= row_num <= 34:
                         cell.number_format = numbers.FORMAT_GENERAL
                     else:
+                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                    cell.alignment = right_alignment
+                    continue
+
+                # 2) Special formatting for “Total” on df indices 0→25 (Excel rows 3→28)
+                if column_name == "Total" and df_index <= 25:
+                    # use integer format for rows where df_index is 0..25
+                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                    cell.alignment = right_alignment
+                    continue
+
+                # 3) Existing columns (Miền Bắc, Miền Nam, Miền Trung, Total for df_index>25)
+                if col_num in formatted_col_indices_existing:
+                    # for Total when df_index >25, fall here
+                    if column_name == "Total" and (26 <= df_index <= 27):
+                        # df_index 26 or 27 → Excel rows 29 or 30: use two-decimal format
                         cell.number_format = (
                             '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
                         )
-                # New columns
-                elif col_num in formatted_col_indices_new:
-                    if row_num in formatted_rows_new:
-                        if col_num == total_upper_col_index:
-                            cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'  # Integer format for TOTAL
+                    elif column_name == "Total" and df_index == 26:
+                        # df_index 26 (Excel row 29) was excluded from dividing—treat as GENERAL
+                        cell.number_format = numbers.FORMAT_GENERAL
+                    else:
+                        # Miền Bắc, Miền Nam, Miền Trung (all df indices except 28–31)
+                        if 31 <= row_num <= 34:
+                            cell.number_format = numbers.FORMAT_GENERAL
                         else:
-                            cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'  # 2 decimal places
+                            cell.number_format = (
+                                '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
+                            )
+                    cell.alignment = right_alignment
+                    continue
+
+                # 4) New columns (Đông Bắc Bộ, Tây Bắc Bộ, …, TOTAL)
+                if col_num in formatted_col_indices_new:
+                    if row_num in formatted_rows_new:
+                        if col_num == total_col_index_new:
+                            # “TOTAL” column (integer for those rows)
+                            cell.number_format = (
+                                '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                            )
+                        else:
+                            # other new columns (2 decimals)
+                            cell.number_format = (
+                                '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
+                            )
                     else:
                         cell.number_format = numbers.FORMAT_GENERAL
-                # Index 28 columns (Head to Đông Nam Bộ)
-                if col_num in formatted_col_indices_index_28 and row_num == 31:
-                    cell.number_format = '_(* #,##0.00_);_(* -#,##0.00_);_(* "-"??_);_(@_)'  # 2 decimal places with minus sign for negatives
-                # Align columns
-                column_name = df.columns[col_num - 1]
-                if column_name in [
-                    "Head",
-                    "Miền Bắc",
-                    "Miền Nam",
-                    "Miền Trung",
-                    "Total",
-                    "TOTAL",
-                    "Đông Bắc Bộ",
-                    "Tây Bắc Bộ",
-                    "ĐB Sông Hồng",
-                    "Bắc Trung Bộ",
-                    "Nam Trung Bộ",
-                    "Tây Nam Bộ",
-                    "Đông Nam Bộ",
-                ]:
                     cell.alignment = right_alignment
-                else:
-                    cell.alignment = left_alignment
+                    continue
+
+                # 5) Index 28 special rounding for select columns (Excel row 31, df_index=28)
+                if col_num in formatted_col_indices_index_28 and row_num == 31:
+                    cell.number_format = (
+                        '_(* #,##0.00_);_(* -#,##0.00_);_(* "-"??_);_(@_)'
+                    )
+                    cell.alignment = right_alignment
+                    continue
+
+                # 6) Default alignment for other cells
+                cell.alignment = left_alignment
 
         # Step 8: Adjust column widths
         for col_num, column in enumerate(df.columns, 1):
@@ -366,5 +385,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data3.xlsx"
+    output_file = "output_data5.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
