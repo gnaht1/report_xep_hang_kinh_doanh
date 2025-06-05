@@ -4,6 +4,7 @@ from psycopg2 import Error
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, numbers
 from openpyxl.utils import get_column_letter
+import numpy as np
 import math
 
 
@@ -36,21 +37,23 @@ def export_postgres_to_excel(db_params, query, output_file):
             print("Warning: Query returned no data. Creating empty Excel file.")
             df = pd.DataFrame(columns=columns)
 
-        # --- NEW: Clear values at DataFrame index 27 for all columns except the first one ---
+        # --- CLEAR values at DataFrame index 27 for all columns except the first one ---
         # Index 27 corresponds to the 28th row (0-based). We leave the first column intact.
         if 27 in df.index:
             for col in df.columns[1:]:
+                # Cast to object dtype first to avoid dtype mismatch
+                df[col] = df[col].astype(object)
                 df.at[27, col] = ""  # Clear the cell content
 
-        # --- EXISTING: Remove values from DataFrame at indices 26–31 for columns "Head" through "Miền Trung" ---
+        # --- CLEAR values from DataFrame at indices 26–31 for columns "Head" through "Miền Trung" ---
         cols_to_clear = ["Head", "Miền Bắc", "Miền Nam", "Miền Trung"]
         for idx in [26, 27, 28, 29, 30, 31]:
             if idx in df.index:
                 for col in cols_to_clear:
                     if col in df.columns:
-                        df.at[idx, col] = ""  # Or use np.nan if you want to set to NaN
+                        df.at[idx, col] = ""
 
-        # If index 28–30 exists and there's a column "TOTAL" (uppercase), divide by 100 as before
+        # --- If indices 28–30 exist and there's a column "TOTAL" (uppercase), divide by 100 ---
         if "TOTAL" in df.columns:
             for idx in [28, 29, 30]:
                 if idx in df.index:
@@ -74,7 +77,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             columns_to_divide_existing + ["Total"] + columns_to_divide_new
         )
 
-        # === Step 4.1: Divide by 1,000,000 where appropriate ===
+        # === Step 4.1: Divide numeric values by 1,000,000 where appropriate ===
         # Existing region columns: skip DataFrame indices 28–31
         mask_existing = ~df.index.isin(range(28, 32))
         for col in columns_to_divide_existing:
@@ -157,7 +160,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                 else:
                     print(f"Warning: '{col}' column not found for index 31 division.")
 
-        # === Step 4.2: Add blank column before "Đông Bắc Bộ" ===
+        # === Step 4.2: Add a blank column before "Đông Bắc Bộ" ===
         if "Đông Bắc Bộ" in df.columns:
             blank_column_index = df.columns.get_loc("Đông Bắc Bộ")
             df.insert(blank_column_index, "", "")
@@ -174,8 +177,8 @@ def export_postgres_to_excel(db_params, query, output_file):
         worksheet = writer.sheets["Report"]
 
         # === Define cell styles ===
-        header_font = Font(name="Calibri", size=12, bold=True)
-        cell_font = Font(name="Calibri", size=11)
+        header_font = Font(name="Calibri", size=12, bold=True, color="000000")
+        cell_font = Font(name="Calibri", size=11, color="000000")
         header_fill = PatternFill(
             start_color="ADD8E6", end_color="ADD8E6", fill_type="solid"
         )
@@ -191,19 +194,27 @@ def export_postgres_to_excel(db_params, query, output_file):
         center_alignment = Alignment(horizontal="center", vertical="center")
         left_alignment = Alignment(horizontal="left", vertical="center")
         right_alignment = Alignment(horizontal="right", vertical="center")
-        group_header_font = Font(name="Calibri", size=14, bold=True)
+
+        # --- Blue background with white font for group headers ---
+        group_header_font = Font(
+            name="Calibri", size=14, bold=True, color="FFFFFF"
+        )  # White text
         group_header_fill = PatternFill(
-            start_color="D3D3D3", end_color="D3D3D3", fill_type="solid"
-        )
+            start_color="0000FF", end_color="0000FF", fill_type="solid"
+        )  # Blue background
 
         # === Step 6: Format column headers (row 2) ===
         for col_num, column_title in enumerate(df.columns, start=1):
             cell = worksheet.cell(row=2, column=col_num)
-            cell.value = column_title
+            # If the column is the original 'funding_name', set the header cell to blank
+            if column_title == "funding_name":
+                cell.value = ""
+            else:
+                cell.value = column_title
             cell.font = header_font
             cell.border = border
             cell.alignment = center_alignment
-            # Highlight the blank column (column 7 after insertion)
+            # Highlight the blank column (column 7 after inserting blank)
             if col_num == 7:
                 cell.fill = yellow_fill
             else:
@@ -372,6 +383,7 @@ def export_postgres_to_excel(db_params, query, output_file):
         # === Step 9: Adjust column widths ===
         for col_num, column in enumerate(df.columns, start=1):
             column_letter = get_column_letter(col_num)
+            # Blank column is at position 7 after inserting blank before "Đông Bắc Bộ"
             if col_num == 7:
                 worksheet.column_dimensions[column_letter].width = 3
             else:
@@ -392,7 +404,8 @@ def export_postgres_to_excel(db_params, query, output_file):
         for row_num in range(3, len(df) + 3):
             worksheet.row_dimensions[row_num].height = 20
 
-        # === Step 11: Add merged headers ===
+        # === Step 11: Add merged headers with blue background and white text ===
+        # The first group ("Tổng cần phân bổ xuống cho ĐVML") spans columns 2 through 6 (Head to Total).
         total_header_cell = worksheet.cell(row=1, column=2)
         total_header_cell.value = "Tổng cần phân bổ xuống cho ĐVML"
         total_header_cell.font = group_header_font
@@ -401,13 +414,14 @@ def export_postgres_to_excel(db_params, query, output_file):
         total_header_cell.border = border
         worksheet.merge_cells(start_row=1, start_column=2, end_row=1, end_column=6)
 
+        # The second group ("KHU VỰC MẠNG LƯỚI") spans columns 8 through 15 (Đông Bắc Bộ to TOTAL).
         khu_vuc_header_cell = worksheet.cell(row=1, column=8)
         khu_vuc_header_cell.value = "KHU VỰC MẠNG LƯỚI"
         khu_vuc_header_cell.font = group_header_font
         khu_vuc_header_cell.fill = group_header_fill
         khu_vuc_header_cell.alignment = center_alignment
         khu_vuc_header_cell.border = border
-        worksheet.merge_cells(start_row=1, start_column=8, end_row=1, end_column=14)
+        worksheet.merge_cells(start_row=1, start_column=8, end_row=1, end_column=15)
 
         # === Step 12: Save the file ===
         writer.close()
@@ -461,5 +475,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data8.xlsx"
+    output_file = "output_data2.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
