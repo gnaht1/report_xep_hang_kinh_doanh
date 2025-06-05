@@ -36,6 +36,15 @@ def export_postgres_to_excel(db_params, query, output_file):
             print("Warning: Query returned no data. Creating empty Excel file.")
             df = pd.DataFrame(columns=columns)
 
+        # --- NEW: Xóa giá trị từ DataFrame ở các index 29, 30, 31 cho các cột "Head" -> "Miền Trung" ---
+        cols_to_clear = ["Head", "Miền Bắc", "Miền Nam", "Miền Trung"]
+        for idx in [26, 27, 28, 29, 30, 31]:
+            if idx in df.index:
+                for col in cols_to_clear:
+                    if col in df.columns:
+                        df.at[idx, col] = ""  # hoặc np.nan nếu muốn đặt thành NaN
+
+        # Nếu có index 28–30 và cột "TOTAL", chia cho 100 như cũ
         for idx in [28, 29, 30]:
             if idx in df.index and "TOTAL" in df.columns:
                 raw = pd.to_numeric(df.loc[idx, "TOTAL"], errors="coerce")
@@ -70,7 +79,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             else:
                 print(f"Warning: '{col}' column not found in query results.")
 
-        # Handle 'Total': skip df indices 26, 28–31
+        # Handle 'Total' (capital T): skip df indices 26, 28–31
         if "Total" in df.columns:
             mask_total = ~df.index.isin([26] + list(range(28, 32)))
             df.loc[mask_total, "Total"] = (
@@ -252,6 +261,16 @@ def export_postgres_to_excel(db_params, query, output_file):
                 column_name = df.columns[col_num - 1]
                 df_index = row_num - 3  # corresponding DataFrame index
 
+                # --- Apply integer format for df_index == 26 as before ---
+                if df_index == 26:
+                    numeric_cols_all = set(
+                        columns_to_divide_existing + ["Total"] + columns_to_divide_new
+                    )
+                    if column_name in numeric_cols_all:
+                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
+                        cell.alignment = right_alignment
+                        continue
+
                 # 1) "Head" column: integer format except indices 28–31
                 if column_name == "Head":
                     if (
@@ -259,25 +278,26 @@ def export_postgres_to_excel(db_params, query, output_file):
                     ):  # Excel rows 31–34 correspond to df indices 28–31
                         cell.number_format = numbers.FORMAT_GENERAL
                     else:
-                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                        cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
                     continue
 
-                # 2) "Total" for df indices 0–25: integer format
+                # 2) "Total" (capital T) for df indices 0–25: integer format
                 if column_name == "Total" and df_index <= 25:
-                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
                     continue
 
-                # 3) Existing region columns (Miền Bắc, Miền Nam, Miền Trung, Total for df_index>25)
+                # 3) Existing region columns (Miền Bắc, Miền Nam, Miền Trung, and "Total" for certain df_indices)
                 if col_num in cols_idx_existing:
-                    # For "Total" when df_index 26 or 27 → two-decimal format
-                    if column_name == "Total" and (26 <= df_index <= 27):
+                    # For "Total" when df_index == 26 → integer format (already handled above)
+                    # For "Total" when df_index == 27 → two-decimal format
+                    if column_name == "Total" and df_index == 27:
                         cell.number_format = (
-                            '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
+                            '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                         )
-                    # df_index 26 → general
-                    elif column_name == "Total" and df_index == 26:
+                    # For "Total" when df_index 28–31 → general
+                    elif column_name == "Total" and (28 <= df_index <= 31):
                         cell.number_format = numbers.FORMAT_GENERAL
                     else:
                         # Other existing numeric cells: two-decimal unless index 28–31
@@ -285,16 +305,14 @@ def export_postgres_to_excel(db_params, query, output_file):
                             cell.number_format = numbers.FORMAT_GENERAL
                         else:
                             cell.number_format = (
-                                '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
+                                '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                             )
                     cell.alignment = right_alignment
                     continue
 
-                # 4) Column "TOTAL" for indices 28–30: divide by 100 and integer format
+                # 4) Column "TOTAL" (uppercase) for df_index in [28, 29, 30]: integer format
                 if column_name == "TOTAL" and df_index in [28, 29, 30]:
-                    # Divide the DataFrame value by 100 (already done in Step 4.1 if it was among new columns)
-                    # but ensure formatting as integer:
-                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
                     continue
 
@@ -304,11 +322,11 @@ def export_postgres_to_excel(db_params, query, output_file):
                         # For "TOTAL" column at other rows → integer format
                         if col_num == total_idx_new:
                             cell.number_format = (
-                                '_(* #,##0_);_(* (#,##0);_(* "-"??_);_(@_)'
+                                '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                             )
                         else:
                             cell.number_format = (
-                                '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
+                                '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                             )
                     else:
                         cell.number_format = numbers.FORMAT_GENERAL
@@ -318,32 +336,26 @@ def export_postgres_to_excel(db_params, query, output_file):
                 # 6) df index 28 (Excel row 31): two-decimal special for numeric columns
                 if col_num in cols_idx_28 and row_num == 31:
                     cell.number_format = (
-                        '_(* #,##0.00_);_(* -#,##0.00_);_(* "-"??_);_(@_)'
+                        '_(* #,##0.00_);_(* -#,##0.00_);_(* "-"_);_(@_)'
                     )
                     cell.alignment = right_alignment
                     continue
 
                 # 7) df index 29 (Excel row 32): one-decimal with minus sign for numeric columns
                 if col_num in cols_idx_29 and row_num == 32:
-                    cell.number_format = (
-                        '_(* #,##0.0_);_(* -#,##0.0_);_(* "-"??_);_(@_)'
-                    )
+                    cell.number_format = '_(* #,##0.0_);_(* -#,##0.0_);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
                     continue
 
                 # 8) df index 30 (Excel row 33): one-decimal with minus sign for numeric columns
                 if col_num in cols_idx_30 and row_num == 33:
-                    cell.number_format = (
-                        '_(* #,##0.0_);_(* -#,##0.0_);_(* "-"??_);_(@_)'
-                    )
+                    cell.number_format = '_(* #,##0.0_);_(* -#,##0.0_);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
                     continue
 
                 # 9) df index 31 (Excel row 34): two-decimal number format for all numeric columns
                 if df_index == 31 and column_name in columns_to_divide_index_31:
-                    cell.number_format = (
-                        '_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)'
-                    )
+                    cell.number_format = '_(* #,##0.00_);_(* (#,##0.00);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
                     continue
 
@@ -442,5 +454,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data3.xlsx"
+    output_file = "output_data7.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
