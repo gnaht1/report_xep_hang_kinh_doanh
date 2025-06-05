@@ -301,6 +301,15 @@ def export_postgres_to_excel(db_params, query, output_file):
             for col_num in range(1, len(df.columns) + 1):
                 cell = worksheet.cell(row=row_num, column=col_num)
 
+                # --- Format column B (Excel column 2) with integer format, thousand separators, parentheses for negatives, dash for zero ---
+                if col_num == 2:
+                    cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
+                    cell.alignment = right_alignment
+                    # Apply border and default font
+                    cell.font = cell_font
+                    cell.border = border
+                    continue  # Skip other formatting rules for column B
+
                 # --- Highlight DataFrame index 0, first column with bold and light blue background ---
                 if df_index == 0 and col_num == 1:
                     cell.font = highlight0_font
@@ -543,5 +552,5 @@ if __name__ == "__main__":
     order by d.sortorder ;
     """
 
-    output_file = "output_data8.xlsx"
+    output_file = "output_data9.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
