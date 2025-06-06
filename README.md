@@ -6,7 +6,7 @@ Received a request from the finance department to create these two reports and p
 2. Implementation
 
 Flowchart:
-![flowchart_process](./Picture/flowchart_report_1.png)
+![flowchart_process](./Picture/flowchart_report.png)
 
 Description of Implementation Steps:
 
@@ -90,60 +90,63 @@ Develop SQL queries to retrieve data in the exact format required for each sheet
 
 ![python](./Picture/python.png)
 
+* Modify Python code to apply custom formatting to the Excel file (e.g., set fonts, apply cell colors, adjust column widths, and configure number formats).
+
 * Write the results to an Excel file.
 
-* Adjust the Excel file formatting (font, colors, column widths, etc.).
 
 ![format](./Picture/report_tonghop.png)
 
-2.10. Upload to Google Drive:
 
-Automatically upload the completed Excel file to Google Drive.
+2.10. Auto-Upload to Google Drive
 
-![drive](./Picture/google_drive.png)
+After generating and formatting the Excel file, use Python’s Google Drive API client to authenticate (via OAuth or service account) and automatically upload or overwrite the file in a specified Drive folder.
+
+![drive](./Picture/gg_drive_upload.png)
 
 3. Skills and Achievements After Completing the Project
 
-Completing this project enhances tool skills, technical skills, and knowledge in the following domains:
+Completing this project enhances tool skills, technical skills, and domain knowledge as follows:
 
 3.1. Tool Skills
 
-* PostgreSQL/DBeaver: Proficient in using PostgreSQL for querying data and DBeaver for managing, importing/exporting data from Excel.
-* Excel: Skilled in processing and exporting data to Excel files through Python automation.
-* Python IDE (VS Code/PyCharm): Effective use of development environments to write, debug, and run Python scripts.
-* Google Drive: Experienced in utilizing Google Drive for cloud storage, file synchronization, and collaborative document management.
+PostgreSQL / DBeaver
+* Write and optimize complex queries against a PostgreSQL database.
+* Use DBeaver to browse tables, run SQL scripts, and import/export data to/from Excel.
+
+Excel / openpyxl
+* Automate creation of Excel workbooks via Python (pandas.ExcelWriter + openpyxl).
+* Apply cell-level formatting (fonts, fills, alignments, number formats) programmatically with openpyxl.
+
+Python IDE (VS Code)
+* Develop, debug, and run Python scripts that integrate database queries, data transformations, and Excel generation.
+
+Google Drive API
+* Authenticate via OAuth2 in a Python script (using google-auth, google-auth-oauthlib).
+* Upload or overwrite files in Drive automatically using googleapiclient and MediaFileUpload.
 
 3.2. Technical Skills
+SQL
+* Extract and transform reporting data from fact tables (e.g., fact_backdate_funding_monthly).
+* Handle filtering, sorting, and joins to retrieve KPI columns for financial analysis.
 
-SQL:
-* Write and optimize complex SQL queries to extract data from PostgreSQL (e.g., querying the fact_backdate_asm_monthly table with ranking and KPI columns).
-* Handle large datasets with filtering and sorting conditions.
-* Use Stored Procedures to automate processes.
-
-
-Python:
-* Utilize the psycopg2 library to connect to and query PostgreSQL databases.
-* Process data with pandas to create DataFrames and export to Excel.
-* Manage errors and database connections using try-except blocks, ensuring safe connection closure.
-
-
-Database Management:
-* Understand how to retrieve and manage data in fact tables for reporting purposes.
-* Skilled in handling complex data columns such as financial KPIs and rankings.
+Python
+* Connect to PostgreSQL with psycopg2, execute queries, and handle exceptions to ensure safe cleanup.
+* Process query results in pandas.DataFrame, including clearing specific rows/columns, scaling numeric values, and rounding.
+* Generate an Excel file with pandas + openpyxl and apply:
+    * Column headers styling (fonts, fills, alignment).
+    * Row-and-cell-level formatting (color fills, merged headers, column widths, row heights, custom number formats).
+* Integrate Google Drive upload:
+    * Authenticate via InstalledAppFlow or service account.
+    * Build a Drive client (build('drive', 'v3', ...)) and use MediaFileUpload to push the finalized Excel file to a specified folder.
+    * Automate the upload step so that every script run overwrites or creates the report on Drive without manual intervention.
 
 
+3.3. Domain Knowledge
+Finance Reporting
+* Understand key financial metrics (e.g., budgets, totals, regional allocations) and how they feed into monthly/quarterly reports.
+* Interpret and manipulate financial KPIs for accurate presentation.
 
-3.3. Domains
-
-Finance:
-* Gain deep understanding of financial KPIs (e.g., tongdiem, ltn_avg, approval_rate_avg, npl_truoc_wo_luy_ke) and ASM ranking reports.
-* Master the organization of data to support financial reporting and performance evaluation.
-
-
-Data Management:
-* Skilled in extracting, validating, and processing data from databases to ensure accuracy.
-* Apply the ETL process to transform raw data into formatted reports.
-
-
-
-This project enhances the ability to use SQL and Python for automating financial reporting, while improving understanding of data management and financial processes in the enterprise.
+Data Management / ETL
+* Extract, transform, and load (ETL) raw data from PostgreSQL into a polished Excel report.
+* Validate, clean, and restructure tabular data to meet business requirements.

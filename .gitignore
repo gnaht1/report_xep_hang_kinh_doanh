@@ -1,0 +1,59 @@
+# ===============================================================
+#  Git Ignore File for Python Projects
+#  This file tells Git which files and folders to ignore.
+# ===============================================================
+
+# Secret files from Google API
+# NEVER commit these files to your repository!
+credentials.json
+token.json
+
+# Python general
+# ----------------
+# Byte-compiled / optimized / C-extensions
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+# --------------------
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Other
+# -----
+# IDE / Editor specific files
+.idea/
+.vscode/
+*.swp
+
+# OS-specific files
+.DS_Store
+Thumbs.db

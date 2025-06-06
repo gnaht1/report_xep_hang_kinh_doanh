@@ -6,6 +6,95 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, numbers
 from openpyxl.utils import get_column_letter
 import numpy as np
 import math
+import os
+import os.path
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaFileUpload
+
+# --- Google Drive Configuration ---
+# If modifying these scopes, delete the file token.json.
+SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+
+
+def authenticate_google_drive():
+    """Authenticates with the Google Drive API and returns the service object."""
+    creds = None
+
+    # Get the absolute path of the directory containing the running script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    token_path = os.path.join(script_dir, "token.json")
+    credential_path = os.path.join(script_dir, "credentials.json")
+
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first time.
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            # --- PATH FIX: Use absolute path to credentials.json ---
+            print(f"Searching for credentials file at: {credential_path}")
+            if not os.path.exists(credential_path):
+                print("\nERROR: Could not find credentials.json at the specified path.")
+                print(">>> Please CHECK AGAIN and ensure that:")
+                print(
+                    "1. The file is named exactly 'credentials.json' (not 'credentials.json.txt')."
+                )
+                print(
+                    "2. The 'credentials.json' file is placed in the SAME FOLDER as this Python script.\n"
+                )
+                return None
+
+            flow = InstalledAppFlow.from_client_secrets_file(credential_path, SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        # Save the credentials for the next run
+        with open(token_path, "w") as token:
+            token.write(creds.to_json())
+
+    try:
+        service = build("drive", "v3", credentials=creds)
+        print("Google Drive authentication successful.")
+        return service
+    except HttpError as error:
+        print(f"An error occurred while building the Drive service: {error}")
+        return None
+
+
+def upload_to_drive(service, file_path, folder_id=None):
+    """Uploads a file to Google Drive, optionally to a specific folder."""
+    if not service:
+        print("Upload failed: Google Drive service is not authenticated.")
+        return
+
+    file_name = os.path.basename(file_path)
+    # Define file metadata, including the parent folder if an ID is provided
+    file_metadata = {"name": file_name}
+    if folder_id:
+        file_metadata["parents"] = [folder_id]
+
+    media = MediaFileUpload(
+        file_path,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    try:
+        file = (
+            service.files()
+            .create(body=file_metadata, media_body=media, fields="id, webViewLink")
+            .execute()
+        )
+        print(f"File upload successful! File ID: {file.get('id')}")
+        print(f"You can view the file at: {file.get('webViewLink')}")
+    except HttpError as error:
+        print(f"An error occurred during file upload: {error}")
 
 
 def export_postgres_to_excel(db_params, query, output_file):
@@ -480,10 +569,18 @@ def export_postgres_to_excel(db_params, query, output_file):
                 end_column=col_kvml_total_idx,
             )
 
-        # === Step 12: Save the file ===
+        # === Step 12: Save the file locally ===
         writer.close()
         writer = None
-        print(f"Data successfully exported to {output_file}")
+        print(f"Excel file created successfully: {output_file}")
+
+        # === Step 13: Upload to Google Drive ===
+        print("\n--- INITIATING GOOGLE DRIVE UPLOAD ---")
+        print("Authenticating...")
+        drive_service = authenticate_google_drive()
+        if drive_service:
+            print(f"Uploading file '{output_file}'...")
+            upload_to_drive(drive_service, output_file)
 
     except Error as db_error:
         print(f"Database Error: {db_error}")
