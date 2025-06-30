@@ -84,6 +84,7 @@ BEGIN
     kpi_aggregated AS (
         SELECT
             cta.area_cde,
+            COALESCE(SUM(k.outstanding_principal), 0) AS op_total,
             COALESCE(SUM(CASE WHEN k.max_bucket = 1 THEN k.outstanding_principal ELSE 0 END), 0) AS op_b1,
             COALESCE(SUM(CASE WHEN k.max_bucket = 2 THEN k.outstanding_principal ELSE 0 END), 0) AS op_b2,
             COALESCE(SUM(CASE WHEN k.max_bucket BETWEEN 2 AND 5 THEN k.outstanding_principal ELSE 0 END), 0) AS op_b2_5,
@@ -98,6 +99,7 @@ BEGIN
     )
     SELECT
         area_cde,
+        op_total / NULLIF(SUM(op_total) OVER (), 0) AS ratio_op_total,
         op_b1 / NULLIF(SUM(op_b1) OVER (), 0) AS ratio_op_b1,
         op_b2 / NULLIF(SUM(op_b2) OVER (), 0) AS ratio_op_b2,
         op_b2_5 / NULLIF(SUM(op_b2_5) OVER (), 0) AS ratio_op_b2_5,
@@ -147,6 +149,9 @@ BEGIN
             COALESCE(SUM(CASE WHEN account_code = 716000000001 THEN total_amount END), 0) AS f11_amount,
             COALESCE(SUM(CASE WHEN account_code = 719000030002 THEN total_amount END), 0) AS f12_amount,
             COALESCE(SUM(CASE WHEN account_code IN (719000030003,719000030103,790000030003,790000030103,790000030004,790000030104) THEN total_amount END), 0) AS f13_amount,
+            COALESCE(SUM(CASE WHEN account_code IN (702000010001,702000010002,704000000001,705000000001,709000000001,714000000002,714000000003,714037000001,714000000004,714014000001,715000000001,715037000001,719000000001,709000000101,719000000101) THEN total_amount END), 0) AS f20_amount,
+            COALESCE(SUM(CASE WHEN account_code IN (816000000001,816000000002,816000000003) THEN total_amount END), 0) AS f21_amount,
+            COALESCE(SUM(CASE WHEN account_code IN (809000000002,809000000001,811000000001,811000000102,811000000002,811014000001,811037000001,811039000001,811041000001,815000000001,819000000002,819000000003,819000000001,790000000003,790000050101,790000000101,790037000001,849000000001,899000000003,899000000002,811000000101,819000060001) THEN total_amount END), 0) AS f22_amount,
             COALESCE(SUM(CASE WHEN CAST(account_code AS VARCHAR) LIKE '85%' THEN total_amount END), 0) AS f25_amount,
             COALESCE(SUM(CASE WHEN CAST(account_code AS VARCHAR) LIKE '86%' THEN total_amount END), 0) AS f26_amount,
             COALESCE(SUM(CASE WHEN CAST(account_code AS VARCHAR) LIKE '87%' THEN total_amount END), 0) AS f27_amount
@@ -163,6 +168,9 @@ BEGIN
             (SELECT f11_amount FROM head_distributable) * r.ratio_psdn + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code = 716000000001), 0) AS f11_amount,
             (SELECT f12_amount FROM head_distributable) * r.ratio_op_b1 + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code = 719000030002), 0) AS f12_amount,
             (SELECT f13_amount FROM head_distributable) * r.ratio_op_b2_5 + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code IN (719000030003,719000030103,790000030003,790000030103,790000030004,790000030104)), 0) AS f13_amount,
+            (SELECT f20_amount FROM head_distributable) * r.ratio_op_total + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code IN (702000010001,702000010002,704000000001,705000000001,709000000001,714000000002,714000000003,714037000001,714000000004,714014000001,715000000001,715037000001,719000000001,709000000101,719000000101)), 0) AS f20_amount,
+            (SELECT f21_amount FROM head_distributable) * r.ratio_op_total + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code IN (816000000001,816000000002,816000000003)), 0) AS f21_amount,
+            (SELECT f22_amount FROM head_distributable) * r.ratio_op_total + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code IN (809000000002,809000000001,811000000001,811000000102,811000000002,811014000001,811037000001,811039000001,811041000001,815000000001,819000000002,819000000003,819000000001,790000000003,790000050101,790000000101,790037000001,849000000001,899000000003,899000000002,811000000101,819000060001)), 0) AS f22_amount,
             (SELECT f25_amount FROM head_distributable) * (s.sm_count::numeric / NULLIF((SELECT SUM(sm_count) FROM tmp_sm_counts), 0)) + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND CAST(t.account_code AS VARCHAR) LIKE '85%'), 0) AS f25_amount,
             (SELECT f26_amount FROM head_distributable) * (s.sm_count::numeric / NULLIF((SELECT SUM(sm_count) FROM tmp_sm_counts), 0)) + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND CAST(t.account_code AS VARCHAR) LIKE '86%'), 0) AS f26_amount,
             (SELECT f27_amount FROM head_distributable) * (s.sm_count::numeric / NULLIF((SELECT SUM(sm_count) FROM tmp_sm_counts), 0)) + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND CAST(t.account_code AS VARCHAR) LIKE '87%'), 0) AS f27_amount
@@ -171,14 +179,13 @@ BEGIN
     ),
     -- 3. Gộp số liệu gốc của Hội sở và Khu vực
     base_metrics AS (
-        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f25_amount, f26_amount, f27_amount FROM regional_final_amounts
+        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f20_amount, f21_amount, f22_amount, f25_amount, f26_amount, f27_amount FROM regional_final_amounts
         UNION ALL
-        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f25_amount, f26_amount, f27_amount FROM head_distributable
+        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f20_amount, f21_amount, f22_amount, f25_amount, f26_amount, f27_amount FROM head_distributable
     ),
     -- 4. Tính toán các chi phí vốn và các chỉ số tổng hợp cuối cùng
     final_calcs AS (
         WITH 
-        -- Tử số: thu nhập thẻ trực tiếp của từng khu vực (ko tính phần phân bổ)
         regional_direct_card_income AS (
             SELECT
                 area_code,
@@ -187,24 +194,19 @@ BEGIN
             WHERE area_code != 'A' AND account_code IN (702000030002, 702000030001, 702000030102, 702000030012, 702000030112, 716000000001, 719000030002, 719000030003,719000030103,790000030003,790000030103,790000030004,790000030104)
             GROUP BY area_code
         ),
-        -- Mẫu số và các giá trị cần phân bổ
         totals_for_ratio AS (
             SELECT
-                -- Doanh thu nguồn vốn toàn hàng
                 (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE account_code IN ('702000040001','702000040002','703000000001','703000000002','703000000003','703000000004', '721000000041','721000000037','721000000039','721000000013','721000000014','721000000036','723000000014', '723000000037','821000000014','821000000037','821000000039','821000000041','821000000013','821000000036', '823000000014','823000000037','741031000001','741031000002','841000000001','841000000005','841000000004', '701000000001','701000000002','701037000001','701037000002','701000000101')) AS v_doanh_thu_nguon_von_toan_hang,
-                -- Lãi thu từ thẻ vay toàn hàng (KVML) - đã phân bổ
                 (SELECT SUM(f9_amount + f10_amount) FROM regional_final_amounts) AS v_lai_tvth,
-                -- CP vốn TT 2 cần phân bổ
                 (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE area_code = 'A' AND account_code IN (801000000001, 802000000001)) AS v_cpvtt2_head,
-                -- CP vốn CCTG cần phân bổ
                 (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE area_code = 'A' AND account_code = 803000000001) AS v_cpcctg_head
         )
         SELECT
             bm.area_cde,
-            bm.f9_amount, bm.f10_amount, bm.f11_amount, bm.f12_amount, bm.f13_amount, bm.f25_amount, bm.f26_amount, bm.f27_amount,
+            bm.f9_amount, bm.f10_amount, bm.f11_amount, bm.f12_amount, bm.f13_amount, bm.f20_amount, bm.f21_amount, bm.f22_amount, bm.f25_amount, bm.f26_amount, bm.f27_amount,
             (bm.f9_amount + bm.f10_amount + bm.f11_amount + bm.f12_amount + bm.f13_amount) AS f4_amount,
+            (bm.f20_amount + bm.f21_amount + bm.f22_amount) AS f6_amount,
             (bm.f25_amount + bm.f26_amount + bm.f27_amount) AS f8_amount,
-            -- Phân bổ chi phí vốn (đã sửa lỗi)
             CASE 
                 WHEN bm.area_cde = 'A' THEN (SELECT v_cpvtt2_head FROM totals_for_ratio)
                 ELSE COALESCE((SELECT v_cpvtt2_head FROM totals_for_ratio) * rdci.v_tnt_regional / NULLIF((SELECT v_doanh_thu_nguon_von_toan_hang + v_lai_tvth FROM totals_for_ratio), 0), 0)
@@ -223,10 +225,14 @@ BEGIN
         SELECT area_cde, 11, f11_amount FROM final_calcs UNION ALL
         SELECT area_cde, 12, f12_amount FROM final_calcs UNION ALL
         SELECT area_cde, 13, f13_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 20, f20_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 21, f21_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 22, f22_amount FROM final_calcs UNION ALL
         SELECT area_cde, 25, f25_amount FROM final_calcs UNION ALL
         SELECT area_cde, 26, f26_amount FROM final_calcs UNION ALL
         SELECT area_cde, 27, f27_amount FROM final_calcs UNION ALL
         SELECT area_cde, 4, f4_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 6, f6_amount FROM final_calcs UNION ALL
         SELECT area_cde, 8, f8_amount FROM final_calcs UNION ALL
         SELECT area_cde, 15, f15_amount FROM final_calcs UNION ALL
         SELECT area_cde, 17, f17_amount FROM final_calcs UNION ALL
@@ -299,12 +305,12 @@ BEGIN
     v_end_log_time := clock_timestamp();
     UPDATE log_tracking SET end_time = v_end_log_time, is_successful = true WHERE id = v_log_id;
 
-EXCEPTION
-    WHEN OTHERS THEN
-        v_end_log_time := clock_timestamp();
-        v_error_msg := SQLERRM || ' - ' || SQLSTATE;
-        UPDATE log_tracking SET end_time = v_end_log_time, is_successful = false, error_log = v_error_msg WHERE id = v_log_id;
-        RAISE NOTICE 'Lỗi xảy ra: %', v_error_msg;
+-- EXCEPTION
+--     WHEN OTHERS THEN
+--         v_end_log_time := clock_timestamp();
+--         v_error_msg := SQLERRM || ' - ' || SQLSTATE;
+--         UPDATE log_tracking SET end_time = v_end_log_time, is_successful = false, error_log = v_error_msg WHERE id = v_log_id;
+--         RAISE NOTICE 'Lỗi xảy ra: %', v_error_msg;
 END;
 $$ LANGUAGE plpgsql;
 --------------------------------------------
