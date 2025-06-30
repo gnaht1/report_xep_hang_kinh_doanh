@@ -154,7 +154,8 @@ BEGIN
             COALESCE(SUM(CASE WHEN account_code IN (809000000002,809000000001,811000000001,811000000102,811000000002,811014000001,811037000001,811039000001,811041000001,815000000001,819000000002,819000000003,819000000001,790000000003,790000050101,790000000101,790037000001,849000000001,899000000003,899000000002,811000000101,819000060001) THEN total_amount END), 0) AS f22_amount,
             COALESCE(SUM(CASE WHEN CAST(account_code AS VARCHAR) LIKE '85%' THEN total_amount END), 0) AS f25_amount,
             COALESCE(SUM(CASE WHEN CAST(account_code AS VARCHAR) LIKE '86%' THEN total_amount END), 0) AS f26_amount,
-            COALESCE(SUM(CASE WHEN CAST(account_code AS VARCHAR) LIKE '87%' THEN total_amount END), 0) AS f27_amount
+            COALESCE(SUM(CASE WHEN CAST(account_code AS VARCHAR) LIKE '87%' THEN total_amount END), 0) AS f27_amount,
+            COALESCE(SUM(CASE WHEN account_code IN (790000050001, 882200050001, 790000030001, 882200030001, 790000000001, 790000020101, 882200000001, 882200050101, 882200020101, 882200060001,790000050101, 882200030101) then total_amount END), 0) AS f28_amount
         FROM tmp_txn_sums
         WHERE area_code = 'A'
         GROUP BY area_cde
@@ -173,15 +174,17 @@ BEGIN
             (SELECT f22_amount FROM head_distributable) * r.ratio_op_total + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code IN (809000000002,809000000001,811000000001,811000000102,811000000002,811014000001,811037000001,811039000001,811041000001,815000000001,819000000002,819000000003,819000000001,790000000003,790000050101,790000000101,790037000001,849000000001,899000000003,899000000002,811000000101,819000060001)), 0) AS f22_amount,
             (SELECT f25_amount FROM head_distributable) * (s.sm_count::numeric / NULLIF((SELECT SUM(sm_count) FROM tmp_sm_counts), 0)) + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND CAST(t.account_code AS VARCHAR) LIKE '85%'), 0) AS f25_amount,
             (SELECT f26_amount FROM head_distributable) * (s.sm_count::numeric / NULLIF((SELECT SUM(sm_count) FROM tmp_sm_counts), 0)) + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND CAST(t.account_code AS VARCHAR) LIKE '86%'), 0) AS f26_amount,
-            (SELECT f27_amount FROM head_distributable) * (s.sm_count::numeric / NULLIF((SELECT SUM(sm_count) FROM tmp_sm_counts), 0)) + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND CAST(t.account_code AS VARCHAR) LIKE '87%'), 0) AS f27_amount
+            (SELECT f27_amount FROM head_distributable) * (s.sm_count::numeric / NULLIF((SELECT SUM(sm_count) FROM tmp_sm_counts), 0)) + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND CAST(t.account_code AS VARCHAR) LIKE '87%'), 0) AS f27_amount,
+            (SELECT f28_amount FROM head_distributable) * r.ratio_op_b2_5 + COALESCE((SELECT SUM(t.total_amount) FROM tmp_txn_sums t WHERE t.area_code = r.area_cde AND t.account_code IN (790000050001, 882200050001, 790000030001, 882200030001, 790000000001, 790000020101, 882200000001
+	, 882200050101, 882200020101, 882200060001,790000050101, 882200030101)), 0) AS f28_amount
         FROM tmp_kpi_ratios r
         JOIN tmp_sm_counts s ON r.area_cde = s.area_cde
     ),
     -- 3. Gộp số liệu gốc của Hội sở và Khu vực
     base_metrics AS (
-        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f20_amount, f21_amount, f22_amount, f25_amount, f26_amount, f27_amount FROM regional_final_amounts
+        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f20_amount, f21_amount, f22_amount, f25_amount, f26_amount, f27_amount, f28_amount FROM regional_final_amounts
         UNION ALL
-        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f20_amount, f21_amount, f22_amount, f25_amount, f26_amount, f27_amount FROM head_distributable
+        SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f20_amount, f21_amount, f22_amount, f25_amount, f26_amount, f27_amount, f28_amount FROM head_distributable
     ),
     -- 4. Tính toán các chi phí vốn và các chỉ số tổng hợp cuối cùng
     final_calcs AS (
@@ -203,7 +206,7 @@ BEGIN
         )
         SELECT
             bm.area_cde,
-            bm.f9_amount, bm.f10_amount, bm.f11_amount, bm.f12_amount, bm.f13_amount, bm.f20_amount, bm.f21_amount, bm.f22_amount, bm.f25_amount, bm.f26_amount, bm.f27_amount,
+            bm.f9_amount, bm.f10_amount, bm.f11_amount, bm.f12_amount, bm.f13_amount, bm.f20_amount, bm.f21_amount, bm.f22_amount, bm.f25_amount, bm.f26_amount, bm.f27_amount,bm.f28_amount,
             (bm.f9_amount + bm.f10_amount + bm.f11_amount + bm.f12_amount + bm.f13_amount) AS f4_amount,
             (bm.f20_amount + bm.f21_amount + bm.f22_amount) AS f6_amount,
             (bm.f25_amount + bm.f26_amount + bm.f27_amount) AS f8_amount,
@@ -231,6 +234,7 @@ BEGIN
         SELECT area_cde, 25, f25_amount FROM final_calcs UNION ALL
         SELECT area_cde, 26, f26_amount FROM final_calcs UNION ALL
         SELECT area_cde, 27, f27_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 28, f28_amount FROM final_calcs UNION ALL
         SELECT area_cde, 4, f4_amount FROM final_calcs UNION ALL
         SELECT area_cde, 6, f6_amount FROM final_calcs UNION ALL
         SELECT area_cde, 8, f8_amount FROM final_calcs UNION ALL
