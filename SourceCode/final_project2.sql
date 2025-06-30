@@ -45,7 +45,6 @@ CREATE TABLE fact_backdate_asm_monthly (
 --------------------------------------------------------------------------------
 -- STORED PROCEDURE TÍNH TOÁN BÁO CÁO (PHIÊN BẢN ĐÃ SỬA LỖI VÀ HOÀN CHỈNH)
 --------------------------------------------------------------------------------
--- Procedure đã được tối ưu với cấu trúc bảng mới
 -- Procedure đã được tối ưu với cấu trúc bảng mới và sửa lỗi
 CREATE OR REPLACE PROCEDURE prc_generate_summary_reports_monthly(p_rp_month BIGINT)
 AS $$
@@ -176,38 +175,62 @@ BEGIN
         UNION ALL
         SELECT area_cde, f9_amount, f10_amount, f11_amount, f12_amount, f13_amount, f25_amount, f26_amount, f27_amount FROM head_distributable
     ),
-    -- 4. Tính các chỉ số tổng hợp và chi phí vốn
-    composite_and_capital_costs AS (
-        WITH totals_for_ratio AS (
+    -- 4. Tính toán các chi phí vốn và các chỉ số tổng hợp cuối cùng
+    final_calcs AS (
+        WITH 
+        -- Tử số: thu nhập thẻ trực tiếp của từng khu vực (ko tính phần phân bổ)
+        regional_direct_card_income AS (
             SELECT
-                (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE account_code IN ('702000040001','702000040002','703000000001','703000000002','703000000003','703000000004', '721000000041','721000000037','721000000039','721000000013','721000000014','721000000036','723000000014', '723000000037','821000000014','821000000037','821000000039','821000000041','821000000013','821000000036', '823000000014','823000000037','741031000001','741031000002','841000000001','841000000005','841000000004', '701000000001','701000000002','701037000001','701037000002','701000000101')) AS total_capital_revenue,
-                (SELECT SUM(f9_amount + f10_amount) FROM base_metrics) AS total_card_interest,
-                (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE area_code = 'A' AND account_code IN (801000000001, 802000000001)) AS distributable_f15,
-                (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE area_code = 'A' AND account_code = 803000000001) AS distributable_f17
+                area_code,
+                SUM(total_amount) as v_tnt_regional
+            FROM tmp_txn_sums
+            WHERE area_code != 'A' AND account_code IN (702000030002, 702000030001, 702000030102, 702000030012, 702000030112, 716000000001, 719000030002, 719000030003,719000030103,790000030003,790000030103,790000030004,790000030104)
+            GROUP BY area_code
+        ),
+        -- Mẫu số và các giá trị cần phân bổ
+        totals_for_ratio AS (
+            SELECT
+                -- Doanh thu nguồn vốn toàn hàng
+                (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE account_code IN ('702000040001','702000040002','703000000001','703000000002','703000000003','703000000004', '721000000041','721000000037','721000000039','721000000013','721000000014','721000000036','723000000014', '723000000037','821000000014','821000000037','821000000039','821000000041','821000000013','821000000036', '823000000014','823000000037','741031000001','741031000002','841000000001','841000000005','841000000004', '701000000001','701000000002','701037000001','701037000002','701000000101')) AS v_doanh_thu_nguon_von_toan_hang,
+                -- Lãi thu từ thẻ vay toàn hàng (KVML) - đã phân bổ
+                (SELECT SUM(f9_amount + f10_amount) FROM regional_final_amounts) AS v_lai_tvth,
+                -- CP vốn TT 2 cần phân bổ
+                (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE area_code = 'A' AND account_code IN (801000000001, 802000000001)) AS v_cpvtt2_head,
+                -- CP vốn CCTG cần phân bổ
+                (SELECT SUM(total_amount) FROM tmp_txn_sums WHERE area_code = 'A' AND account_code = 803000000001) AS v_cpcctg_head
         )
         SELECT
             bm.area_cde,
-            bm.f9_amount + bm.f10_amount + bm.f11_amount + bm.f12_amount + bm.f13_amount AS f4_amount,
-            bm.f25_amount + bm.f26_amount + bm.f27_amount AS f8_amount,
-            (tr.distributable_f15 * (bm.f9_amount + bm.f10_amount)) / NULLIF(tr.total_capital_revenue + tr.total_card_interest, 0) AS f15_amount,
-            (tr.distributable_f17 * (bm.f9_amount + bm.f10_amount)) / NULLIF(tr.total_capital_revenue + tr.total_card_interest, 0) AS f17_amount
-        FROM base_metrics bm, totals_for_ratio tr
+            bm.f9_amount, bm.f10_amount, bm.f11_amount, bm.f12_amount, bm.f13_amount, bm.f25_amount, bm.f26_amount, bm.f27_amount,
+            (bm.f9_amount + bm.f10_amount + bm.f11_amount + bm.f12_amount + bm.f13_amount) AS f4_amount,
+            (bm.f25_amount + bm.f26_amount + bm.f27_amount) AS f8_amount,
+            -- Phân bổ chi phí vốn (đã sửa lỗi)
+            CASE 
+                WHEN bm.area_cde = 'A' THEN (SELECT v_cpvtt2_head FROM totals_for_ratio)
+                ELSE COALESCE((SELECT v_cpvtt2_head FROM totals_for_ratio) * rdci.v_tnt_regional / NULLIF((SELECT v_doanh_thu_nguon_von_toan_hang + v_lai_tvth FROM totals_for_ratio), 0), 0)
+            END AS f15_amount,
+            CASE
+                WHEN bm.area_cde = 'A' THEN (SELECT v_cpcctg_head FROM totals_for_ratio)
+                ELSE COALESCE((SELECT v_cpcctg_head FROM totals_for_ratio) * rdci.v_tnt_regional / NULLIF((SELECT v_doanh_thu_nguon_von_toan_hang + v_lai_tvth FROM totals_for_ratio), 0), 0)
+            END AS f17_amount
+        FROM base_metrics bm
+        LEFT JOIN regional_direct_card_income rdci ON bm.area_cde = rdci.area_code
     ),
     -- 5. Unpivot tất cả dữ liệu thành dạng dòng để INSERT
     final_data AS (
-        SELECT area_cde, 9 AS funding_id, f9_amount AS amount FROM base_metrics UNION ALL
-        SELECT area_cde, 10, f10_amount FROM base_metrics UNION ALL
-        SELECT area_cde, 11, f11_amount FROM base_metrics UNION ALL
-        SELECT area_cde, 12, f12_amount FROM base_metrics UNION ALL
-        SELECT area_cde, 13, f13_amount FROM base_metrics UNION ALL
-        SELECT area_cde, 25, f25_amount FROM base_metrics UNION ALL
-        SELECT area_cde, 26, f26_amount FROM base_metrics UNION ALL
-        SELECT area_cde, 27, f27_amount FROM base_metrics UNION ALL
-        SELECT area_cde, 4, f4_amount FROM composite_and_capital_costs UNION ALL
-        SELECT area_cde, 8, f8_amount FROM composite_and_capital_costs UNION ALL
-        SELECT area_cde, 15, f15_amount FROM composite_and_capital_costs UNION ALL
-        SELECT area_cde, 17, f17_amount FROM composite_and_capital_costs UNION ALL
-        SELECT area_cde, 5, f15_amount + f17_amount FROM composite_and_capital_costs -- funding_id 5 = 15 + 17
+        SELECT area_cde, 9 AS funding_id, f9_amount AS amount FROM final_calcs UNION ALL
+        SELECT area_cde, 10, f10_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 11, f11_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 12, f12_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 13, f13_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 25, f25_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 26, f26_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 27, f27_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 4, f4_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 8, f8_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 15, f15_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 17, f17_amount FROM final_calcs UNION ALL
+        SELECT area_cde, 5, f15_amount + f17_amount FROM final_calcs -- funding_id 5 = 15 + 17
     )
     -- 6. Insert dữ liệu cuối cùng vào bảng fact
     INSERT INTO fact_backdate_funding_monthly(funding_id, month_key, area_code, amount)
