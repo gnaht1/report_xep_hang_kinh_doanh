@@ -753,7 +753,7 @@ begin
 	-- head 
 	SELECT SUM(amount)  into v_laitronghan_head
 	FROM fact_txn_month f
-	WHERE account_code IN ( 702000030002, 702000030001,702000030102)
+	WHERE account_code IN (702000030002, 702000030001,702000030102)
 	AND analysis_code LIKE 'HEAD%'
 	AND CAST(TO_CHAR(transaction_date, 'YYYYMM') AS INT8) BETWEEN v_start_rp_month AND p_rp_month;
 
