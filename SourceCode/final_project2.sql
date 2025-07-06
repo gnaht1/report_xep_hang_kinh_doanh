@@ -54,6 +54,7 @@ DECLARE
     v_error_msg TEXT;
     v_log_id BIGINT;
     v_start_rp_month BIGINT := 202301; -- Tháng bắt đầu lũy kế
+    v_ltn_column TEXT;
 BEGIN
     -- ---------------------
     -- BƯỚC 1: KHỞI TẠO VÀ GHI LOG
@@ -107,14 +108,34 @@ BEGIN
         (npl + wo_lk) / NULLIF(total_outstanding + wo_lk, 0) AS npl_truoc_wo_luy_ke
     FROM kpi_aggregated;
     
-    -- Bảng tạm 2: Lấy số lượng nhân sự SM theo khu vực
-    CREATE TEMP TABLE tmp_sm_counts ON COMMIT DROP AS
+    -- Xác định cột tháng động để đếm số lượng nhân sự
     SELECT
-        am.area_cde,
-        COUNT(k.email) AS sm_count
-    FROM kpi_asm_data k
-    JOIN area_mapping am ON k.area_name = am.area_name
-    GROUP BY am.area_cde;
+        CASE (p_rp_month % 100)
+            WHEN 1 THEN 'ltn_jan'
+            WHEN 2 THEN 'ltn_feb'
+            WHEN 3 THEN 'ltn_mar'
+            WHEN 4 THEN 'ltn_apr'
+            WHEN 5 THEN 'ltn_may'
+            WHEN 6 THEN 'ltn_jun'
+            WHEN 7 THEN 'ltn_july'
+            WHEN 8 THEN 'ltn_aug'
+            WHEN 9 THEN 'ltn_sep'
+            WHEN 10 THEN 'ltn_oct'
+            WHEN 11 THEN 'ltn_nov'
+            WHEN 12 THEN 'ltn_dec'
+        END
+    INTO v_ltn_column;
+
+    -- Bảng tạm 2: Lấy số lượng nhân sự SM theo khu vực (SỬ DỤNG DYNAMIC SQL)
+    EXECUTE format('
+        CREATE TEMP TABLE tmp_sm_counts ON COMMIT DROP AS
+        SELECT
+            am.area_cde,
+            COUNT(k.%I) AS sm_count
+        FROM kpi_asm_data k
+        JOIN area_mapping am ON k.area_name = am.area_name
+        GROUP BY am.area_cde;
+    ', v_ltn_column);
 
     -- Bảng tạm 3: Tổng hợp số liệu giao dịch từ fact_txn_month
     CREATE TEMP TABLE tmp_txn_sums ON COMMIT DROP AS
@@ -269,7 +290,11 @@ BEGIN
         SELECT area_cde, 29, f29_cir FROM final_calcs UNION ALL
         SELECT area_cde, 30, f30_margin FROM final_calcs UNION ALL
         SELECT area_cde, 31, f31_hs_von FROM final_calcs UNION ALL
-        SELECT area_cde, 32, f32_hsbqns FROM final_calcs
+        SELECT area_cde, 32, f32_hsbqns FROM final_calcs UNION ALL
+        -- Bổ sung funding_id = 2 (Số lượng nhân sự)
+        SELECT area_cde, 2 AS funding_id, sm_count::NUMERIC AS amount FROM tmp_sm_counts
+        UNION ALL
+        SELECT 'A' AS area_cde, 2 AS funding_id, SUM(sm_count)::NUMERIC AS amount FROM tmp_sm_counts
     )
     -- 6. Insert dữ liệu cuối cùng vào bảng fact
     INSERT INTO fact_backdate_funding_monthly(funding_id, month_key, area_code, amount)
