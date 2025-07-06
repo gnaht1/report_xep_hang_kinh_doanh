@@ -55,6 +55,9 @@ DECLARE
     v_log_id BIGINT;
     v_start_rp_month BIGINT := 202301; -- Tháng bắt đầu lũy kế
     v_ltn_column TEXT;
+    v_psdn_column TEXT;
+    v_approved_rate_column TEXT;
+    v_month_num INT := p_rp_month % 100;
 BEGIN
     -- ---------------------
     -- BƯỚC 1: KHỞI TẠO VÀ GHI LOG
@@ -110,21 +113,23 @@ BEGIN
     
     -- Xác định cột tháng động để đếm số lượng nhân sự
     SELECT
-        CASE (p_rp_month % 100)
-            WHEN 1 THEN 'ltn_jan'
-            WHEN 2 THEN 'ltn_feb'
-            WHEN 3 THEN 'ltn_mar'
-            WHEN 4 THEN 'ltn_apr'
-            WHEN 5 THEN 'ltn_may'
-            WHEN 6 THEN 'ltn_jun'
-            WHEN 7 THEN 'ltn_july'
-            WHEN 8 THEN 'ltn_aug'
-            WHEN 9 THEN 'ltn_sep'
-            WHEN 10 THEN 'ltn_oct'
-            WHEN 11 THEN 'ltn_nov'
-            WHEN 12 THEN 'ltn_dec'
+        CASE v_month_num
+            WHEN 1 THEN 'ltn_jan' WHEN 2 THEN 'ltn_feb' WHEN 3 THEN 'ltn_mar' WHEN 4 THEN 'ltn_apr'
+            WHEN 5 THEN 'ltn_may' WHEN 6 THEN 'ltn_jun' WHEN 7 THEN 'ltn_july' WHEN 8 THEN 'ltn_aug'
+            WHEN 9 THEN 'ltn_sep' WHEN 10 THEN 'ltn_oct' WHEN 11 THEN 'ltn_nov' WHEN 12 THEN 'ltn_dec'
+        END,
+        CASE v_month_num
+            WHEN 1 THEN 'psdn_jan' WHEN 2 THEN 'psdn_feb' WHEN 3 THEN 'psdn_mar' WHEN 4 THEN 'psdn_apr'
+            WHEN 5 THEN 'psdn_may' WHEN 6 THEN 'psdn_jun' WHEN 7 THEN 'psdn_july' WHEN 8 THEN 'psdn_aug'
+            WHEN 9 THEN 'psdn_sep' WHEN 10 THEN 'psdn_oct' WHEN 11 THEN 'psdn_nov' WHEN 12 THEN 'psdn_dec'
+        END,
+        CASE v_month_num
+            WHEN 1 THEN 'approved_rate_jan' WHEN 2 THEN 'approved_rate_feb' WHEN 3 THEN 'approved_rate_mar'
+            WHEN 4 THEN 'approved_rate_apr' WHEN 5 THEN 'approved_rate_may' WHEN 6 THEN 'approved_rate_jun'
+            WHEN 7 THEN 'approved_rate_july' WHEN 8 THEN 'approved_rate_aug' WHEN 9 THEN 'approved_rate_sep'
+            WHEN 10 THEN 'approved_rate_oct' WHEN 11 THEN 'approved_rate_nov' WHEN 12 THEN 'approved_rate_dec'
         END
-    INTO v_ltn_column;
+    INTO v_ltn_column, v_psdn_column, v_approved_rate_column;
 
     -- Bảng tạm 2: Lấy số lượng nhân sự SM theo khu vực (SỬ DỤNG DYNAMIC SQL)
     EXECUTE format('
@@ -134,8 +139,9 @@ BEGIN
             COUNT(k.%I) AS sm_count
         FROM kpi_asm_data k
         JOIN area_mapping am ON k.area_name = am.area_name
+        WHERE k.%I IS NOT NULL
         GROUP BY am.area_cde;
-    ', v_ltn_column);
+    ', v_ltn_column, v_ltn_column);
 
     -- Bảng tạm 3: Tổng hợp số liệu giao dịch từ fact_txn_month
     CREATE TEMP TABLE tmp_txn_sums ON COMMIT DROP AS
@@ -303,59 +309,108 @@ BEGIN
     -- ---------------------
     -- BƯỚC 4: TÍNH TOÁN DỮ LIỆU BÁO CÁO 2 (fact_backdate_asm_monthly)
     -- ---------------------
-    WITH asm_calcs AS (
+    WITH 
+    -- CTE 1: Tính các chỉ số trung bình lũy kế
+    asm_avg_calcs AS (
+        SELECT
+            k.email,
+            (CASE v_month_num
+                WHEN 1 THEN COALESCE(k.ltn_jan, 0)
+                WHEN 2 THEN COALESCE(k.ltn_jan, 0) + COALESCE(k.ltn_feb, 0)
+                WHEN 3 THEN COALESCE(k.ltn_jan, 0) + COALESCE(k.ltn_feb, 0) + COALESCE(k.ltn_mar, 0)
+                WHEN 4 THEN COALESCE(k.ltn_jan, 0) + COALESCE(k.ltn_feb, 0) + COALESCE(k.ltn_mar, 0) + COALESCE(k.ltn_apr, 0)
+                WHEN 5 THEN COALESCE(k.ltn_jan, 0) + COALESCE(k.ltn_feb, 0) + COALESCE(k.ltn_mar, 0) + COALESCE(k.ltn_apr, 0) + COALESCE(k.ltn_may, 0)
+                -- Thêm các tháng còn lại nếu cần
+                ELSE 0
+            END)::NUMERIC / v_month_num AS ltn_avg,
+            (CASE v_month_num
+                WHEN 1 THEN COALESCE(k.psdn_jan, 0)
+                WHEN 2 THEN COALESCE(k.psdn_jan, 0) + COALESCE(k.psdn_feb, 0)
+                WHEN 3 THEN COALESCE(k.psdn_jan, 0) + COALESCE(k.psdn_feb, 0) + COALESCE(k.psdn_mar, 0)
+                WHEN 4 THEN COALESCE(k.psdn_jan, 0) + COALESCE(k.psdn_feb, 0) + COALESCE(k.psdn_mar, 0) + COALESCE(k.psdn_apr, 0)
+                WHEN 5 THEN COALESCE(k.psdn_jan, 0) + COALESCE(k.psdn_feb, 0) + COALESCE(k.psdn_mar, 0) + COALESCE(k.psdn_apr, 0) + COALESCE(k.psdn_may, 0)
+                -- Thêm các tháng còn lại nếu cần
+                ELSE 0
+            END)::NUMERIC / v_month_num AS psdn_avg,
+            (CASE v_month_num
+                WHEN 1 THEN COALESCE(k.approved_rate_jan, 0)
+                WHEN 2 THEN COALESCE(k.approved_rate_jan, 0) + COALESCE(k.approved_rate_feb, 0)
+                WHEN 3 THEN COALESCE(k.approved_rate_jan, 0) + COALESCE(k.approved_rate_feb, 0) + COALESCE(k.approved_rate_mar, 0)
+                WHEN 4 THEN COALESCE(k.approved_rate_jan, 0) + COALESCE(k.approved_rate_feb, 0) + COALESCE(k.approved_rate_mar, 0) + COALESCE(k.approved_rate_apr, 0)
+                WHEN 5 THEN COALESCE(k.approved_rate_jan, 0) + COALESCE(k.approved_rate_feb, 0) + COALESCE(k.approved_rate_mar, 0) + COALESCE(k.approved_rate_apr, 0) + COALESCE(k.approved_rate_may, 0)
+                -- Thêm các tháng còn lại nếu cần
+                ELSE 0
+            END)::NUMERIC / v_month_num AS approval_rate_avg
+        FROM kpi_asm_data k
+        WHERE 
+            CASE
+                WHEN v_ltn_column = 'ltn_jan' THEN k.ltn_jan IS NOT NULL
+                WHEN v_ltn_column = 'ltn_feb' THEN k.ltn_feb IS NOT NULL
+                -- Thêm các tháng còn lại
+                ELSE FALSE
+            END
+    ),
+    -- CTE 2: Tập hợp tất cả dữ liệu cần thiết cho báo cáo ASM
+    asm_full_data AS (
         SELECT
             am.area_cde,
             k.area_name,
             k.email,
-            (CASE
-                WHEN p_rp_month % 100 = 1 THEN k.ltn_jan
-                WHEN p_rp_month % 100 = 2 THEN k.ltn_jan + k.ltn_feb
-                WHEN p_rp_month % 100 = 3 THEN k.ltn_jan + k.ltn_feb + k.ltn_mar
-                -- ... thêm các tháng còn lại
-                ELSE 0
-            END)::NUMERIC / (p_rp_month % 100) AS ltn_avg,
-            -- ... Tương tự cho psdn_avg, approval_rate_avg
-            r.npl_truoc_wo_luy_ke,
+            avg.ltn_avg,
+            avg.psdn_avg,
+            avg.approval_rate_avg,
+            ratios.npl_truoc_wo_luy_ke,
             (SELECT amount FROM fact_backdate_funding_monthly sub WHERE sub.month_key = p_rp_month AND sub.funding_id = 29 AND sub.area_code = am.area_cde) AS cir,
             (SELECT amount FROM fact_backdate_funding_monthly sub WHERE sub.month_key = p_rp_month AND sub.funding_id = 30 AND sub.area_code = am.area_cde) AS margin,
             (SELECT amount FROM fact_backdate_funding_monthly sub WHERE sub.month_key = p_rp_month AND sub.funding_id = 31 AND sub.area_code = am.area_cde) AS hs_von,
             (SELECT amount FROM fact_backdate_funding_monthly sub WHERE sub.month_key = p_rp_month AND sub.funding_id = 32 AND sub.area_code = am.area_cde) AS hsbq_nhan_su
         FROM kpi_asm_data k
         JOIN area_mapping am ON k.area_name = am.area_name
-        LEFT JOIN tmp_kpi_ratios r ON am.area_cde = r.area_cde
+        JOIN asm_avg_calcs avg ON k.email = avg.email
+        LEFT JOIN tmp_kpi_ratios ratios ON am.area_cde = ratios.area_cde
     ),
+    -- CTE 3: Xếp hạng các chỉ số
     ranked_data AS (
         SELECT
             *,
             RANK() OVER (ORDER BY ltn_avg DESC) as rank_ltn_avg,
+            RANK() OVER (ORDER BY psdn_avg DESC) as rank_psdn_avg,
+            RANK() OVER (ORDER BY approval_rate_avg DESC) as rank_approval_rate_avg,
+            RANK() OVER (ORDER BY npl_truoc_wo_luy_ke ASC) as rank_npl_truoc_wo_luy_ke,
             DENSE_RANK() OVER (ORDER BY cir ASC) as rank_cir,
             DENSE_RANK() OVER (ORDER BY margin DESC) as rank_margin,
             DENSE_RANK() OVER (ORDER BY hs_von DESC) as rank_hs_von,
-            DENSE_RANK() OVER (ORDER BY hsbq_nhan_su DESC) as rank_hsbq_nhan_su,
-            RANK() OVER (ORDER BY npl_truoc_wo_luy_ke ASC) as rank_npl_truoc_wo_luy_ke
-        FROM asm_calcs
+            DENSE_RANK() OVER (ORDER BY hsbq_nhan_su DESC) as rank_hsbq_nhan_su
+        FROM asm_full_data
     ),
-    final_asm_data AS (
+    -- CTE 4: Tính điểm
+    final_scores AS (
         SELECT
             *,
-            (rank_ltn_avg + rank_npl_truoc_wo_luy_ke) AS diem_quy_mo, -- Cần thêm các rank khác nếu có
+            (rank_ltn_avg + rank_psdn_avg + rank_approval_rate_avg + rank_npl_truoc_wo_luy_ke) AS diem_quy_mo,
             (rank_cir + rank_margin + rank_hs_von + rank_hsbq_nhan_su) as diem_fin
         FROM ranked_data
     )
-    INSERT INTO fact_backdate_asm_monthly(month_key, area_cde, area_name, email, tongdiem, rank_final, ltn_avg, rank_ltn_avg, diem_quy_mo, diem_fin)
+    -- CTE 5: Xếp hạng cuối cùng
+    INSERT INTO fact_backdate_asm_monthly(
+        month_key, area_cde, area_name, email, tongdiem, rank_final, 
+        ltn_avg, rank_ltn_avg, psdn_avg, rank_psdn_avg, approval_rate_avg, rank_approval_rate_avg,
+        npl_truoc_wo_luy_ke, rank_npl_truoc_wo_luy_ke, diem_quy_mo, rank_ptkd,
+        cir, rank_cir, margin, rank_margin, hs_von, rank_hs_von, hsbq_nhan_su, rank_hsbq_nhan_su,
+        diem_fin, rank_fin
+    )
     SELECT
-        p_rp_month,
-        area_cde,
-        area_name,
-        email,
+        p_rp_month, area_cde, area_name, email,
         diem_quy_mo + diem_fin AS tongdiem,
         RANK() OVER (ORDER BY (diem_quy_mo + diem_fin) ASC) as rank_final,
-        ltn_avg,
-        rank_ltn_avg,
+        ltn_avg, rank_ltn_avg, psdn_avg, rank_psdn_avg, approval_rate_avg, rank_approval_rate_avg,
+        npl_truoc_wo_luy_ke, rank_npl_truoc_wo_luy_ke,
         diem_quy_mo,
-        diem_fin
-    FROM final_asm_data;
+        RANK() OVER (ORDER BY diem_quy_mo ASC) as rank_ptkd,
+        cir, rank_cir, margin, rank_margin, hs_von, rank_hs_von, hsbq_nhan_su, rank_hsbq_nhan_su,
+        diem_fin,
+        RANK() OVER (ORDER BY diem_fin ASC) as rank_fin
+    FROM final_scores;
 
     -- ---------------------
     -- BƯỚC 5: KẾT THÚC VÀ GHI LOG
