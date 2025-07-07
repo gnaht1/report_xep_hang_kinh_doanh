@@ -301,7 +301,7 @@ def export_postgres_to_excel(db_params, query, output_file):
             cell.font = header_font
             cell.alignment = center_alignment
 
-            if column_title_from_df in ["TOTAL", "Month"]:
+            if column_title_from_df in ["TOTAL"]:
                 cell.fill = gray_fill
             elif col_num == blank_col_excel_idx:
                 cell.fill = yellow_fill
@@ -327,13 +327,12 @@ def export_postgres_to_excel(db_params, query, output_file):
                 if col_num_excel > 1:
                     cell.fill = default_data_fill
 
-                # --- Special column styling for "TOTAL" and "Month" (Fill and Font) ---
-                if actual_df_column_name == "TOTAL" or actual_df_column_name == "Month":
+                # --- Special column styling for "TOTAL" (Fill and Font) ---
+                if actual_df_column_name == "TOTAL":
                     cell.fill = gray_fill  # Overrides default_data_fill
                     cell.font = bold_row_font
                     if actual_df_column_name == "TOTAL":
                         cell.alignment = right_alignment
-                    # else "Month" keeps left_alignment (or could be center_alignment if preferred)
 
                 # --- Rule 0: df_index == 0, Excel cols B-N (2-14) ---
                 if df_index == 0 and 2 <= col_num_excel <= 14:
@@ -366,11 +365,8 @@ def export_postgres_to_excel(db_params, query, output_file):
                 ):
                     cell.number_format = special_rows_number_format
                     cell.alignment = right_alignment
-                    # Font: If TOTAL/Month, it's already bold from gray_fill rule. Else, default cell_font.
-                    if not (
-                        actual_df_column_name == "TOTAL"
-                        or actual_df_column_name == "Month"
-                    ):
+                    # Font: If TOTAL, it's already bold from gray_fill rule. Else, default cell_font.
+                    if not (actual_df_column_name == "TOTAL"):
                         cell.font = cell_font
                     # Fill: default_data_fill or gray_fill is already set. Override if blank.
                     if col_num_excel == blank_col_excel_idx:
@@ -381,10 +377,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                 elif col_num_excel == 2:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
                     cell.alignment = right_alignment
-                    if not (
-                        actual_df_column_name == "TOTAL"
-                        or actual_df_column_name == "Month"
-                    ):  # Col B unlikely to be "Month"
+                    if not (actual_df_column_name == "TOTAL"):
                         cell.font = cell_font
                     if col_num_excel == blank_col_excel_idx:
                         cell.fill = yellow_fill
@@ -410,7 +403,7 @@ def export_postgres_to_excel(db_params, query, output_file):
 
                 # --- General cell formatting if no 'continue' was hit ---
                 # Font and alignment are set. Default fill might be set.
-                # Specific fills for TOTAL/Month are set.
+                # Specific fills for TOTAL are set.
 
                 # Ensure blank column is yellow if not handled by a more specific fill in a 'continue' block
                 if col_num_excel == blank_col_excel_idx:
@@ -452,7 +445,7 @@ def export_postgres_to_excel(db_params, query, output_file):
                     cell.alignment = right_alignment
                 elif actual_df_column_name == "TOTAL" and df_index in [28, 29, 30]:
                     cell.number_format = '_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)'
-                    # cell.alignment = right_alignment # Already set by TOTAL/Month rule
+                    # cell.alignment = right_alignment # Already set by TOTAL rule
                 elif (
                     actual_df_column_name in columns_to_divide_new
                     and df_index not in [26, 28, 29, 30, 31]
@@ -608,17 +601,7 @@ if __name__ == "__main__":
         "password": "1234",
     }
     query = """
-    SELECT 
-        d.funding_name, 
-        f.tpb_head AS "Head", f.tpb_mienbac AS "Miền Bắc", f.tpb_miennam AS "Miền Nam",
-        f.tpb_mientrung AS "Miền Trung", f.tpv_total AS "Total", 
-        f.kvml_dbb AS "Đông Bắc Bộ", f.kvml_tbb AS "Tây Bắc Bộ", f.kvml_dbsh AS "ĐB Sông Hồng",
-        f.kvml_btb AS "Bắc Trung Bộ", f.kvml_ntb AS "Nam Trung Bộ", f.kvml_tnb AS "Tây Nam Bộ",
-        f.kvml_dnb AS "Đông Nam Bộ", f.kvml_total AS "TOTAL", f.month_key AS "Month"
-    FROM dim_funding_structure d 
-    JOIN fact_backdate_funding_monthly f ON d.funding_id = f.funding_id 
-    WHERE f.month_key = 202302
-    ORDER BY d.sortorder;
+    SELECT * FROM fn_get_monthly_summary_report(202302);
     """
-    output_file = "BaocaoTonghop_T2_formatted_py.xlsx"  # Changed output filename
+    output_file = "BaocaoTonghop_T2_new.xlsx"  # Changed output filename
     export_postgres_to_excel(db_params, query, output_file)

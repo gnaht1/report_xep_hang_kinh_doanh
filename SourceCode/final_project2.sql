@@ -428,3 +428,79 @@ END;
 $$ LANGUAGE plpgsql;
 --------------------------------------------
 call prc_generate_summary_reports_monthly(202302);
+
+--------------------------- function
+-- Xóa hàm cũ nếu tồn tại để tránh lỗi
+DROP FUNCTION IF EXISTS fn_get_monthly_summary_report(BIGINT);
+
+-- Tạo hàm mới để xuất báo cáo theo định dạng mong muốn
+CREATE OR REPLACE FUNCTION fn_get_monthly_summary_report(p_rp_month BIGINT)
+-- Định nghĩa các cột trả về của hàm, khớp với format trong hình
+RETURNS TABLE (
+    "Chỉ tiêu" TEXT,
+    "HEAD" NUMERIC,
+    "Miền Bắc" NUMERIC,
+    "Miền Nam" NUMERIC,
+    "Miền Trung" NUMERIC,
+    "Total" NUMERIC,
+    "Đông Bắc Bộ" NUMERIC,
+    "Tây Bắc Bộ" NUMERIC,
+    "ĐB Sông Hồng" NUMERIC,
+    "Bắc Trung Bộ" NUMERIC,
+    "Nam Trung Bộ" NUMERIC,
+    "Tây Nam Bộ" NUMERIC,
+    "Đông Nam Bộ" NUMERIC,
+    "Total KVML" NUMERIC
+)
+AS $$
+BEGIN
+    -- Câu lệnh RETURN QUERY sẽ thực thi truy vấn và trả về kết quả
+    RETURN QUERY
+    WITH pivoted_data AS (
+        -- Bước 1: Xoay dữ liệu từ dạng hàng sang cột
+        -- Join với dim_funding_structure để lấy tên và thứ tự chỉ tiêu
+        -- Dùng SUM(CASE...) để gán giá trị 'amount' vào đúng cột 'area_code'
+        SELECT
+            d.funding_id,
+            d.funding_name,
+            d.sortorder,
+            -- Cột HEAD
+            SUM(CASE WHEN f.area_code = 'A' THEN f.amount ELSE 0 END) AS head_amount,
+            -- Các cột cho từng khu vực kinh doanh
+            SUM(CASE WHEN f.area_code = 'B' THEN f.amount ELSE 0 END) AS dong_bac_bo,
+            SUM(CASE WHEN f.area_code = 'C' THEN f.amount ELSE 0 END) AS tay_bac_bo,
+            SUM(CASE WHEN f.area_code = 'D' THEN f.amount ELSE 0 END) AS db_song_hong,
+            SUM(CASE WHEN f.area_code = 'E' THEN f.amount ELSE 0 END) AS bac_trung_bo,
+            SUM(CASE WHEN f.area_code = 'F' THEN f.amount ELSE 0 END) AS nam_trung_bo,
+            SUM(CASE WHEN f.area_code = 'G' THEN f.amount ELSE 0 END) AS tay_nam_bo,
+            SUM(CASE WHEN f.area_code = 'H' THEN f.amount ELSE 0 END) AS dong_nam_bo
+        FROM fact_backdate_funding_monthly f
+        JOIN dim_funding_structure d ON f.funding_id = d.funding_id
+        WHERE f.month_key = p_rp_month
+        GROUP BY d.funding_id, d.funding_name, d.sortorder
+    )
+    -- Bước 2: Tính các cột tổng hợp và định dạng đầu ra cuối cùng
+    SELECT
+        p.funding_name::TEXT,
+        p.head_amount,
+        NULL::NUMERIC, -- Cột Miền Bắc, để trống như trong hình
+        NULL::NUMERIC, -- Cột Miền Nam, để trống như trong hình
+        NULL::NUMERIC, -- Cột Miền Trung, để trống như trong hình
+        p.head_amount AS total_head, -- Cột Total (trái) bằng cột HEAD
+        p.dong_bac_bo,
+        p.tay_bac_bo,
+        p.db_song_hong,
+        p.bac_trung_bo,
+        p.nam_trung_bo,
+        p.tay_nam_bo,
+        p.dong_nam_bo,
+        -- Cột Total KVML (phải) là tổng của tất cả các khu vực
+        (p.dong_bac_bo + p.tay_bac_bo + p.db_song_hong + p.bac_trung_bo + p.nam_trung_bo + p.tay_nam_bo + p.dong_nam_bo) AS total_kvml
+    FROM pivoted_data p
+    ORDER BY p.sortorder; -- Sắp xếp các chỉ tiêu theo đúng thứ tự
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM fn_get_monthly_summary_report(202302);
+
+
