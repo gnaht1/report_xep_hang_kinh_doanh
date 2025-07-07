@@ -446,6 +446,9 @@ BEGIN
             CASE
                 WHEN v_ltn_column = 'ltn_jan' THEN k.ltn_jan IS NOT NULL
                 WHEN v_ltn_column = 'ltn_feb' THEN k.ltn_feb IS NOT NULL
+                when v_ltn_column = 'ltn_mar' THEN k.ltn_mar IS NOT NULL
+                WHEN v_ltn_column = 'ltn_apr' THEN k.ltn_apr IS NOT NULL
+                WHEN v_ltn_column = 'ltn_may' THEN k.ltn_may IS NOT NULL
                 -- Thêm các tháng còn lại
                 ELSE FALSE
             END
