@@ -1,5 +1,18 @@
---------------------------------------------------------------------------------
--- TÁI CẤU TRÚC BẢNG ĐỂ TỐI ƯU HÓA
+-- Tổ chức mô hình dữ liệu dim , fact để lưu trữ một cách tối ưu ( tái sử dụng )
+CREATE TABLE dim_funding_structure (
+    funding_id SERIAL PRIMARY KEY,
+    funding_code VARCHAR(255) NOT NULL,
+    funding_name VARCHAR(255) NOT NULL,
+    funding_parent_id INT,
+    funding_level INT,
+    sortorder int,
+    rec_created_dt timestamp default now(),
+    rec_updated_dt timestamp default now()
+);
+
+select * from dim_funding_structure
+order by sortorder;
+
 -- Sử dụng cấu trúc bảng "dài" (long format) để dễ dàng truy vấn và mở rộng.
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS fact_backdate_funding_monthly;
@@ -42,10 +55,50 @@ CREATE TABLE fact_backdate_asm_monthly (
 	rank_fin int8 NULL
 );
 
+-- Tao bang area_mapping
+CREATE TABLE IF NOT EXISTS area_mapping (
+    area_cde VARCHAR(10) PRIMARY KEY,
+    area_name VARCHAR(50) NOT NULL
+);
+
+INSERT INTO area_mapping (area_cde, area_name) VALUES
+    ('A', 'Hội Sở'),
+    ('B', 'Đông Bắc Bộ'),
+    ('C', 'Tây Bắc Bộ'),
+    ('D', 'Đồng Bằng Sông Hồng'),
+    ('E', 'Bắc Trung Bộ'),
+    ('F', 'Nam Trung Bộ'),
+    ('G', 'Tây Nam Bộ'),
+    ('H', 'Đông Nam Bộ');
+   
+ALTER TABLE public.area_mapping ADD city_list varchar NULL;
+
+UPDATE area_mapping
+SET city_list = CASE area_cde
+	WHEN 'B' THEN '''Hà Giang'', ''Tuyên Quang'', ''Phú Thọ'', ''Thái Nguyên'', ''Bắc Kạn'', ''Cao Bằng'', ''Lạng Sơn'', ''Bắc Giang'', ''Quảng Ninh'''
+	WHEN 'C' THEN '''Lào Cai'', ''Yên Bái'', ''Điện Biên'', ''Sơn La'', ''Hòa Bình'''
+	WHEN 'D' THEN '''Hà Nội'', ''Hải Phòng'', ''Vĩnh Phúc'', ''Bắc Ninh'', ''Hưng Yên'', ''Hải Dương'', ''Thái Bình'', ''Nam Định'', ''Ninh Bình'', ''Hà Nam'''
+	WHEN 'E' THEN '''Thanh Hoá'', ''Nghệ An'', ''Hà Tĩnh'', ''Quảng Bình'', ''Quảng Trị'', ''Huế'''
+	WHEN 'F' THEN '''Đà Nẵng'', ''Quảng Nam'', ''Quảng Ngãi'', ''Bình Định'', ''Phú Yên'', ''Khánh Hoà'', ''Ninh Thuận'', ''Bình Thuận'', ''Kon Tum'', ''Gia Lai'', ''Đắk Lắk'', ''Đắk Nông'', ''Lâm Đồng'''
+	WHEN 'G' THEN '''Cần Thơ'', ''Long An'', ''Đồng Tháp'', ''Tiền Giang'', ''An Giang'', ''Bến Tre'', ''Vĩnh Long'', ''Trà Vinh'', ''Hậu Giang'', ''Kiên Giang'', ''Sóc Trăng'', ''Bạc Liêu'', ''Cà Mau'''
+	WHEN 'H' THEN '''Hồ Chí Minh'', ''Bà Rịa - Vũng Tàu'', ''Bình Dương'', ''Bình Phước'', ''Đồng Nai'', ''Tây Ninh'''
+	ELSE ''
+END;
+
+
+------------- Bang log
+create table log_tracking(
+	id serial primary key 
+	, procedure_name text not null 
+	, start_time timestamp 
+	, end_time timestamp 
+	, is_successful bool
+	, error_log text 
+	, rec_created_dt timestamp default now()
+);
 --------------------------------------------------------------------------------
--- STORED PROCEDURE TÍNH TOÁN BÁO CÁO (PHIÊN BẢN ĐÃ SỬA LỖI VÀ HOÀN CHỈNH)
+-- STORED PROCEDURE TÍNH TOÁN BÁO CÁO 
 --------------------------------------------------------------------------------
--- Procedure đã được tối ưu với cấu trúc bảng mới và sửa lỗi
 CREATE OR REPLACE PROCEDURE prc_generate_summary_reports_monthly(p_rp_month BIGINT)
 AS $$
 DECLARE
@@ -60,6 +113,30 @@ DECLARE
     v_month_num INT := p_rp_month % 100;
 BEGIN
     -- ---------------------
+    -- THÔNG TIN NGƯỜI TẠO
+    -- ---------------------
+    -- Tên người tạo: Nguyen Phan Huynh Thang 
+    -- Ngày tạo: 2025-05-18
+
+    -- ---------------------
+    -- THÔNG TIN NGƯỜI CẬP NHẬT
+    -- ---------------------
+    -- Tên người cập nhật: Nguyen Phan Huynh Thang 
+    -- Ngày cập nhật: 2025-07-07
+    -- Mục đích cập nhật: Tối ưu với cấu trúc bảng mới và sửa lỗi
+
+    -- ---------------------
+    -- SUMMARY LUỒNG XỬ LÝ
+    -- ---------------------
+    -- Bước 1: KHỞI TẠO VÀ GHI LOG
+    -- Bước 2: TẠO CÁC BẢNG TẠM CHỨA DỮ LIỆU GỐC ĐÃ QUA XỬ LÝ
+    -- Bước 3: TÍNH TOÁN VÀ INSERT DỮ LIỆU BÁO CÁO 1 (fact_backdate_funding_monthly)
+    -- Bước 3.5: BACKFILL CÁC funding_id CÒN THIẾU VỚI GIÁ TRỊ 0
+    -- Bước 4: TÍNH TOÁN VÀ INSERT DỮ LIỆU BÁO CÁO 2 (fact_backdate_asm_monthly)
+    -- Bước 5: CẬP NHẬT LOG VỚI THỜI GIAN KẾT THÚC VÀ TRẠNG THÁI THÀNH CÔNG
+
+    -- ---------------------
+    -- CHI TIẾT CÁC BƯỚC
     -- BƯỚC 1: KHỞI TẠO VÀ GHI LOG
     -- ---------------------
     v_start_log_time := clock_timestamp();
@@ -73,7 +150,7 @@ BEGIN
     DELETE FROM fact_backdate_asm_monthly WHERE month_key = p_rp_month;
 
     -- ---------------------
-    -- BƯỚC 2: TẠO CÁC BẢNG TẠM CHỨA DỮ LIỆU GỐC ĐÃ QUA SƠ CHẾ
+    -- BƯỚC 2: TẠO CÁC BẢNG TẠM CHỨA DỮ LIỆU GỐC ĐÃ QUA XỬ LÝ
     -- ---------------------
 
     -- Bảng tạm 1: Tính toán các tỷ lệ phân bổ từ fact_kpi_month cho các khu vực
@@ -306,6 +383,29 @@ BEGIN
     INSERT INTO fact_backdate_funding_monthly(funding_id, month_key, area_code, amount)
     SELECT funding_id, p_rp_month, area_cde, amount FROM final_data;
 
+    -- BƯỚC 3.5: Backfill các funding_id còn thiếu với giá trị 0
+    WITH all_possible_entries AS (
+        SELECT
+            d.funding_id,
+            a.area_cde AS area_code
+        FROM dim_funding_structure d
+        CROSS JOIN (SELECT area_cde FROM area_mapping) a
+    )
+    INSERT INTO fact_backdate_funding_monthly(funding_id, month_key, area_code, amount)
+    SELECT
+        ape.funding_id,
+        p_rp_month,
+        ape.area_code,
+        0
+    FROM all_possible_entries ape
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM fact_backdate_funding_monthly f
+        WHERE f.month_key = p_rp_month
+          AND f.funding_id = ape.funding_id
+          AND f.area_code = ape.area_code
+    );
+
     -- ---------------------
     -- BƯỚC 4: TÍNH TOÁN DỮ LIỆU BÁO CÁO 2 (fact_backdate_asm_monthly)
     -- ---------------------
@@ -418,18 +518,20 @@ BEGIN
     v_end_log_time := clock_timestamp();
     UPDATE log_tracking SET end_time = v_end_log_time, is_successful = true WHERE id = v_log_id;
 
--- EXCEPTION
---     WHEN OTHERS THEN
---         v_end_log_time := clock_timestamp();
---         v_error_msg := SQLERRM || ' - ' || SQLSTATE;
---         UPDATE log_tracking SET end_time = v_end_log_time, is_successful = false, error_log = v_error_msg WHERE id = v_log_id;
---         RAISE NOTICE 'Lỗi xảy ra: %', v_error_msg;
+    EXCEPTION
+        WHEN OTHERS THEN
+            v_end_log_time := clock_timestamp();
+            v_error_msg := SQLERRM || ' - ' || SQLSTATE;
+            UPDATE log_tracking SET end_time = v_end_log_time, is_successful = false, error_log = v_error_msg WHERE id = v_log_id;
+            RAISE NOTICE 'Lỗi xảy ra: %', v_error_msg;
 END;
 $$ LANGUAGE plpgsql;
 --------------------------------------------
 call prc_generate_summary_reports_monthly(202302);
 
---------------------------- function
+--------------------------------------------------------------------------------
+-- HÀM XUẤT BÁO CÁO TỔNG HỢP (PIVOT)
+--------------------------------------------------------------------------------
 -- Xóa hàm cũ nếu tồn tại để tránh lỗi
 DROP FUNCTION IF EXISTS fn_get_monthly_summary_report(BIGINT);
 
@@ -437,8 +539,8 @@ DROP FUNCTION IF EXISTS fn_get_monthly_summary_report(BIGINT);
 CREATE OR REPLACE FUNCTION fn_get_monthly_summary_report(p_rp_month BIGINT)
 -- Định nghĩa các cột trả về của hàm, khớp với format trong hình
 RETURNS TABLE (
-    "Chỉ tiêu" TEXT,
-    "HEAD" NUMERIC,
+    "funding_name" TEXT,
+    "Head" NUMERIC,
     "Miền Bắc" NUMERIC,
     "Miền Nam" NUMERIC,
     "Miền Trung" NUMERIC,
@@ -450,7 +552,7 @@ RETURNS TABLE (
     "Nam Trung Bộ" NUMERIC,
     "Tây Nam Bộ" NUMERIC,
     "Đông Nam Bộ" NUMERIC,
-    "Total KVML" NUMERIC
+    "TOTAL" NUMERIC
 )
 AS $$
 BEGIN
@@ -503,4 +605,48 @@ $$ LANGUAGE plpgsql;
 
 SELECT * FROM fn_get_monthly_summary_report(202302);
 
+-- HÀM XUẤT BÁO CÁO XẾP HẠNG ASM
+--------------------------------------------------------------------------------
 
+DROP FUNCTION IF EXISTS fn_get_asm_ranking_report(BIGINT);
+
+CREATE OR REPLACE FUNCTION fn_get_asm_ranking_report(p_rp_month BIGINT)
+RETURNS TABLE (
+    month_key int8,
+    area_cde varchar(200),
+    area_name varchar(200),
+    email varchar(200),
+    "Tổng điểm" numeric,
+    rank_final int8,
+    ltn_avg numeric,
+    rank_ltn_avg int8,
+    psdn_avg numeric,
+    rank_psdn_avg int8,
+    approval_rate_avg numeric,
+    rank_approval_rate_avg int8,
+    npl_truoc_wo_luy_ke numeric,
+    rank_npl_truoc_wo_luy_ke int8,
+    "Điểm Quy Mô" numeric,
+    rank_ptkd int8,
+    cir numeric,
+    rank_cir int8,
+    margin numeric,
+    rank_margin int8,
+    hs_von numeric,
+    rank_hs_von int8,
+    hsbq_nhan_su numeric,
+    rank_hsbq_nhan_su int8,
+    "Điểm FIN" int8,
+    rank_fin int8
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT *
+    FROM fact_backdate_asm_monthly f
+    WHERE f.month_key = p_rp_month
+    ORDER BY f.rank_final;
+END;
+$$ LANGUAGE plpgsql;
+
+select * from fn_get_asm_ranking_report(202302);

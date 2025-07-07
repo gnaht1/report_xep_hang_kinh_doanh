@@ -330,16 +330,16 @@ def export_postgres_to_excel(db_params, query, output_file):
         quy_mo_cell.alignment = center_alignment
         quy_mo_cell.fill = quy_mo_fill
         quy_mo_cell.border = border
-        worksheet.merge_cells(start_row=1, start_column=6, end_row=1, end_column=15)
+        worksheet.merge_cells(start_row=1, start_column=6, end_row=1, end_column=16)
 
         # Merged column header for "Tài Chính"
-        tai_chinh_cell = worksheet.cell(row=1, column=16)
+        tai_chinh_cell = worksheet.cell(row=1, column=17)
         tai_chinh_cell.value = "TÀI CHÍNH"
         tai_chinh_cell.font = white_font
         tai_chinh_cell.alignment = center_alignment
         tai_chinh_cell.fill = tai_chinh_fill
         tai_chinh_cell.border = border
-        worksheet.merge_cells(start_row=1, start_column=16, end_row=1, end_column=25)
+        worksheet.merge_cells(start_row=1, start_column=17, end_row=1, end_column=26)
 
         # Step 11: Save the file
         writer.close()
@@ -378,39 +378,11 @@ if __name__ == "__main__":
 
     # SQL query
     query = """
-    SELECT 
-        f.month_key 
-        , f.area_cde 
-        , f.email 
-        , f.tongdiem AS "Tổng điểm"
-        , f.rank_final 
-        , f.ltn_avg 
-        , f.rank_ltn_avg 
-        , f.psdn_avg 
-        , f.rank_psdn_avg 
-        , f.approval_rate_avg 
-        , f.rank_approval_rate_avg 
-        , f.npl_truoc_wo_luy_ke 
-        , f.rank_npl_truoc_wo_luy_ke 
-        , f.diem_quy_mo AS "Điểm Quy Mô"
-        , f.rank_ptkd 
-        , f.cir 
-        , f.rank_cir 
-        , f.margin 
-        , f.rank_margin 
-        , f.hs_von 
-        , f.rank_hs_von 
-        , f.hsbq_nhan_su 
-        , f.rank_hsbq_nhan_su 
-        , f.diem_fin AS "Điểm FIN"
-        , f.rank_fin
-    FROM fact_backdate_asm_monthly f
-    WHERE month_key = 202302
-    ORDER BY f.rank_final ;
+    select * from fn_get_asm_ranking_report(202302);
     """
 
     # Output Excel file path
-    output_file = "BaocaoXepHangASM_T2_formatted_py.xlsx"
+    output_file = "BaocaoXepHangASM_T2_new.xlsx"
 
     # Call the function
     export_postgres_to_excel(db_params, query, output_file)
