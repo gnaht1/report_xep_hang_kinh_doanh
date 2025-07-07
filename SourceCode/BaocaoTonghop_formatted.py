@@ -573,20 +573,16 @@ def export_postgres_to_excel(db_params, query, output_file):
         print("Authenticating...")
         drive_service = authenticate_google_drive()
         if drive_service:
-            # Get  folder ID from  config.py
             target_folder_id = config.GOOGLE_DRIVE_FOLDER_ID
-
-            # Kiểm tra xem ID đã được người dùng thay đổi hay chưa
             if (
                 not target_folder_id
                 or "YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE" in target_folder_id
             ):
-                print("\n!!! LỖI CẤU HÌNH !!!")
+                print("\n!!! CONFIGURATION ERROR !!!")
                 print(
-                    ">>> Vui lòng cập nhật biến 'GOOGLE_DRIVE_FOLDER_ID' trong file config.py trước khi chạy."
+                    ">>> Please update the 'GOOGLE_DRIVE_FOLDER_ID' in your config.py file before running."
                 )
-                return  # Dừng hàm tại đây nếu chưa có ID
-
+                return
             print(f"Uploading file '{output_file}' to folder ID: {target_folder_id}...")
             upload_to_drive(drive_service, output_file, folder_id=target_folder_id)
 
@@ -607,7 +603,8 @@ def export_postgres_to_excel(db_params, query, output_file):
             writer.close()
 
 
-if __name__ == "__main__":
+def generate_summary_report():
+    """Runs the entire process for the summary report."""
     db_params = {
         "host": "localhost",
         "port": "5432",
@@ -618,5 +615,9 @@ if __name__ == "__main__":
     query = """
     SELECT * FROM fn_get_monthly_summary_report(202302);
     """
-    output_file = "BaocaoTonghop_new.xlsx"  # Changed output filename
+    output_file = "BaocaoTonghop_new.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
+
+
+if __name__ == "__main__":
+    generate_summary_report()

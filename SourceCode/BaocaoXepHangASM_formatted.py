@@ -380,9 +380,8 @@ def export_postgres_to_excel(db_params, query, output_file):
             print("PostgreSQL connection closed.")
 
 
-# Example usage
-if __name__ == "__main__":
-    # Database connection parameters
+def generate_ranking_report():
+    """Runs the entire process for the ASM ranking report."""
     db_params = {
         "host": "localhost",
         "port": "5432",
@@ -390,14 +389,12 @@ if __name__ == "__main__":
         "user": "postgres",
         "password": "1234",
     }
-
-    # SQL query
     query = """
     select * from fn_get_asm_ranking_report(202302);
     """
-
-    # Output Excel file path
     output_file = "BaocaoXepHangASM_new.xlsx"
-
-    # Call the function
     export_postgres_to_excel(db_params, query, output_file)
+
+
+if __name__ == "__main__":
+    generate_ranking_report()
