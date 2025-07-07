@@ -96,6 +96,13 @@ create table log_tracking(
 	, error_log text 
 	, rec_created_dt timestamp default now()
 );
+
+-- index 
+CREATE INDEX fact_txn_month_account_code_annalysis_code_trans_date_idx ON public.fact_txn_month (account_code,analysis_code,transaction_date);
+CREATE INDEX fact_kpi_month_pos_city_monthkey_idx ON public.fact_kpi_month (pos_city,kpi_month);
+CREATE INDEX fact_kpi_month_kpi_month_maxbucket_poscity_idx ON public.fact_kpi_month (kpi_month,pos_city,max_bucket);
+CREATE INDEX fact_kpi_month_kpi_month_maxbucket_idx ON public.fact_kpi_month (kpi_month,max_bucket);
+CREATE INDEX fact_kpi_month_pos_city_writeoff_month_idx ON public.fact_kpi_month (pos_city,write_off_month);
 --------------------------------------------------------------------------------
 -- STORED PROCEDURE TÍNH TOÁN BÁO CÁO 
 --------------------------------------------------------------------------------
