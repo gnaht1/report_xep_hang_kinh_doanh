@@ -14,6 +14,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
+import config
 
 # --- Google Drive Configuration ---
 # If modifying these scopes, delete the file token.json.
@@ -572,8 +573,22 @@ def export_postgres_to_excel(db_params, query, output_file):
         print("Authenticating...")
         drive_service = authenticate_google_drive()
         if drive_service:
-            print(f"Uploading file '{output_file}'...")
-            upload_to_drive(drive_service, output_file)
+            # Get  folder ID from  config.py
+            target_folder_id = config.GOOGLE_DRIVE_FOLDER_ID
+
+            # Kiểm tra xem ID đã được người dùng thay đổi hay chưa
+            if (
+                not target_folder_id
+                or "YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE" in target_folder_id
+            ):
+                print("\n!!! LỖI CẤU HÌNH !!!")
+                print(
+                    ">>> Vui lòng cập nhật biến 'GOOGLE_DRIVE_FOLDER_ID' trong file config.py trước khi chạy."
+                )
+                return  # Dừng hàm tại đây nếu chưa có ID
+
+            print(f"Uploading file '{output_file}' to folder ID: {target_folder_id}...")
+            upload_to_drive(drive_service, output_file, folder_id=target_folder_id)
 
     except Error as db_error:
         print(f"Database Error: {db_error}")
@@ -603,5 +618,5 @@ if __name__ == "__main__":
     query = """
     SELECT * FROM fn_get_monthly_summary_report(202302);
     """
-    output_file = "BaocaoTonghop_T2_new.xlsx"  # Changed output filename
+    output_file = "BaocaoTonghop_new.xlsx"  # Changed output filename
     export_postgres_to_excel(db_params, query, output_file)
