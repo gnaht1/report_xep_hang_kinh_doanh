@@ -28,11 +28,14 @@ def send_email(subject, body):
         msg["From"] = config.SENDER_EMAIL
         msg["To"] = config.RECIPIENT_EMAIL
         msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
+
+        # CHANGE 1: Send the email as HTML instead of plain text
+        # This is what makes the link clickable.
+        msg.attach(MIMEText(body, "html"))
 
         # Connect to the SMTP server and send the email
         with smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT) as server:
-            server.starttls()  # Secure the connection
+            server.starttls()
             server.login(config.SENDER_EMAIL, config.SENDER_PASSWORD)
             server.send_message(msg)
 
@@ -44,6 +47,7 @@ def send_email(subject, body):
 def run_reports(report_period):
     """Main function to orchestrate the generation of both reports for a given period."""
     start_time = time.time()
+
     print(f"==============================================")
     print(f"== STARTING REPORT GENERATION FOR PERIOD: {report_period} ==")
     print(f"==============================================")
@@ -52,20 +56,9 @@ def run_reports(report_period):
     error_message = ""
 
     try:
-        # --- 1. Run Summary Report ---
-        print("\n[1/2] Generating Summary Report...")
         summary_reporter.generate_summary_report(report_period)
-        print("✅ [1/2] Summary Report completed.")
-
-        print("\n" + "-" * 45 + "\n")
-
-        # --- 2. Run Ranking Report ---
-        print("[2/2] Generating ASM Ranking Report...")
         ranking_reporter.generate_ranking_report(report_period)
-        print("✅ [2/2] ASM Ranking Report completed.")
-
         success = True
-
     except Exception as e:
         error_message = str(e)
         print(f"\n[CRITICAL ERROR] An unexpected error occurred: {error_message}")
@@ -79,24 +72,41 @@ def run_reports(report_period):
         print(f"== Total execution time: {total_time:.2f} seconds ==")
         print("==============================================")
 
-        # Send email notification based on the outcome
+        # CHANGE 2: Build the Drive URL and add it to the email body
+        folder_id = config.GOOGLE_DRIVE_FOLDER_ID
+        drive_folder_url = None
+        if "YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE" not in folder_id and folder_id:
+            drive_folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
+
         if success:
             email_subject = f"✅ Success: Report for {report_period} Completed"
-            email_body = (
-                f"The automated report generation process has completed successfully.\n\n"
-                f"Total execution time: {total_time:.2f} seconds.\n"
-                f"Reports have been uploaded to Google Drive."
-            )
+            email_body = f"""
+            <html>
+            <body>
+                <p>The automated report generation process for period <strong>{report_period}</strong> has completed successfully.</p>
+                <p>Total execution time: {total_time:.2f} seconds.</p>
+            """
+            if drive_folder_url:
+                email_body += f'<p>The generated reports have been uploaded to Google Drive. You can view them here:</p><p><a href="{drive_folder_url}">View Google Drive Folder</a></p>'
+            email_body += "</body></html>"
         else:
             email_subject = f"❌ Failure: Report for {report_period} Failed"
-            email_body = (
-                f"The automated report generation process has failed.\n\n"
-                f"Error details: {error_message}\n\n"
-                f"Please check the execution logs for more information."
-            )
+            email_body = f"""
+            <html>
+            <body>
+                <p>The automated report generation process for period <strong>{report_period}</strong> has failed.</p>
+                <p><strong>Error details:</strong> {error_message}</p>
+                <p>Please check the execution logs for more information.</p>
+            </body>
+            </html>
+            """
 
         send_email(email_subject, email_body)
 
 
-# if __name__ == "__main__":
-#     run_reports()
+# This block is only used if you run this script directly
+# It is not used when running from the Flask web app
+if __name__ == "__main__":
+    # Example of how to run directly for testing purposes
+    test_period = "202305"
+    run_reports(test_period)
