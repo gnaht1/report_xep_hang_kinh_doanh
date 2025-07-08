@@ -41,13 +41,12 @@ def send_email(subject, body):
         print(f"❌ FAILED to send email. Error: {e}")
 
 
-def run_reports():
-    """Main function to orchestrate the generation of both reports."""
+def run_reports(report_period):
+    """Main function to orchestrate the generation of both reports for a given period."""
     start_time = time.time()
-
-    print("==============================================")
-    print("== STARTING AUTOMATED REPORT GENERATION ==")
-    print("==============================================")
+    print(f"==============================================")
+    print(f"== STARTING REPORT GENERATION FOR PERIOD: {report_period} ==")
+    print(f"==============================================")
 
     success = False
     error_message = ""
@@ -55,14 +54,14 @@ def run_reports():
     try:
         # --- 1. Run Summary Report ---
         print("\n[1/2] Generating Summary Report...")
-        summary_reporter.generate_summary_report()
+        summary_reporter.generate_summary_report(report_period)
         print("✅ [1/2] Summary Report completed.")
 
         print("\n" + "-" * 45 + "\n")
 
         # --- 2. Run Ranking Report ---
         print("[2/2] Generating ASM Ranking Report...")
-        ranking_reporter.generate_ranking_report()
+        ranking_reporter.generate_ranking_report(report_period)
         print("✅ [2/2] ASM Ranking Report completed.")
 
         success = True
@@ -82,14 +81,14 @@ def run_reports():
 
         # Send email notification based on the outcome
         if success:
-            email_subject = "✅ Success: Report Generation Completed"
+            email_subject = f"✅ Success: Report for {report_period} Completed"
             email_body = (
                 f"The automated report generation process has completed successfully.\n\n"
                 f"Total execution time: {total_time:.2f} seconds.\n"
                 f"Reports have been uploaded to Google Drive."
             )
         else:
-            email_subject = "❌ Failure: Report Generation Encountered an Error"
+            email_subject = f"❌ Failure: Report for {report_period} Failed"
             email_body = (
                 f"The automated report generation process has failed.\n\n"
                 f"Error details: {error_message}\n\n"
@@ -99,5 +98,5 @@ def run_reports():
         send_email(email_subject, email_body)
 
 
-if __name__ == "__main__":
-    run_reports()
+# if __name__ == "__main__":
+#     run_reports()

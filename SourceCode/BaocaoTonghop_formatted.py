@@ -603,8 +603,8 @@ def export_postgres_to_excel(db_params, query, output_file):
             writer.close()
 
 
-def generate_summary_report():
-    """Runs the entire process for the summary report."""
+def generate_summary_report(report_period):  # Added parameter
+    """Runs the entire process for the summary report for a given period."""
     db_params = {
         "host": "localhost",
         "port": "5432",
@@ -612,10 +612,12 @@ def generate_summary_report():
         "user": "postgres",
         "password": "1234",
     }
-    query = """
-    SELECT * FROM fn_get_monthly_summary_report(202302);
+    # Use the parameter in the SQL query
+    query = f"""
+    SELECT * FROM fn_get_monthly_summary_report({report_period});
     """
-    output_file = "BaocaoTonghop_new.xlsx"
+    # Use the parameter in the output filename
+    output_file = f"BaocaoTonghop_{report_period}.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
 
 

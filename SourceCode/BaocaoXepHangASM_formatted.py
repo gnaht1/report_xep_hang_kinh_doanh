@@ -380,8 +380,8 @@ def export_postgres_to_excel(db_params, query, output_file):
             print("PostgreSQL connection closed.")
 
 
-def generate_ranking_report():
-    """Runs the entire process for the ASM ranking report."""
+def generate_ranking_report(report_period):  # Added parameter
+    """Runs the entire process for the ASM ranking report for a given period."""
     db_params = {
         "host": "localhost",
         "port": "5432",
@@ -389,10 +389,12 @@ def generate_ranking_report():
         "user": "postgres",
         "password": "1234",
     }
-    query = """
-    select * from fn_get_asm_ranking_report(202302);
+    # Use the parameter in the SQL query
+    query = f"""
+    select * from fn_get_asm_ranking_report({report_period});
     """
-    output_file = "BaocaoXepHangASM_new.xlsx"
+    # Use the parameter in the output filename
+    output_file = f"BaocaoXepHangASM_{report_period}.xlsx"
     export_postgres_to_excel(db_params, query, output_file)
 
 
