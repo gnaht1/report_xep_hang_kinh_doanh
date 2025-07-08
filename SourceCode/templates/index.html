@@ -9,7 +9,7 @@
         .container { max-width: 500px; margin: auto; background: white; padding: 20px 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h1 { color: #333; }
         label { font-weight: bold; margin-top: 10px; display: block; }
-        select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
+        input[type="email"], select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
         button { background-color: #007bff; color: white; border: none; cursor: pointer; margin-top: 20px; }
         button:hover { background-color: #0056b3; }
         .flash { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
@@ -21,8 +21,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Report Trigger</h1>
-        <p>Select a month and year to generate and upload the reports.</p>
+        <h1>Finance Report Trigger</h1>
+        <p>Select a period and enter your email to receive the reports.</p>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -44,13 +44,16 @@
                     <option value="{{ m }}">{{ m }}</option>
                 {% endfor %}
             </select>
+            
+            <label for="email">Your Email:</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email for notification" required>
 
             <button type="submit">Generate Reports</button>
         </form>
 
         {% if drive_folder_url %}
         <div class="folder-link">
-            <p>Reports will be uploaded to the following folder:</p>
+            <p>Reports are uploaded to the following folder:</p>
             <a href="{{ drive_folder_url }}" target="_blank">View Google Drive Folder</a>
         </div>
         {% endif %}
