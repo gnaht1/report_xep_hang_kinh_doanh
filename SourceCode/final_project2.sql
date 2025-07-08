@@ -537,7 +537,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 --------------------------------------------
-call prc_generate_summary_reports_monthly(202302);
+call prc_generate_summary_reports_monthly(202304);
 
 --------------------------------------------------------------------------------
 -- HÀM XUẤT BÁO CÁO TỔNG HỢP (PIVOT)
@@ -613,7 +613,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM fn_get_monthly_summary_report(202302);
+SELECT * FROM fn_get_monthly_summary_report(202304);
 
 -- HÀM XUẤT BÁO CÁO XẾP HẠNG ASM
 --------------------------------------------------------------------------------
