@@ -15,6 +15,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 import config
+import json
 
 # --- Google Drive Configuration ---
 # If modifying these scopes, delete the file token.json.
@@ -22,43 +23,54 @@ SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
 
 def authenticate_google_drive():
-    """Authenticates with the Google Drive API and returns the service object."""
+    """
+    Authenticates with Google Drive. It first tries to use environment variables
+    (for production on Render) and falls back to local files (for development).
+    """
     creds = None
+    SCOPES = [
+        "https://www.googleapis.com/auth/drive.file"
+    ]  # Make sure SCOPES is defined
 
-    # Get the absolute path of the directory containing the running script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    token_path = os.path.join(script_dir, "token.json")
-    credential_path = os.path.join(script_dir, "credentials.json")
+    # --- Method 1: Load from Environment Variables (for Server) ---
+    creds_content_str = os.environ.get("GOOGLE_CREDENTIALS_CONTENT")
+    token_content_str = os.environ.get("GOOGLE_TOKEN_CONTENT")
 
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first time.
-    if os.path.exists(token_path):
-        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+    if creds_content_str and token_content_str:
+        print("Loading Google credentials from environment variables.")
+        try:
+            creds_info = json.loads(creds_content_str)
+            token_info = json.loads(token_content_str)
+            creds = Credentials.from_authorized_user_info(token_info, SCOPES)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON from environment variables: {e}")
+            return None
 
-    # If there are no (valid) credentials available, let the user log in.
+    # --- Method 2: Load from Files (for Local Development) ---
+    if not creds:
+        print("Loading Google credentials from local files.")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        token_path = os.path.join(script_dir, "token.json")
+        credential_path = os.path.join(script_dir, "credentials.json")
+
+        if os.path.exists(token_path):
+            creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+
+    # --- Refresh Token if Needed ---
+    if creds and creds.expired and creds.refresh_token:
+        print("Refreshing Google credentials token.")
+        creds.refresh(Request())
+
+    # --- Re-authenticate if No Creds Available (only works on local) ---
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            # --- PATH FIX: Use absolute path to credentials.json ---
-            print(f"Searching for credentials file at: {credential_path}")
-            if not os.path.exists(credential_path):
-                print("\nERROR: Could not find credentials.json at the specified path.")
-                print(">>> Please CHECK AGAIN and ensure that:")
-                print(
-                    "1. The file is named exactly 'credentials.json' (not 'credentials.json.txt')."
-                )
-                print(
-                    "2. The 'credentials.json' file is placed in the SAME FOLDER as this Python script.\n"
-                )
-                return None
-
+        if os.path.exists(credential_path):
             flow = InstalledAppFlow.from_client_secrets_file(credential_path, SCOPES)
             creds = flow.run_local_server(port=0)
-
-        # Save the credentials for the next run
-        with open(token_path, "w") as token:
-            token.write(creds.to_json())
+            with open(token_path, "w") as token:
+                token.write(creds.to_json())
+        else:
+            print("ERROR: credentials.json not found.")
+            return None
 
     try:
         service = build("drive", "v3", credentials=creds)
