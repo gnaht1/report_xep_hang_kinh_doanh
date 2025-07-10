@@ -13,7 +13,7 @@ CREATE TABLE dim_funding_structure (
 select * from dim_funding_structure
 order by sortorder;
 
--- Sử dụng cấu trúc bảng "dài" (long format) để dễ dàng truy vấn và mở rộng.
+-- Sử dụng cấu trúc long format để dễ dàng truy vấn và mở rộng.
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS fact_backdate_funding_monthly;
 CREATE TABLE fact_backdate_funding_monthly (
@@ -167,7 +167,7 @@ BEGIN
             area_cde,
             TRIM(UNNEST(STRING_TO_ARRAY(REPLACE(city_list, '''', ''), ', '))) AS city_name
         FROM area_mapping
-        WHERE area_cde != 'A' -- Chỉ lấy các khu vực, không lấy Hội sở
+        WHERE area_cde != 'A' 
     ),
     kpi_aggregated AS (
         SELECT
@@ -215,7 +215,7 @@ BEGIN
         END
     INTO v_ltn_column, v_psdn_column, v_approved_rate_column;
 
-    -- Bảng tạm 2: Lấy số lượng nhân sự SM theo khu vực (SỬ DỤNG DYNAMIC SQL)
+    -- Bảng tạm 2: Lấy số lượng nhân sự SM theo khu vực (DYNAMIC SQL)
     EXECUTE format('
         CREATE TEMP TABLE tmp_sm_counts ON COMMIT DROP AS
         SELECT
@@ -542,12 +542,11 @@ call prc_generate_summary_reports_monthly(202304);
 --------------------------------------------------------------------------------
 -- HÀM XUẤT BÁO CÁO TỔNG HỢP (PIVOT)
 --------------------------------------------------------------------------------
--- Xóa hàm cũ nếu tồn tại để tránh lỗi
+
 DROP FUNCTION IF EXISTS fn_get_monthly_summary_report(BIGINT);
 
--- Tạo hàm mới để xuất báo cáo theo định dạng mong muốn
 CREATE OR REPLACE FUNCTION fn_get_monthly_summary_report(p_rp_month BIGINT)
--- Định nghĩa các cột trả về của hàm, khớp với format trong hình
+
 RETURNS TABLE (
     "funding_name" TEXT,
     "Head" NUMERIC,
@@ -566,12 +565,10 @@ RETURNS TABLE (
 )
 AS $$
 BEGIN
-    -- Câu lệnh RETURN QUERY sẽ thực thi truy vấn và trả về kết quả
+    
     RETURN QUERY
     WITH pivoted_data AS (
         -- Bước 1: Xoay dữ liệu từ dạng hàng sang cột
-        -- Join với dim_funding_structure để lấy tên và thứ tự chỉ tiêu
-        -- Dùng SUM(CASE...) để gán giá trị 'amount' vào đúng cột 'area_code'
         SELECT
             d.funding_id,
             d.funding_name,
@@ -595,10 +592,10 @@ BEGIN
     SELECT
         p.funding_name::TEXT,
         p.head_amount,
-        NULL::NUMERIC, -- Cột Miền Bắc, để trống như trong hình
-        NULL::NUMERIC, -- Cột Miền Nam, để trống như trong hình
-        NULL::NUMERIC, -- Cột Miền Trung, để trống như trong hình
-        p.head_amount AS total_head, -- Cột Total (trái) bằng cột HEAD
+        NULL::NUMERIC, 
+        NULL::NUMERIC, 
+        NULL::NUMERIC, 
+        p.head_amount AS total_head, -- Cột Total (trái) 
         p.dong_bac_bo,
         p.tay_bac_bo,
         p.db_song_hong,
@@ -606,10 +603,10 @@ BEGIN
         p.nam_trung_bo,
         p.tay_nam_bo,
         p.dong_nam_bo,
-        -- Cột Total KVML (phải) là tổng của tất cả các khu vực
+        -- Cột Total KVML (phải)
         (p.dong_bac_bo + p.tay_bac_bo + p.db_song_hong + p.bac_trung_bo + p.nam_trung_bo + p.tay_nam_bo + p.dong_nam_bo) AS total_kvml
     FROM pivoted_data p
-    ORDER BY p.sortorder; -- Sắp xếp các chỉ tiêu theo đúng thứ tự
+    ORDER BY p.sortorder; 
 END;
 $$ LANGUAGE plpgsql;
 
