@@ -1,4 +1,24 @@
 ## Business Ranking Report
+- [1. Context](#1-context)
+- [2. Implementation](#2-implementation)
+  - [2.1. Input/Output Overview](#21-inputoutput-overview)
+    - [2.1.1. Input Tables:](#211-input-tables)
+    - [2.1.2. Output Reports:](#212-output-reports)
+  - [2.2. Data Model Organization (Dimension \& Fact):](#22-data-model-organization-dimension--fact)
+    - [2.2.1. Summary Report:](#221-summary-report)
+    - [2.2.2. ASM Ranking Report:](#222-asm-ranking-report)
+  - [2.3. Create log\_tracking Table:](#23-create-log_tracking-table)
+  - [2.4. Write Stored Procedure:](#24-write-stored-procedure)
+  - [2.5. Indexing:](#25-indexing)
+  - [2.6. Build Queries for Sheets:](#26-build-queries-for-sheets)
+  - [2.7. Execute with Python:](#27-execute-with-python)
+  - [2.8. Auto-Upload to Google Drive](#28-auto-upload-to-google-drive)
+  - [2.9. Scheduled task](#29-scheduled-task)
+- [3. Skills and Achievements After Completing the Project](#3-skills-and-achievements-after-completing-the-project)
+  - [3.1. Tool Skills](#31-tool-skills)
+  - [3.2. Technical Skills](#32-technical-skills)
+  - [3.3. Domain Knowledge](#33-domain-knowledge)
+
 # 1. Context
 
 Upon request from the Finance department, a reporting system was developed to process three monthly input files (fact_txn, fact_kpi, and kpi_asm) sourced respectively from the accounting, business development, and finance datasets. These input files are automatically collected every month and loaded into the centralized database.
