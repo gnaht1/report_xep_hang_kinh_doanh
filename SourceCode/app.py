@@ -1,31 +1,77 @@
+# In your app.py file
+import math
+
+
+import pandas as pd
+import numpy as np  # Make sure to import numpy
 import json
 import plotly
 import plotly.graph_objects as go
 from flask import Flask, render_template, request, jsonify
 
-# Import các hàm lấy dữ liệu đã tạo ở bước 1
+# (Keep your other imports for get_summary_data, get_ranking_data, etc.)
 from BaocaoTonghop_formatted import get_summary_data
 from BaocaoXepHangASM_formatted import get_ranking_data
-
-# Import hàm gửi email từ file gốc
 from run_all_reports import send_email
-import config  # Import config để lấy thông tin email
+import config
 
 app = Flask(__name__)
 
 
-# --- Hàm tạo biểu đồ Plotly ---
 def create_summary_table(period):
+    """
+    Creates a Plotly Table for the summary report.
+    - Divides values by 1,000,000 for specified rows.
+    - Pre-formats numbers into strings to correctly hide zero values and handle missing data.
+    """
     df = get_summary_data(period)
     if df.empty:
         return None
-    # TẠO BẢNG PLOTLY: Giao diện sẽ được tùy chỉnh ở đây
-    # Đây là ví dụ cơ bản, bạn cần tùy chỉnh màu sắc, font chữ để giống Excel
+
+    # --- START: Final Data Transformation & Formatting ---
+
+    # Step 1 & 2: Same as before - define which rows to divide.
+    numeric_cols = df.columns[1:]
+    rows_to_transform = df.index[:-6].union(df.index[-1:])
+
+    # Step 3: Apply division.
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+        df.loc[rows_to_transform, col] = df.loc[rows_to_transform, col] / 1000000
+
+    # Step 4: A new, robust method to format the data into strings.
+    for col in numeric_cols:
+
+        def format_value(val):
+            # NEW: First, check if the value is NaN (missing). If so, return a hyphen.
+            if pd.isna(val):
+                return "-"
+
+            # If value is not a number (e.g., a string), keep it as is.
+            if not isinstance(val, (int, float)):
+                return val
+
+            # If the value is very close to zero, also return a hyphen.
+            if math.isclose(val, 0):
+                return "-"
+
+            # If it's a non-zero number, format it as a string.
+            return f"{val:,.2f}"
+
+        # Apply this formatting function to the entire column.
+        df[col] = df[col].apply(format_value)
+
+    # --- END: Final Data Transformation & Formatting ---
+
+    # Create the Plotly figure.
     fig = go.Figure(
         data=[
             go.Table(
                 header=dict(
-                    values=list(df.columns), fill_color="paleturquoise", align="left"
+                    values=list(df.columns),
+                    fill_color="paleturquoise",
+                    align="center",
+                    font=dict(size=12, color="black"),
                 ),
                 cells=dict(
                     values=[df[col] for col in df.columns],
@@ -35,10 +81,17 @@ def create_summary_table(period):
             )
         ]
     )
+
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10))
+
     return fig
 
 
+# --- HÀM create_ranking_table VÀ CÁC ROUTE CÒN LẠI GIỮ NGUYÊN ---
+
+
 def create_ranking_table(period):
+    # This function does not need changes for this request.
     df = get_ranking_data(period)
     if df.empty:
         return None
@@ -59,17 +112,11 @@ def create_ranking_table(period):
     return fig
 
 
-# --- Routes (Đường dẫn của web) ---
 @app.route("/")
 def index():
-    # Lấy tháng từ request, mặc định là tháng 5/2023
     report_month = request.args.get("month", "202305")
-
-    # Tạo biểu đồ
     summary_fig = create_summary_table(report_month)
     ranking_fig = create_ranking_table(report_month)
-
-    # Chuyển biểu đồ thành JSON để hiển thị trên web
     summary_graph_json = (
         json.dumps(summary_fig, cls=plotly.utils.PlotlyJSONEncoder)
         if summary_fig
@@ -80,8 +127,6 @@ def index():
         if ranking_fig
         else "null"
     )
-
-    # Danh sách các tháng để chọn
     months = [
         {"value": "202301", "text": "Tháng 1, 2023"},
         {"value": "202302", "text": "Tháng 2, 2023"},
@@ -89,7 +134,6 @@ def index():
         {"value": "202304", "text": "Tháng 4, 2023"},
         {"value": "202305", "text": "Tháng 5, 2023"},
     ]
-
     return render_template(
         "index.html",
         summary_graph_json=summary_graph_json,
@@ -103,9 +147,7 @@ def index():
 def send_approval_email():
     data = request.get_json()
     report_period = data.get("report_period")
-    # Thêm email của cấp trên vào file config.py
     recipient_email = getattr(config, "MANAGER_EMAIL", "manager@example.com")
-
     subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
     body = f"""
     <html><body>
