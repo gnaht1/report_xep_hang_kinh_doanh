@@ -400,3 +400,25 @@ def generate_ranking_report(report_period):  # Added parameter
 
 if __name__ == "__main__":
     generate_ranking_report()
+
+
+# Thêm hàm này vào BaocaoXepHangASM_formatted.py
+def get_ranking_data(report_period):
+    """Chỉ lấy dữ liệu từ DB và trả về DataFrame."""
+    db_params = {
+        "host": "localhost",
+        "port": "5432",
+        "dbname": "final_project",
+        "user": "postgres",
+        "password": "1234",
+    }
+    query = f"select * from fn_get_asm_ranking_report({report_period});"
+    try:
+        connection = psycopg2.connect(**db_params)
+        df = pd.read_sql_query(query, connection)
+        connection.close()
+        print(f"Lấy dữ liệu Báo cáo xếp hạng cho kỳ {report_period} thành công.")
+        return df
+    except Exception as e:
+        print(f"Lỗi khi lấy dữ liệu báo cáo xếp hạng: {e}")
+        return pd.DataFrame()  # Trả về DataFrame rỗng nếu có lỗi

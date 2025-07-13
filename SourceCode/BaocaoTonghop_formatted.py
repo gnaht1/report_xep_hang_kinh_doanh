@@ -635,3 +635,27 @@ def generate_summary_report(report_period):  # Added parameter
 
 if __name__ == "__main__":
     generate_summary_report()
+
+
+def get_summary_data(report_period):
+    """Chỉ lấy dữ liệu từ DB và trả về DataFrame."""
+    db_params = {
+        "host": "localhost",
+        "port": "5432",
+        "dbname": "final_project",
+        "user": "postgres",
+        "password": "1234",
+    }
+    query = f"SELECT * FROM fn_get_monthly_summary_report({report_period});"
+    try:
+        connection = psycopg2.connect(**db_params)
+        df = pd.read_sql_query(query, connection)
+        connection.close()
+        # Thực hiện các bước biến đổi dữ liệu cơ bản (chia cho 1,000,000, v.v.)
+        # LƯU Ý: Chỉ biến đổi dữ liệu, không định dạng cho Excel
+        # ... (thêm logic xử lý DataFrame từ file gốc của bạn vào đây) ...
+        print(f"Lấy dữ liệu Báo cáo tổng hợp cho kỳ {report_period} thành công.")
+        return df
+    except Exception as e:
+        print(f"Lỗi khi lấy dữ liệu báo cáo tổng hợp: {e}")
+        return pd.DataFrame()  # Trả về DataFrame rỗng nếu có lỗi

@@ -1,62 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automated Report Trigger</title>
+    <title>Bảng điều khiển Báo cáo</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; margin: 40px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        label { font-weight: bold; margin-top: 10px; display: block; }
-        input[type="email"], select, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; border: none; cursor: pointer; margin-top: 20px; }
-        button:hover { background-color: #0056b3; }
-        .flash { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .flash.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .folder-link { margin-top: 25px; padding: 15px; background-color: #e9ecef; border-radius: 5px; text-align: center; }
-        .folder-link a { color: #0056b3; text-decoration: none; font-weight: bold; }
+        body { font-family: sans-serif; margin: 2em; }
+        .container { max-width: 1600px; margin: auto; }
+        h1, h2 { color: #333; }
+        .controls { margin-bottom: 20px; }
+        .report { margin-top: 30px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; }
+        #btnApprove {
+            background-color: #4CAF50; color: white; padding: 10px 20px;
+            border: none; border-radius: 5px; cursor: pointer; font-size: 16px;
+            margin-top: 20px;
+        }
+        #btnApprove:hover { background-color: #45a049; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Finance Report Trigger</h1>
-        <p>Select a period and enter your email to receive the reports.</p>
+        <h1>Bảng điều khiển Báo cáo</h1>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <form action="/trigger" method="post">
-            <label for="year">Year:</label>
-            <select name="year" id="year" required>
-                <option value="2023">2023</option>
-            </select>
-
-            <label for="month">Month:</label>
-            <select name="month" id="month" required>
-                {% for m in range(1, 6) %}
-                    <option value="{{ m }}">{{ m }}</option>
-                {% endfor %}
-            </select>
-            
-            <label for="email">Your Email:</label>
-            <input type="email" id="email" name="email" placeholder="Enter your email for notification" required>
-
-            <button type="submit">Generate Reports</button>
-        </form>
-
-        {% if drive_folder_url %}
-        <div class="folder-link">
-            <p>Reports are uploaded to the following folder:</p>
-            <a href="{{ drive_folder_url }}" target="_blank">View Google Drive Folder</a>
+        <div class="controls">
+            <form action="/" method="get">
+                <label for="month">Chọn tháng báo cáo:</label>
+                <select name="month" id="month" onchange="this.form.submit()">
+                    {% for month in months %}
+                        <option value="{{ month.value }}" {% if month.value == selected_month %}selected{% endif %}>
+                            {{ month.text }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <noscript><input type="submit" value="Xem"></noscript>
+            </form>
         </div>
-        {% endif %}
+
+        <div class="report">
+            <h2>Báo cáo Tổng hợp (Kỳ: {{ selected_month }})</h2>
+            <div id="summaryGraph"></div>
+        </div>
+
+        <div class="report">
+            <h2>Báo cáo Xếp hạng ASM (Kỳ: {{ selected_month }})</h2>
+            <div id="rankingGraph"></div>
+        </div>
+
+        <button id="btnApprove">Phê duyệt & Gửi Email</button>
     </div>
+
+    <script>
+        // Hiển thị biểu đồ
+        var summaryData = {{ summary_graph_json|safe }};
+        if (summaryData) {
+            Plotly.newPlot('summaryGraph', summaryData.data, summaryData.layout || {});
+        } else {
+            document.getElementById('summaryGraph').innerHTML = '<p>Không có dữ liệu cho kỳ báo cáo này.</p>';
+        }
+
+
+        var rankingData = {{ ranking_graph_json|safe }};
+        if(rankingData) {
+            Plotly.newPlot('rankingGraph', rankingData.data, rankingData.layout || {});
+        } else {
+            document.getElementById('rankingGraph').innerHTML = '<p>Không có dữ liệu cho kỳ báo cáo này.</p>';
+        }
+
+
+        // Xử lý sự kiện bấm nút
+        document.getElementById('btnApprove').addEventListener('click', function() {
+            var reportPeriod = document.getElementById('month').value;
+            if (confirm('Bạn có chắc muốn phê duyệt và gửi email báo cáo cho kỳ ' + reportPeriod + '?')) {
+                fetch('/send-approval-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ report_period: reportPeriod })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        alert('Thành công! ' + data.message);
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        });
+    </script>
 </body>
 </html>

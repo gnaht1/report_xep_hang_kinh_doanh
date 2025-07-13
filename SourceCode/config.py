@@ -15,4 +15,6 @@ SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "umldoomsday@gmail.com")
 SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD", "twiq wczd mddm eznv")
-# RECIPIENT_EMAIL line is now removed
+
+####
+MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL", "nphuthang15@gmail.com")

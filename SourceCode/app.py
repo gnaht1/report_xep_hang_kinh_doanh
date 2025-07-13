@@ -1,50 +1,129 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-import threading
-import config
-from run_all_reports import run_reports
+import json
+import plotly
+import plotly.graph_objects as go
+from flask import Flask, render_template, request, jsonify
+
+# Import các hàm lấy dữ liệu đã tạo ở bước 1
+from BaocaoTonghop_formatted import get_summary_data
+from BaocaoXepHangASM_formatted import get_ranking_data
+
+# Import hàm gửi email từ file gốc
+from run_all_reports import send_email
+import config  # Import config để lấy thông tin email
 
 app = Flask(__name__)
-app.secret_key = "a_very_secret_key_for_flashing"
 
 
+# --- Hàm tạo biểu đồ Plotly ---
+def create_summary_table(period):
+    df = get_summary_data(period)
+    if df.empty:
+        return None
+    # TẠO BẢNG PLOTLY: Giao diện sẽ được tùy chỉnh ở đây
+    # Đây là ví dụ cơ bản, bạn cần tùy chỉnh màu sắc, font chữ để giống Excel
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(
+                    values=list(df.columns), fill_color="paleturquoise", align="left"
+                ),
+                cells=dict(
+                    values=[df[col] for col in df.columns],
+                    fill_color="lavender",
+                    align="left",
+                ),
+            )
+        ]
+    )
+    return fig
+
+
+def create_ranking_table(period):
+    df = get_ranking_data(period)
+    if df.empty:
+        return None
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(
+                    values=list(df.columns), fill_color="lightgreen", align="left"
+                ),
+                cells=dict(
+                    values=[df[col] for col in df.columns],
+                    fill_color="white",
+                    align="left",
+                ),
+            )
+        ]
+    )
+    return fig
+
+
+# --- Routes (Đường dẫn của web) ---
 @app.route("/")
 def index():
-    folder_id = config.GOOGLE_DRIVE_FOLDER_ID
-    drive_folder_url = None
-    if "YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE" not in folder_id and folder_id:
-        drive_folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
-    return render_template("index.html", drive_folder_url=drive_folder_url)
+    # Lấy tháng từ request, mặc định là tháng 5/2023
+    report_month = request.args.get("month", "202305")
 
+    # Tạo biểu đồ
+    summary_fig = create_summary_table(report_month)
+    ranking_fig = create_ranking_table(report_month)
 
-@app.route("/trigger", methods=["POST"])
-def trigger_report():
-    year = request.form.get("year")
-    month = request.form.get("month")
-    # Get the user's email from the form
-    recipient_email = request.form.get("email")
-
-    if not all([year, month, recipient_email]):
-        flash("Please fill out all fields.", "error")
-        return redirect(url_for("index"))
-
-    report_period = f"{year}{int(month):02d}"
-
-    print(
-        f"Web request received for period {report_period}. Notifying {recipient_email}"
+    # Chuyển biểu đồ thành JSON để hiển thị trên web
+    summary_graph_json = (
+        json.dumps(summary_fig, cls=plotly.utils.PlotlyJSONEncoder)
+        if summary_fig
+        else "null"
+    )
+    ranking_graph_json = (
+        json.dumps(ranking_fig, cls=plotly.utils.PlotlyJSONEncoder)
+        if ranking_fig
+        else "null"
     )
 
-    # Pass the user's email to the background thread
-    report_thread = threading.Thread(
-        target=run_reports, args=(report_period, recipient_email)
-    )
-    report_thread.start()
+    # Danh sách các tháng để chọn
+    months = [
+        {"value": "202301", "text": "Tháng 1, 2023"},
+        {"value": "202302", "text": "Tháng 2, 2023"},
+        {"value": "202303", "text": "Tháng 3, 2023"},
+        {"value": "202304", "text": "Tháng 4, 2023"},
+        {"value": "202305", "text": "Tháng 5, 2023"},
+    ]
 
-    flash(
-        f"✅ The report for period {report_period} has started. A notification will be sent to {recipient_email} upon completion.",
-        "success",
+    return render_template(
+        "index.html",
+        summary_graph_json=summary_graph_json,
+        ranking_graph_json=ranking_graph_json,
+        months=months,
+        selected_month=report_month,
     )
-    return redirect(url_for("index"))
+
+
+@app.route("/send-approval-email", methods=["POST"])
+def send_approval_email():
+    data = request.get_json()
+    report_period = data.get("report_period")
+    # Thêm email của cấp trên vào file config.py
+    recipient_email = getattr(config, "MANAGER_EMAIL", "manager@example.com")
+
+    subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
+    body = f"""
+    <html><body>
+        <p>Xin chào cấp trên,</p>
+        <p>Báo cáo cho kỳ <strong>{report_period}</strong> đã được xem xét và phê duyệt.</p>
+        <p>Bạn có thể xem trực tiếp báo cáo tại đây:</p>
+        <p><a href="{request.host_url}?month={report_period}">Xem Báo cáo Tương tác</a></p>
+        <p>Trân trọng.</p>
+    </body></html>
+    """
+    try:
+        send_email(subject, body, recipient_email)
+        return jsonify(
+            {"status": "success", "message": f"Email đã được gửi tới {recipient_email}"}
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
