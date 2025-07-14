@@ -19,51 +19,34 @@ app = Flask(__name__)
 
 
 def create_summary_table(period):
-    """
-    Creates a Plotly Table for the summary report.
-    - Divides values by 1,000,000 for specified rows.
-    - Pre-formats numbers into strings to correctly hide zero values and handle missing data.
-    """
     df = get_summary_data(period)
     if df.empty:
         return None
 
-    # --- START: Final Data Transformation & Formatting ---
-
-    # Step 1 & 2: Same as before - define which rows to divide.
     numeric_cols = df.columns[1:]
     rows_to_transform = df.index[:-6].union(df.index[-1:])
 
-    # Step 3: Apply division.
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
         df.loc[rows_to_transform, col] = df.loc[rows_to_transform, col] / 1000000
 
-    # Step 4: A new, robust method to format the data into strings.
     for col in numeric_cols:
 
         def format_value(val):
-            # NEW: First, check if the value is NaN (missing). If so, return a hyphen.
             if pd.isna(val):
                 return "-"
-
-            # If value is not a number (e.g., a string), keep it as is.
             if not isinstance(val, (int, float)):
                 return val
-
-            # If the value is very close to zero, also return a hyphen.
             if math.isclose(val, 0):
                 return "-"
-
-            # If it's a non-zero number, format it as a string.
             return f"{val:,.2f}"
 
-        # Apply this formatting function to the entire column.
         df[col] = df[col].apply(format_value)
 
-    # --- END: Final Data Transformation & Formatting ---
+    # --- Chỉ tạo fill_color mặc định cho tất cả các dòng ---
+    num_cols = len(df.columns)
+    fill_color = [["lavender"] * len(df) for _ in range(num_cols)]
 
-    # Create the Plotly figure.
     fig = go.Figure(
         data=[
             go.Table(
@@ -75,15 +58,14 @@ def create_summary_table(period):
                 ),
                 cells=dict(
                     values=[df[col] for col in df.columns],
-                    fill_color="lavender",
+                    fill_color=fill_color,
                     align="left",
+                    height=30,
                 ),
             )
         ]
     )
-
     fig.update_layout(margin=dict(l=10, r=10, t=10, b=10))
-
     return fig
 
 

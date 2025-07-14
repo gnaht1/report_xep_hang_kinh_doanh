@@ -38,6 +38,29 @@
 
         <div class="report">
             <h2>Báo cáo Tổng hợp (Kỳ: {{ selected_month }})</h2>
+            <!-- Super header chạy từ cột 2 đến 6 trong 14 cột, không bị che khuất -->
+        <div style="display: flex; width: 100%; margin-bottom: 0; align-items: center;">
+    <div style="flex:1"></div>
+    <div style="
+        flex:5;
+        background: #ffe066;
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        border-radius: 6px 6px 0 0;
+        color: #222;
+        border: 2px solid #ffcc00;
+        border-bottom: none;
+        box-shadow: 0 2px 6px rgba(255,200,50,0.08);
+        letter-spacing: 0.5px;
+        padding: 8px 0 4px 0;
+        ">
+        Tổng cần phân bổ xuống cho ĐVML
+    </div>
+    <div style="flex:8"></div>
+</div>
+
+
             <div id="summaryGraph"></div>
         </div>
 
