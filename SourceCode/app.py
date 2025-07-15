@@ -50,6 +50,7 @@ def create_summary_table(period):
     fig = go.Figure(
         data=[
             go.Table(
+                columnwidth=[140, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60],
                 header=dict(
                     values=list(df.columns),
                     fill_color="paleturquoise",
@@ -65,7 +66,13 @@ def create_summary_table(period):
             )
         ]
     )
-    fig.update_layout(margin=dict(l=10, r=10, t=0, b=10))
+    fig.update_layout(
+        autosize=False,
+        width=1800,  # hoặc lớn hơn nếu nhiều cột
+        height=600,
+        margin=dict(l=10, r=10, t=0, b=10),
+    )
+
     return fig
 
 
