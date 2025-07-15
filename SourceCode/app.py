@@ -43,14 +43,42 @@ def create_summary_table(period):
 
         df[col] = df[col].apply(format_value)
 
-    # --- Chỉ tạo fill_color mặc định cho tất cả các dòng ---
+    # THÊM CỘT TRỐNG GIỮA CỘT 6 và 7
+    col_name = " "
+    insert_at = 6
+    df.insert(insert_at, col_name, "")
+
     num_cols = len(df.columns)
-    fill_color = [["lavender"] * len(df) for _ in range(num_cols)]
+    num_rows = len(df)
+
+    # Fill màu: cột mới màu vàng, còn lại lavender
+    fill_color = []
+    for col_idx in range(num_cols):
+        if col_idx == 6:
+            fill_color.append(["#fff699"] * num_rows)  # vàng nhạt cho cột 7 mới
+        else:
+            fill_color.append(["lavender"] * num_rows)
 
     fig = go.Figure(
         data=[
             go.Table(
-                columnwidth=[140, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60],
+                columnwidth=[
+                    100,
+                    40,
+                    40,
+                    40,
+                    40,
+                    40,
+                    30,
+                    40,
+                    40,
+                    40,
+                    40,
+                    40,
+                    40,
+                    40,
+                    40,
+                ],
                 header=dict(
                     values=list(df.columns),
                     fill_color="paleturquoise",
@@ -68,7 +96,7 @@ def create_summary_table(period):
     )
     fig.update_layout(
         autosize=False,
-        width=1800,  # hoặc lớn hơn nếu nhiều cột
+        width=1550,
         height=600,
         margin=dict(l=10, r=10, t=0, b=10),
     )
