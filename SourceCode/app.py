@@ -164,6 +164,7 @@ def create_summary_html(period):
     for _, row in df.iterrows():
         cells = []
         row_name = str(row.iloc[0]).strip()  # Lấy tên hàng (cột đầu tiên)
+        is_green_row = row_name in green_rows
 
         for i, cell in enumerate(row):
             if i == 6:  # Cột trống thứ 7 (index 6) - màu vàng
@@ -178,7 +179,10 @@ def create_summary_html(period):
                 cells.append(f"<td class='cell-orange'>{cell}</td>")
             elif i == 0 and row_name in green_rows:
                 cells.append(f"<td class='cell-green'>{cell}</td>")
-
+            elif is_green_row and i != 0 and i != 6 and i != len(row) - 1:
+                # Cột từ 2-6 (index 1-5) và 8-14 (index 7-13) của green_rows - màu xám
+                # Bỏ qua cột đầu (i==0), cột trống (i==6), và cột cuối (i==len(row)-1)
+                cells.append(f"<td class='cell-gray'>{cell}</td>")
             else:
                 cells.append(f"<td>{cell}</td>")
 
