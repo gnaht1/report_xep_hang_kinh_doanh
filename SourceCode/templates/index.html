@@ -17,6 +17,54 @@
         }
         #btnApprove:hover { background-color: #45a049; }
     </style>
+
+    <style>
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table th,
+        .summary-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        .summary-table thead th {
+            background-color: paleturquoise;
+            font-weight: bold;
+        }
+        .summary-table .header-blue {
+            background-color: #007acc !important;
+            color: white !important;
+            font-weight: bold;
+        }
+        .summary-table .header-yellow {
+            background-color: #fff699 !important;
+            color: black !important;
+            font-weight: bold;
+        }
+        .summary-table .column-yellow {
+            background-color: #fff699 !important;
+        }
+        
+        .summary-table .cell-blue {
+            background-color: #73b3eeff !important;
+            font-weight: bold;
+        }
+        .summary-table .cell-yellow {
+            background-color: #e0a80dff !important;
+            font-weight: bold;
+        }
+        .summary-table .cell-orange {
+            background-color: #e05b08ff !important;
+            font-weight: bold;
+        }
+        .summary-table .cell-green {
+            background-color: #0fa814ff !important;
+            font-weight: bold;
+        }
+    </style>
+
 </head>
 <body>
     <div class="container">
@@ -38,8 +86,8 @@
 
         <div class="report">
             <h2>Báo cáo Tổng hợp (Kỳ: {{ selected_month }})</h2>
-            <!-- Super header chạy từ cột 2 đến 6 trong 14 cột, không bị che khuất -->
-        <!-- Hai superheader đồng màu xanh dương nhạt, hiển thị trên cùng -->
+            <!-- insert the HTML table with superheaders -->
+            {{ summary_table_html|safe }}
             
 
             <div id="summaryGraph"></div>
