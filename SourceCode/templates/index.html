@@ -157,6 +157,65 @@
     </div>
 
     <script>
+        // Add loading indicator styles
+        function showLoading(message) {
+            // Create loading overlay if it doesn't exist
+            if (!document.getElementById('loadingOverlay')) {
+                var overlay = document.createElement('div');
+                overlay.id = 'loadingOverlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                overlay.style.display = 'flex';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.zIndex = '1000';
+                
+                var loadingBox = document.createElement('div');
+                loadingBox.style.backgroundColor = 'white';
+                loadingBox.style.padding = '20px';
+                loadingBox.style.borderRadius = '8px';
+                loadingBox.style.textAlign = 'center';
+                loadingBox.style.maxWidth = '400px';
+                
+                var spinner = document.createElement('div');
+                spinner.style.border = '5px solid #f3f3f3';
+                spinner.style.borderTop = '5px solid #3498db';
+                spinner.style.borderRadius = '50%';
+                spinner.style.width = '50px';
+                spinner.style.height = '50px';
+                spinner.style.margin = '0 auto 15px';
+                spinner.style.animation = 'spin 2s linear infinite';
+                
+                var messageElement = document.createElement('p');
+                messageElement.id = 'loadingMessage';
+                messageElement.textContent = message || 'Đang xử lý...';
+                
+                // Add keyframe animation
+                var style = document.createElement('style');
+                style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                document.head.appendChild(style);
+                
+                loadingBox.appendChild(spinner);
+                loadingBox.appendChild(messageElement);
+                overlay.appendChild(loadingBox);
+                document.body.appendChild(overlay);
+            } else {
+                document.getElementById('loadingMessage').textContent = message || 'Đang xử lý...';
+                document.getElementById('loadingOverlay').style.display = 'flex';
+            }
+        }
+        
+        function hideLoading() {
+            var overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+        
         // Handle approval button click
         document.getElementById('btnApprove').addEventListener('click', function() {
             var reportPeriod = document.getElementById('month').value;
@@ -169,6 +228,9 @@
             }
             
             if (confirm('Bạn có chắc muốn phê duyệt và gửi email báo cáo cho kỳ ' + reportPeriod + '?')) {
+                // Show loading indicator - this may take some time
+                showLoading('Đang tạo báo cáo và gửi email. Vui lòng chờ đợi...');
+                
                 // Send approval request with email and report period
                 fetch('/send-approval-email', {
                     method: 'POST',
@@ -180,13 +242,21 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    // Hide loading indicator
+                    hideLoading();
+                    
                     if(data.status === 'success') {
                         alert('Thành công! ' + data.message);
                     } else {
                         alert('Lỗi: ' + data.message);
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    // Hide loading indicator on error
+                    hideLoading();
+                    console.error('Error:', error);
+                    alert('Đã xảy ra lỗi khi xử lý yêu cầu.');
+                });
             }
         });
     </script>

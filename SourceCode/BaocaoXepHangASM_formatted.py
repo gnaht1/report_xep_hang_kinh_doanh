@@ -37,8 +37,17 @@ def authenticate_google_drive():
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+                # Save the refreshed token
+                with open(token_path, "w") as token:
+                    token.write(creds.to_json())
+            except Exception as e:
+                print(f"Error refreshing token: {e}")
+                print("Please run refresh_google_token.py to generate a new token")
+                # Continue to try to create new token
+
+        if not creds or not creds.valid:
             # --- PATH FIX: Use absolute path to credentials.json ---
             print(f"Searching for credentials file at: {credential_path}")
             if not os.path.exists(credential_path):
@@ -50,14 +59,25 @@ def authenticate_google_drive():
                 print(
                     "2. The 'credentials.json' file is placed in the SAME FOLDER as this Python script.\n"
                 )
+                print(
+                    "3. Or run refresh_google_token.py to generate a new token manually.\n"
+                )
                 return None
 
-            flow = InstalledAppFlow.from_client_secrets_file(credential_path, SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        # Save the credentials for the next run
-        with open(token_path, "w") as token:
-            token.write(creds.to_json())
+            try:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    credential_path, SCOPES
+                )
+                creds = flow.run_local_server(port=0)
+                # Save the credentials for the next run
+                with open(token_path, "w") as token:
+                    token.write(creds.to_json())
+            except Exception as e:
+                print(f"Error creating new token: {e}")
+                print(
+                    "Please run refresh_google_token.py to generate a new token manually"
+                )
+                return None
 
     try:
         service = build("drive", "v3", credentials=creds)

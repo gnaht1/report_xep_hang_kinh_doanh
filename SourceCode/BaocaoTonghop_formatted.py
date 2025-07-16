@@ -59,15 +59,32 @@ def authenticate_google_drive():
     # --- Refresh Token if Needed ---
     if creds and creds.expired and creds.refresh_token:
         print("Refreshing Google credentials token.")
-        creds.refresh(Request())
+        try:
+            creds.refresh(Request())
+            # Save the refreshed token
+            with open(token_path, "w") as token:
+                token.write(creds.to_json())
+        except Exception as e:
+            print(f"Error refreshing token: {e}")
+            print("Please run refresh_google_token.py to generate a new token")
+            creds = None
 
     # --- Re-authenticate if No Creds Available (only works on local) ---
     if not creds or not creds.valid:
         if os.path.exists(credential_path):
-            flow = InstalledAppFlow.from_client_secrets_file(credential_path, SCOPES)
-            creds = flow.run_local_server(port=0)
-            with open(token_path, "w") as token:
-                token.write(creds.to_json())
+            try:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    credential_path, SCOPES
+                )
+                creds = flow.run_local_server(port=0)
+                with open(token_path, "w") as token:
+                    token.write(creds.to_json())
+            except Exception as e:
+                print(f"Error creating new token: {e}")
+                print(
+                    "Please run refresh_google_token.py to generate a new token manually"
+                )
+                return None
         else:
             print("ERROR: credentials.json not found.")
             return None

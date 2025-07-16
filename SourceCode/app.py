@@ -355,43 +355,70 @@ def index():
 @app.route("/send-approval-email", methods=["POST"])
 def send_approval_email():
     """
-    Handle sending approval email to supervisor with Google Drive link
+    Handle report generation and send approval email to supervisor with Google Drive link
 
-    This route receives the report period and supervisor email from the form,
-    then sends an email with a link to the Google Drive folder containing the report
+    This route:
+    1. Receives the report period and supervisor email from the form
+    2. Runs the report generation to ensure latest data
+    3. Sends an email with a link to the Google Drive folder containing the report
     """
     data = request.get_json()
     report_period = data.get("report_period")
-    # Get recipient email from request data instead of config
+    # Get recipient email from request data
     recipient_email = data.get("email")
 
-    # Build email subject and body
-    subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
-
-    # Get Google Drive link from config or use a default
-    google_drive_link = getattr(
-        config,
-        "GOOGLE_DRIVE_FOLDER",
-        f"https://drive.google.com/drive/folders/{report_period}",
-    )
-
-    body = f"""
-    <html><body>
-        <p>Xin chào cấp trên,</p>
-        <p>Báo cáo cho kỳ <strong>{report_period}</strong> đã được xem xét và phê duyệt.</p>
-        <p>Bạn có thể xem báo cáo tại Google Drive tại đây:</p>
-        <p><a href="{google_drive_link}">Xem Báo Cáo trên Google Drive</a></p>
-        <p>Trân trọng.</p>
-    </body></html>
-    """
     try:
+        # First, run the reports to generate latest data
+        from run_all_reports import run_reports
+
+        # Run report generation with the selected period
+        try:
+            # This will generate reports and upload to Google Drive
+            run_reports(report_period, recipient_email)
+            report_generated = True
+        except Exception as e:
+            report_generated = False
+            print(f"Error generating reports: {str(e)}")
+            # Continue with email anyway, but note the error
+
+        # Build email subject
+        subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
+
+        # Get Google Drive link from config or use a default
+        google_drive_link = getattr(
+            config,
+            "GOOGLE_DRIVE_FOLDER",
+            f"https://drive.google.com/drive/folders/{report_period}",
+        )
+
+        # Build email body
+        body = f"""
+        <html><body>
+            <p>Xin chào cấp trên,</p>
+            <p>Báo cáo cho kỳ <strong>{
+            report_period
+        }</strong> đã được xem xét và phê duyệt.</p>
+            {
+            '<p><strong style="color:green;">✅ Báo cáo đã được tạo lại với dữ liệu mới nhất.</strong></p>'
+            if report_generated
+            else '<p><strong style="color:orange;">⚠️ Không thể tạo báo cáo mới. Email này đính kèm báo cáo hiện có.</strong></p>'
+        }
+            <p>Bạn có thể xem báo cáo tại Google Drive tại đây:</p>
+            <p><a href="{google_drive_link}">Xem Báo Cáo trên Google Drive</a></p>
+            <p>Trân trọng.</p>
+        </body></html>
+        """
+
         # Send email and return success response
         send_email(subject, body, recipient_email)
         return jsonify(
-            {"status": "success", "message": f"Email đã được gửi tới {recipient_email}"}
+            {
+                "status": "success",
+                "message": f"Báo cáo đã được tạo và email đã được gửi tới {recipient_email}",
+            }
         )
     except Exception as e:
-        # Return error response if email sending fails
+        # Return error response if the process fails
         return jsonify({"status": "error", "message": str(e)})
 
 
