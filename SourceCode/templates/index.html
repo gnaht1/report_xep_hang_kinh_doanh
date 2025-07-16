@@ -69,6 +69,22 @@
         .summary-table .cell-light-yellow {
             background-color: #f0f1d0ff !important;
         }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .ranking-table th,
+        .ranking-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        .ranking-table thead th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
     </style>
 
 </head>
@@ -94,37 +110,17 @@
             <h2>Báo cáo Tổng hợp (Kỳ: {{ selected_month }})</h2>
             <!-- insert the HTML table with superheaders -->
             {{ summary_table_html|safe }}
-            
-
-            <div id="summaryGraph"></div>
         </div>
 
         <div class="report">
             <h2>Báo cáo Xếp hạng ASM (Kỳ: {{ selected_month }})</h2>
-            <div id="rankingGraph"></div>
+            {{ ranking_table_html|safe }}
         </div>
 
         <button id="btnApprove">Phê duyệt & Gửi Email</button>
     </div>
 
     <script>
-        // Hiển thị biểu đồ
-        var summaryData = {{ summary_graph_json|safe }};
-        if (summaryData) {
-            Plotly.newPlot('summaryGraph', summaryData.data, summaryData.layout || {});
-        } else {
-            document.getElementById('summaryGraph').innerHTML = '<p>Không có dữ liệu cho kỳ báo cáo này.</p>';
-        }
-
-
-        var rankingData = {{ ranking_graph_json|safe }};
-        if(rankingData) {
-            Plotly.newPlot('rankingGraph', rankingData.data, rankingData.layout || {});
-        } else {
-            document.getElementById('rankingGraph').innerHTML = '<p>Không có dữ liệu cho kỳ báo cáo này.</p>';
-        }
-
-
         // Xử lý sự kiện bấm nút
         document.getElementById('btnApprove').addEventListener('click', function() {
             var reportPeriod = document.getElementById('month').value;

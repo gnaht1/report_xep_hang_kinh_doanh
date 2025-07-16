@@ -18,93 +18,6 @@ import config
 app = Flask(__name__)
 
 
-# def create_summary_table(period):
-#     df = get_summary_data(period)
-#     if df.empty:
-#         return None
-
-#     numeric_cols = df.columns[1:]
-#     rows_to_transform = df.index[:-6].union(df.index[-1:])
-
-#     for col in numeric_cols:
-#         df[col] = pd.to_numeric(df[col], errors="coerce")
-#         df.loc[rows_to_transform, col] = df.loc[rows_to_transform, col] / 1000000
-
-#     for col in numeric_cols:
-
-#         def format_value(val):
-#             if pd.isna(val):
-#                 return "-"
-#             if not isinstance(val, (int, float)):
-#                 return val
-#             if math.isclose(val, 0):
-#                 return "-"
-#             return f"{val:,.2f}"
-
-#         df[col] = df[col].apply(format_value)
-
-#     # THÊM CỘT TRỐNG GIỮA CỘT 6 và 7
-#     col_name = " "
-#     insert_at = 6
-#     df.insert(insert_at, col_name, "")
-
-#     num_cols = len(df.columns)
-#     num_rows = len(df)
-
-#     # Fill màu: cột mới màu vàng, còn lại lavender
-#     fill_color = []
-#     for col_idx in range(num_cols):
-#         if col_idx == 6:
-#             fill_color.append(["#fff699"] * num_rows)  # vàng nhạt cho cột 7 mới
-#         else:
-#             fill_color.append(["lavender"] * num_rows)
-
-#     fig = go.Figure(
-#         data=[
-#             go.Table(
-#                 columnwidth=[
-#                     100,
-#                     40,
-#                     40,
-#                     40,
-#                     40,
-#                     40,
-#                     30,
-#                     40,
-#                     40,
-#                     40,
-#                     40,
-#                     40,
-#                     40,
-#                     40,
-#                     40,
-#                 ],
-#                 header=dict(
-#                     values=list(df.columns),
-#                     fill_color="paleturquoise",
-#                     align="center",
-#                     font=dict(size=12, color="black"),
-#                 ),
-#                 cells=dict(
-#                     values=[df[col] for col in df.columns],
-#                     fill_color=fill_color,
-#                     align="left",
-#                     height=30,
-#                 ),
-#             )
-#         ]
-#     )
-#     fig.update_layout(
-#         autosize=False,
-#         width=1550,
-#         height=600,
-#         margin=dict(l=10, r=10, t=0, b=10),
-#     )
-
-#     return fig
-
-
-# app.py (new function)
 def create_summary_html(period):
     df = get_summary_data(period)
 
@@ -289,25 +202,66 @@ def create_summary_html(period):
 
 
 def create_ranking_table(period):
-    # This function does not need changes for this request.
     df = get_ranking_data(period)
     if df.empty:
-        return None
-    fig = go.Figure(
-        data=[
-            go.Table(
-                header=dict(
-                    values=list(df.columns), fill_color="lightgreen", align="left"
-                ),
-                cells=dict(
-                    values=[df[col] for col in df.columns],
-                    fill_color="white",
-                    align="left",
-                ),
-            )
-        ]
+        return "<p>No data available for ranking.</p>"
+
+    # Build superheader row with "QUY MÔ" spanning columns 7-16 (indices 6-15)
+    total_cols = len(df.columns)
+
+    # Create superheader
+    superheader_cells = []
+
+    # Columns 1-6 (indices 0-5): individual headers with rowspan=2
+    for i in range(6):
+        if i < total_cols:
+            superheader_cells.append(f"<th rowspan='2'>{df.columns[i]}</th>")
+
+    # Columns 7-16 (indices 6-15): "QUY MÔ" header with colspan=10
+    if total_cols > 6:
+        quy_mo_colspan = min(10, total_cols - 6)  # Max 10 columns for QUY MÔ
+        superheader_cells.append(
+            f"<th colspan='{quy_mo_colspan}' style='background-color: #4472C4; color: white; text-align: center;'>QUY MÔ</th>"
+        )
+
+    # Columns 17+ (indices 16+): "TÀI CHÍNH" header
+    if total_cols > 16:
+        tai_chinh_colspan = total_cols - 16  # All remaining columns
+        superheader_cells.append(
+            f"<th colspan='{tai_chinh_colspan}' style='background-color: #FF6600; color: white; text-align: center;'>TÀI CHÍNH</th>"
+        )
+
+    superheader = f"<tr>{''.join(superheader_cells)}</tr>"
+
+    # Build second header row - for columns 7-16 (QUY MÔ) and 17+ (TÀI CHÍNH)
+    subheader_cells = []
+    # Add columns for QUY MÔ (indices 6-15)
+    for i in range(6, min(16, total_cols)):
+        subheader_cells.append(f"<th>{df.columns[i]}</th>")
+    # Add columns for TÀI CHÍNH (indices 16+)
+    for i in range(16, total_cols):
+        subheader_cells.append(f"<th>{df.columns[i]}</th>")
+
+    header_row = f"<tr>{''.join(subheader_cells)}</tr>"
+
+    # Build table body
+    body_rows = []
+    for _, row in df.iterrows():
+        cells = []
+        for cell in row:
+            cells.append(f"<td>{cell}</td>")
+        body_rows.append(f"<tr>{''.join(cells)}</tr>")
+
+    html = (
+        "<table class='ranking-table' style='border-collapse: collapse; width: 100%;'>"
+        "<thead>"
+        f"{superheader}"
+        f"{header_row}"
+        "</thead>"
+        "<tbody>" + "".join(body_rows) + "</tbody>"
+        "</table>"
     )
-    return fig
+    return html
 
 
 @app.route("/")
@@ -315,17 +269,7 @@ def index():
     report_month = request.args.get("month", "202305")
     summary_table_html = create_summary_html(report_month)
 
-    ranking_fig = create_ranking_table(report_month)
-    summary_graph_json = (
-        json.dumps(summary_table_html, cls=plotly.utils.PlotlyJSONEncoder)
-        if summary_table_html
-        else "null"
-    )
-    ranking_graph_json = (
-        json.dumps(ranking_fig, cls=plotly.utils.PlotlyJSONEncoder)
-        if ranking_fig
-        else "null"
-    )
+    ranking_table_html = create_ranking_table(report_month)
     months = [
         {"value": "202301", "text": "Tháng 1, 2023"},
         {"value": "202302", "text": "Tháng 2, 2023"},
@@ -336,7 +280,7 @@ def index():
     return render_template(
         "index.html",
         summary_table_html=summary_table_html,
-        ranking_graph_json=ranking_graph_json,
+        ranking_table_html=ranking_table_html,
         months=months,
         selected_month=report_month,
     )
