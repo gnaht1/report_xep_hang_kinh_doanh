@@ -79,4 +79,4 @@ def run_reports(report_period, recipient_email):
 
 
 if __name__ == "__main__":
-    run_reports("202305", "test@example.com")
+    run_reports("202302", "umldoomsday@gmail.com")
