@@ -59,3 +59,7 @@ venv.bak/
 Thumbs.db
 
 .github/instructions/comment code in English.instructions.md
+
+# Excel
+.xlsx
+.xls
