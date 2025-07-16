@@ -354,25 +354,44 @@ def index():
 
 @app.route("/send-approval-email", methods=["POST"])
 def send_approval_email():
+    """
+    Handle sending approval email to supervisor with Google Drive link
+
+    This route receives the report period and supervisor email from the form,
+    then sends an email with a link to the Google Drive folder containing the report
+    """
     data = request.get_json()
     report_period = data.get("report_period")
-    recipient_email = getattr(config, "MANAGER_EMAIL", "manager@example.com")
+    # Get recipient email from request data instead of config
+    recipient_email = data.get("email")
+
+    # Build email subject and body
     subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
+
+    # Get Google Drive link from config or use a default
+    google_drive_link = getattr(
+        config,
+        "GOOGLE_DRIVE_FOLDER",
+        f"https://drive.google.com/drive/folders/{report_period}",
+    )
+
     body = f"""
     <html><body>
         <p>Xin chào cấp trên,</p>
         <p>Báo cáo cho kỳ <strong>{report_period}</strong> đã được xem xét và phê duyệt.</p>
-        <p>Bạn có thể xem trực tiếp báo cáo tại đây:</p>
-        <p><a href="{request.host_url}?month={report_period}">Xem Báo cáo Tương tác</a></p>
+        <p>Bạn có thể xem báo cáo tại Google Drive tại đây:</p>
+        <p><a href="{google_drive_link}">Xem Báo Cáo trên Google Drive</a></p>
         <p>Trân trọng.</p>
     </body></html>
     """
     try:
+        # Send email and return success response
         send_email(subject, body, recipient_email)
         return jsonify(
             {"status": "success", "message": f"Email đã được gửi tới {recipient_email}"}
         )
     except Exception as e:
+        # Return error response if email sending fails
         return jsonify({"status": "error", "message": str(e)})
 
 
