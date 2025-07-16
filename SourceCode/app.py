@@ -1,7 +1,5 @@
 # In your app.py file
 import math
-
-
 import pandas as pd
 import numpy as np  # Make sure to import numpy
 import json
@@ -9,7 +7,7 @@ import plotly
 import plotly.graph_objects as go
 from flask import Flask, render_template, request, jsonify
 
-# (Keep your other imports for get_summary_data, get_ranking_data, etc.)
+# Import other required modules
 from BaocaoTonghop_formatted import get_summary_data
 from BaocaoXepHangASM_formatted import get_ranking_data
 from run_all_reports import send_email
@@ -215,7 +213,28 @@ def create_ranking_table(period):
     # Columns 1-6 (indices 0-5): individual headers with rowspan=2
     for i in range(6):
         if i < total_cols:
-            superheader_cells.append(f"<th rowspan='2'>{df.columns[i]}</th>")
+            column_name = df.columns[i]
+            if column_name.lower() in ["rank_ptkd", "rank_fin"]:
+                superheader_cells.append(
+                    f"<th rowspan='2' class='rank-green'>{column_name}</th>"
+                )
+            elif (
+                "điểm quy mô" in column_name.lower()
+                or "điểm fin" in column_name.lower()
+            ):
+                superheader_cells.append(
+                    f"<th rowspan='2' class='diem-header'>{column_name}</th>"
+                )
+            elif "tổng điểm" in column_name.lower():
+                superheader_cells.append(
+                    f"<th rowspan='2' class='tong-diem-header'>{column_name}</th>"
+                )
+            elif column_name.lower() == "rank_final":
+                superheader_cells.append(
+                    f"<th rowspan='2' class='rank-final-header'>{column_name}</th>"
+                )
+            else:
+                superheader_cells.append(f"<th rowspan='2'>{column_name}</th>")
 
     # Columns 7-16 (indices 6-15): "QUY MÔ" header with colspan=10
     if total_cols > 6:
@@ -237,10 +256,30 @@ def create_ranking_table(period):
     subheader_cells = []
     # Add columns for QUY MÔ (indices 6-15)
     for i in range(6, min(16, total_cols)):
-        subheader_cells.append(f"<th>{df.columns[i]}</th>")
+        column_name = df.columns[i]
+        if column_name.lower() in ["rank_ptkd", "rank_fin"]:
+            subheader_cells.append(f"<th class='rank-green'>{column_name}</th>")
+        elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
+            subheader_cells.append(f"<th class='diem-header'>{column_name}</th>")
+        elif "tổng điểm" in column_name.lower():
+            subheader_cells.append(f"<th class='tong-diem-header'>{column_name}</th>")
+        elif column_name.lower() == "rank_final":
+            subheader_cells.append(f"<th class='rank-final-header'>{column_name}</th>")
+        else:
+            subheader_cells.append(f"<th>{column_name}</th>")
     # Add columns for TÀI CHÍNH (indices 16+)
     for i in range(16, total_cols):
-        subheader_cells.append(f"<th>{df.columns[i]}</th>")
+        column_name = df.columns[i]
+        if column_name.lower() in ["rank_ptkd", "rank_fin"]:
+            subheader_cells.append(f"<th class='rank-green'>{column_name}</th>")
+        elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
+            subheader_cells.append(f"<th class='diem-header'>{column_name}</th>")
+        elif "tổng điểm" in column_name.lower():
+            subheader_cells.append(f"<th class='tong-diem-header'>{column_name}</th>")
+        elif column_name.lower() == "rank_final":
+            subheader_cells.append(f"<th class='rank-final-header'>{column_name}</th>")
+        else:
+            subheader_cells.append(f"<th>{column_name}</th>")
 
     header_row = f"<tr>{''.join(subheader_cells)}</tr>"
 
@@ -248,8 +287,35 @@ def create_ranking_table(period):
     body_rows = []
     for _, row in df.iterrows():
         cells = []
-        for cell in row:
-            cells.append(f"<td>{cell}</td>")
+        for i, cell in enumerate(row):
+            column_name = df.columns[i]
+            # Format numeric values in "Tổng điểm" and "Điểm Quy Mô" columns as integers
+            if (
+                "tổng điểm" in column_name.lower()
+                or "điểm quy mô" in column_name.lower()
+            ):
+                if pd.notnull(cell) and isinstance(cell, (int, float)):
+                    # Round to integer and format
+                    formatted_value = f"{int(round(cell))}"
+                    cells.append(f"<td class='tong-diem-cell'>{formatted_value}</td>")
+                else:
+                    cells.append(f"<td class='tong-diem-cell'>{cell}</td>")
+            # Format ltn_avg and hsbq_nhan_su with comma as thousand separator and 2 decimal places
+            elif column_name.lower() in ["ltn_avg", "hsbq_nhan_su"]:
+                if pd.notnull(cell) and isinstance(cell, (int, float)):
+                    formatted_value = (
+                        f"{cell:,.2f}"  # Format with commas and 2 decimal places
+                    )
+                    cells.append(f"<td>{formatted_value}</td>")
+                else:
+                    cells.append(f"<td>{cell}</td>")
+            # Apply styling for rank columns
+            elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
+                cells.append(f"<td class='rank-bold'>{cell}</td>")
+            elif column_name.lower() == "rank_final":
+                cells.append(f"<td class='rank-final-cell'>{cell}</td>")
+            else:
+                cells.append(f"<td>{cell}</td>")
         body_rows.append(f"<tr>{''.join(cells)}</tr>")
 
     html = (
