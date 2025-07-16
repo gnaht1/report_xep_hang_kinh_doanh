@@ -58,3 +58,4 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+.github/instructions/comment code in English.instructions.md

@@ -129,7 +129,7 @@ def create_summary_html(period):
 
     superheader = (
         "<tr>"
-        f"<th rowspan='2'>{df.columns[0]}</th>"
+        "<th rowspan='2'></th>"
         "<th colspan='5' class='header-blue'>Tổng cần phân bổ xuống cho ĐVML</th>"
         "<th rowspan='2' class='column-yellow'></th>"
         "<th colspan='7' class='header-blue' >KHU VỰC MẠNG LƯỚI</th>"
@@ -158,14 +158,18 @@ def create_summary_html(period):
         "Tổng thu nhập hoạt động",
         "Tổng chi phí hoạt động",
         "Chi phí dự phòng",
-    ]
+    ]  # Function to format cell values
 
-    # Function to format cell values
-    def format_cell_value(value, row_index, total_rows):
+    def format_cell_value(value, row_index, total_rows, column_index, total_columns):
         """Format cell value: divide by 1,000,000 except rows 2-6 from bottom, convert 0/None to '-'"""
         # Identify rows that should NOT be divided by 1,000,000 (rows 2-6 from bottom)
         # If total_rows = 10, excluded rows are: [4, 5, 6, 7, 8] (indices for rows 6, 5, 4, 3, 2 from bottom)
         excluded_rows = list(range(total_rows - 6, total_rows - 1))
+
+        # Set values to null for last 6 rows (from bottom), columns 2-5 (indices 1-4)
+        last_6_rows = list(range(total_rows - 6, total_rows))
+        if row_index in last_6_rows and column_index in [1, 2, 3, 4]:
+            return "-"
 
         if pd.isna(value) or value is None:
             return "-"
@@ -178,8 +182,27 @@ def create_summary_html(period):
             if value == 0 or math.isclose(value, 0, abs_tol=1e-10):
                 return "-"
 
-            # Format number with 2 decimal places and comma separators
-            return f"{value:,.2f}"
+            # Identify rows 2, 3, 4 from bottom (indices: total_rows-4, total_rows-3, total_rows-2)
+            rows_2_3_4_from_bottom = [total_rows - 4, total_rows - 3, total_rows - 2]
+            last_column_index = total_columns - 1  # Last column index
+
+            if (
+                row_index in rows_2_3_4_from_bottom
+                and column_index == last_column_index
+            ):
+                # Round to nearest integer, no decimal places - NO negative formatting for these rows
+                rounded_value = round(value / 100)
+                return f"{rounded_value:,}"
+            elif row_index in rows_2_3_4_from_bottom:
+                # For rows 2,3,4 from bottom in all other columns - NO negative formatting
+                return f"{value:,.2f}"
+            else:
+                # Format number with 2 decimal places and comma separators
+                # Apply negative formatting (parentheses) for all other rows
+                if value < 0:
+                    return f"({abs(value):,.2f})"
+                else:
+                    return f"{value:,.2f}"
 
         if isinstance(value, str):
             if (
@@ -194,6 +217,7 @@ def create_summary_html(period):
     # Build table body
     body_rows = []
     total_rows = len(df)
+    total_columns = len(df.columns)
 
     for row_index, (_, row) in enumerate(df.iterrows()):
         cells = []
@@ -206,7 +230,9 @@ def create_summary_html(period):
             if i == 0:
                 formatted_cell = str(cell)  # Row name column - no numeric formatting
             else:
-                formatted_cell = format_cell_value(cell, row_index, total_rows)
+                formatted_cell = format_cell_value(
+                    cell, row_index, total_rows, i, total_columns
+                )
 
             if i == 6:  # Cột trống thứ 7 (index 6) - màu vàng
                 cells.append(f"<td class='column-yellow'>{formatted_cell}</td>")
