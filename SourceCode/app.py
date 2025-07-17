@@ -3,8 +3,6 @@ import math
 import pandas as pd
 import numpy as np  # Make sure to import numpy
 import json
-import plotly
-import plotly.graph_objects as go
 from flask import Flask, render_template, request, jsonify
 
 # Import other required modules
