@@ -407,12 +407,14 @@ def send_approval_email():
         </body></html>
         """
 
-        # Send email and return success response
+        # Send email and return success response with Google Drive link
         send_email(subject, body, recipient_email)
         return jsonify(
             {
                 "status": "success",
                 "message": f"Báo cáo đã được tạo và email đã được gửi tới {recipient_email}",
+                "google_drive_link": google_drive_link,
+                "report_period": report_period,
             }
         )
     except Exception as e:
