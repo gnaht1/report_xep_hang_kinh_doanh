@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Trang chủ Báo cáo{% endblock %}
+
+{% block content %}
+<div class="welcome-header">
+    <h1>Hệ thống Báo cáo Kinh doanh</h1>
+    <p>Chào mừng bạn đến với trang tổng hợp báo cáo. Vui lòng chọn một trong các báo cáo dưới đây để bắt đầu xem dữ liệu chi tiết.</p>
+</div>
+
+<div class="nav-cards">
+    <a href="{{ url_for('summary_report') }}" class="card">
+        <div class="card-icon">📊</div>
+        <h3>Báo cáo Tổng hợp</h3>
+        <p>Xem báo cáo tổng hợp hiệu suất kinh doanh theo từng khu vực.</p>
+    </a>
+
+    <a href="{{ url_for('ranking_report') }}" class="card">
+        <div class="card-icon">🏆</div>
+        <h3>Báo cáo Xếp hạng ASM</h3>
+        <p>Xem báo cáo xếp hạng chi tiết dành cho các ASM dựa trên KPI.</p>
+    </a>
+</div>
+{% endblock %}

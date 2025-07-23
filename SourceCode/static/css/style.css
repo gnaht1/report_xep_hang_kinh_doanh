@@ -1,0 +1,240 @@
+/* General Body and Container Styles */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    background-color: #f4f7f6;
+}
+
+.container {
+    max-width: 1600px;
+    margin: auto;
+    padding: 2em;
+}
+
+h1,
+h2 {
+    color: #333;
+}
+
+.controls {
+    margin-bottom: 20px;
+}
+
+.report {
+    margin-top: 30px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: white;
+}
+
+/* Approval Button */
+#btnApprove {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+#btnApprove:hover {
+    background-color: #45a049;
+}
+
+/* Menu Styles */
+.navbar {
+    overflow: hidden;
+    background-color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar a {
+    float: left;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 20px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.navbar a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+.navbar a.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Home Page Specific Styles */
+.welcome-header {
+    text-align: center;
+    margin: 40px 0;
+}
+
+.welcome-header h1 {
+    color: #2c3e50;
+    font-size: 2.5em;
+}
+
+.welcome-header p {
+    color: #7f8c8d;
+    font-size: 1.2em;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.nav-cards {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 50px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+    padding: 30px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+    font-size: 3em;
+    color: #3498db;
+}
+
+.card h3 {
+    margin-top: 20px;
+    color: #34495e;
+}
+
+.card p {
+    color: #95a5a6;
+}
+
+
+/* General Table Styles */
+.summary-table,
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.summary-table th,
+.summary-table td,
+.ranking-table th,
+.ranking-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+
+.summary-table thead th,
+.ranking-table thead th {
+    font-weight: bold;
+}
+
+/* Summary Table Specific Styles */
+.summary-table thead th {
+    background-color: paleturquoise;
+}
+
+.summary-table .header-blue {
+    background-color: #007acc !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.summary-table .column-yellow {
+    background-color: #f7fc4b !important;
+}
+
+.summary-table .cell-blue {
+    background-color: #73b3eeff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-yellow {
+    background-color: #e0a80dff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-orange {
+    background-color: #e05b08ff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-green {
+    background-color: #0fa814ff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-gray {
+    background-color: #d3d3d3 !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-light-gray {
+    background-color: #f0f0f0 !important;
+}
+
+.summary-table .cell-light-yellow {
+    background-color: #f0f1d0ff !important;
+}
+
+
+/* Ranking Table Specific Styles */
+.ranking-table thead th {
+    background-color: #f0f0f0;
+}
+
+.ranking-table .rank-green {
+    background-color: #28a745 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .rank-bold {
+    font-weight: bold !important;
+}
+
+.ranking-table .diem-header {
+    background-color: #bce9ff !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .tong-diem-cell {
+    font-weight: bold !important;
+}
+
+.ranking-table .tong-diem-header {
+    background-color: #E2EFD9 !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .rank-final-header {
+    background-color: #007acc !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .rank-final-cell {
+    font-weight: bold !important;
+}

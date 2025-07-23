@@ -1,7 +1,8 @@
+# comment code in English
 # In your app.py file
 import math
 import pandas as pd
-import numpy as np  # Make sure to import numpy
+import numpy as np
 import json
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 
@@ -14,6 +15,8 @@ import config
 app = Flask(__name__)
 
 
+# --- FUNCTIONS TO CREATE HTML TABLES (create_summary_html, create_ranking_table) ---
+# --- These functions remain unchanged. ---
 def create_summary_html(period):
     df = get_summary_data(period)
 
@@ -326,11 +329,13 @@ def create_ranking_table(period):
     return html
 
 
+# --- NEW: Route for the new home page ---
 @app.route("/")
-def index():
-    return redirect(url_for("summary_report"))
+def home():
+    return render_template("home.html")
 
 
+# --- Route for Summary Report (previously index) ---
 @app.route("/summary_report")
 def summary_report():
     report_month = request.args.get("month", "202305")
@@ -350,6 +355,7 @@ def summary_report():
     )
 
 
+# --- Route for Ranking Report ---
 @app.route("/ranking_report")
 def ranking_report():
     report_month = request.args.get("month", "202305")
@@ -373,60 +379,40 @@ def ranking_report():
 def send_approval_email():
     """
     Handle report generation and send approval email to supervisor with Google Drive link
-
-    This route:
-    1. Receives the report period and supervisor email from the form
-    2. Runs the report generation to ensure latest data
-    3. Sends an email with a link to the Google Drive folder containing the report
+    This function remains unchanged.
     """
     data = request.get_json()
     report_period = data.get("report_period")
-    # Get recipient email from request data
     recipient_email = data.get("email")
 
     try:
-        # First, run the reports to generate latest data
         from run_all_reports import run_reports
 
-        # Run report generation with the selected period
         try:
-            # This will generate reports and upload to Google Drive
             run_reports(report_period, recipient_email)
             report_generated = True
         except Exception as e:
             report_generated = False
             print(f"Error generating reports: {str(e)}")
-            # Continue with email anyway, but note the error
 
-        # Build email subject
         subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
-
-        # Get Google Drive link from config or use a default
         google_drive_link = getattr(
             config,
             "GOOGLE_DRIVE_FOLDER",
             f"https://drive.google.com/drive/folders/{report_period}",
         )
 
-        # Build email body
         body = f"""
         <html><body>
             <p>Xin chào cấp trên,</p>
-            <p>Báo cáo cho kỳ <strong>{
-            report_period
-        }</strong> đã được xem xét và phê duyệt.</p>
-            {
-            '<p><strong style="color:green;">✅ Báo cáo đã được tạo lại với dữ liệu mới nhất.</strong></p>'
-            if report_generated
-            else '<p><strong style="color:orange;">⚠️ Không thể tạo báo cáo mới. Email này đính kèm báo cáo hiện có.</strong></p>'
-        }
+            <p>Báo cáo cho kỳ <strong>{report_period}</strong> đã được xem xét và phê duyệt.</p>
+            {'<p><strong style="color:green;">✅ Báo cáo đã được tạo lại với dữ liệu mới nhất.</strong></p>' if report_generated else '<p><strong style="color:orange;">⚠️ Không thể tạo báo cáo mới. Email này đính kèm báo cáo hiện có.</strong></p>'}
             <p>Bạn có thể xem báo cáo tại Google Drive tại đây:</p>
             <p><a href="{google_drive_link}">Xem Báo Cáo trên Google Drive</a></p>
             <p>Trân trọng.</p>
         </body></html>
         """
 
-        # Send email and return success response with Google Drive link
         send_email(subject, body, recipient_email)
         return jsonify(
             {
@@ -437,7 +423,6 @@ def send_approval_email():
             }
         )
     except Exception as e:
-        # Return error response if the process fails
         return jsonify({"status": "error", "message": str(e)})
 
 
