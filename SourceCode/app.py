@@ -3,7 +3,7 @@ import math
 import pandas as pd
 import numpy as np  # Make sure to import numpy
 import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 # Import other required modules
 from BaocaoTonghop_formatted import get_summary_data
@@ -195,8 +195,6 @@ def create_summary_html(period):
 
 
 # --- HÀM create_ranking_table VÀ CÁC ROUTE CÒN LẠI GIỮ NGUYÊN ---
-
-
 def create_ranking_table(period):
     df = get_ranking_data(period)
     if df.empty:
@@ -330,9 +328,31 @@ def create_ranking_table(period):
 
 @app.route("/")
 def index():
+    return redirect(url_for("summary_report"))
+
+
+@app.route("/summary_report")
+def summary_report():
     report_month = request.args.get("month", "202305")
     summary_table_html = create_summary_html(report_month)
+    months = [
+        {"value": "202301", "text": "Tháng 1, 2023"},
+        {"value": "202302", "text": "Tháng 2, 2023"},
+        {"value": "202303", "text": "Tháng 3, 2023"},
+        {"value": "202304", "text": "Tháng 4, 2023"},
+        {"value": "202305", "text": "Tháng 5, 2023"},
+    ]
+    return render_template(
+        "summary_report.html",
+        summary_table_html=summary_table_html,
+        months=months,
+        selected_month=report_month,
+    )
 
+
+@app.route("/ranking_report")
+def ranking_report():
+    report_month = request.args.get("month", "202305")
     ranking_table_html = create_ranking_table(report_month)
     months = [
         {"value": "202301", "text": "Tháng 1, 2023"},
@@ -342,8 +362,7 @@ def index():
         {"value": "202305", "text": "Tháng 5, 2023"},
     ]
     return render_template(
-        "index.html",
-        summary_table_html=summary_table_html,
+        "ranking_report.html",
         ranking_table_html=ranking_table_html,
         months=months,
         selected_month=report_month,

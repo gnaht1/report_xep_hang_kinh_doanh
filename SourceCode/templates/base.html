@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Bảng điều khiển Báo cáo{% endblock %}</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; }
+        .container { max-width: 1600px; margin: auto; padding: 2em; }
+        h1, h2 { color: #333; }
+        .controls { margin-bottom: 20px; }
+        .report { margin-top: 30px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; }
+        #btnApprove {
+            background-color: #4CAF50; color: white; padding: 10px 20px;
+            border: none; border-radius: 5px; cursor: pointer; font-size: 16px;
+            margin-top: 20px;
+        }
+        #btnApprove:hover { background-color: #45a049; }
+
+        /* Menu styles */
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+        }
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .navbar a.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        /* Table styles */
+        .summary-table, .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .summary-table th, .summary-table td,
+        .ranking-table th, .ranking-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        .summary-table thead th, .ranking-table thead th {
+            font-weight: bold;
+        }
+        .summary-table thead th { background-color: paleturquoise; }
+        .summary-table .header-blue { background-color: #007acc !important; color: white !important; font-weight: bold; }
+        .summary-table .column-yellow { background-color: #f7fc4b !important; }
+        .summary-table .cell-blue { background-color: #73b3eeff !important; font-weight: bold; }
+        .summary-table .cell-yellow { background-color: #e0a80dff !important; font-weight: bold; }
+        .summary-table .cell-orange { background-color: #e05b08ff !important; font-weight: bold; }
+        .summary-table .cell-green { background-color: #0fa814ff !important; font-weight: bold; }
+        .summary-table .cell-gray { background-color: #d3d3d3 !important; font-weight: bold; }
+        .summary-table .cell-light-gray { background-color: #f0f0f0 !important; }
+        .summary-table .cell-light-yellow { background-color: #f0f1d0ff !important; }
+
+        .ranking-table thead th { background-color: #f0f0f0; }
+        .ranking-table .rank-green { background-color: #28a745 !important; color: white !important; font-weight: bold !important; }
+        .ranking-table .rank-bold { font-weight: bold !important; }
+        .ranking-table .diem-header { background-color: #bce9ff !important; font-weight: bold !important; }
+        .ranking-table .tong-diem-cell { font-weight: bold !important; }
+        .ranking-table .tong-diem-header { background-color: #E2EFD9 !important; font-weight: bold !important; }
+        .ranking-table .rank-final-header { background-color: #007acc !important; color: white !important; font-weight: bold !important; }
+        .ranking-table .rank-final-cell { font-weight: bold !important; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="{{ url_for('summary_report') }}" class="{{ 'active' if request.endpoint == 'summary_report' else '' }}">Báo cáo Tổng hợp</a>
+        <a href="{{ url_for('ranking_report') }}" class="{{ 'active' if request.endpoint == 'ranking_report' else '' }}">Báo cáo Xếp hạng ASM</a>
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const approveButton = document.getElementById('btnApprove');
+            if (approveButton) {
+                approveButton.addEventListener('click', function() {
+                    var reportPeriod = document.getElementById('month').value;
+                    var email = document.getElementById('supervisorEmail').value;
+                    
+                    if(!email || !email.includes('@')) {
+                        alert('Vui lòng nhập địa chỉ email hợp lệ!');
+                        return;
+                    }
+                    
+                    showLoading('Đang tạo báo cáo và gửi email. Vui lòng chờ đợi...');
+                    
+                    fetch('/send-approval-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            report_period: reportPeriod,
+                            email: email
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        hideLoading();
+                        if (data.status === 'success') {
+                            var successMessage = data.message;
+                            if (data.google_drive_link) {
+                                successMessage += '\n\nBạn có thể xem báo cáo tại: ' + data.google_drive_link;
+                            }
+                            
+                            if (confirm(successMessage + '\n\nBạn có muốn mở Google Drive ngay bây giờ?')) {
+                                window.open(data.google_drive_link, '_blank');
+                            }
+                            
+                            document.getElementById('supervisorEmail').value = '';
+                        } else {
+                            alert('Lỗi: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi gửi email phê duyệt.');
+                    });
+                });
+            }
+        });
+
+        function showLoading(message) {
+            hideLoading();
+            
+            var overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;';
+            
+            var loadingBox = document.createElement('div');
+            loadingBox.style.cssText = 'background-color: white; padding: 20px; border-radius: 8px; text-align: center; max-width: 400px;';
+            
+            var spinner = document.createElement('div');
+            spinner.style.cssText = 'border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; margin: 0 auto 15px; animation: spin 2s linear infinite;';
+            
+            var messageElement = document.createElement('p');
+            messageElement.textContent = message || 'Đang xử lý...';
+            messageElement.style.cssText = 'margin: 0; font-size: 16px;';
+            
+            loadingBox.appendChild(spinner);
+            loadingBox.appendChild(messageElement);
+            overlay.appendChild(loadingBox);
+            document.body.appendChild(overlay);
+            
+            if (!document.getElementById('spinnerAnimation')) {
+                var style = document.createElement('style');
+                style.id = 'spinnerAnimation';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        function hideLoading() {
+            var overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+    </script>
+</body>
+</html>

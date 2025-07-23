@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Báo cáo Xếp hạng ASM{% endblock %}
+
+{% block content %}
+    <h1>Báo cáo Xếp hạng ASM</h1>
+
+    <div class="controls">
+        <form action="{{ url_for('ranking_report') }}" method="get">
+            <label for="month">Chọn tháng báo cáo:</label>
+            <select name="month" id="month" onchange="this.form.submit()">
+                {% for month in months %}
+                    <option value="{{ month.value }}" {% if month.value == selected_month %}selected{% endif %}>
+                        {{ month.text }}
+                    </option>
+                {% endfor %}
+            </select>
+            <noscript><input type="submit" value="Xem"></noscript>
+        </form>
+    </div>
+
+    <div class="report">
+        <h2>Báo cáo Xếp hạng ASM (Kỳ: {{ selected_month }})</h2>
+        {{ ranking_table_html|safe }}
+    </div>
+
+    <div class="approval-section" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+        <h3>Phê duyệt và Gửi Email</h3>
+        <div style="margin-bottom: 15px;">
+            <label for="supervisorEmail" style="display: block; margin-bottom: 5px; font-weight: bold;">Email cấp trên:</label>
+            <input type="email" id="supervisorEmail" style="width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" 
+                   placeholder="Nhập email cấp trên..." required>
+        </div>
+        <button id="btnApprove">Phê duyệt & Gửi Email</button>
+    </div>
+{% endblock %}
