@@ -18,27 +18,19 @@ app = Flask(__name__)
 # --- FUNCTIONS TO CREATE HTML TABLES (create_summary_html, create_ranking_table) ---
 # --- These functions remain unchanged. ---
 def create_summary_html(period):
+    # This function now correctly receives a period like "202305"
     df = get_summary_data(period)
 
     if df.empty:
-        return "<p>No data available.</p>"
+        return (
+            f"<p>Không có dữ liệu cho kỳ báo cáo {period}. Vui lòng kiểm tra lại.</p>"
+        )
 
-    # Thêm cột trống giữa cột 6 và 7
+    # The rest of the function for creating the HTML table is unchanged
     df.insert(6, " ", "")
-
-    # Đếm số cột để xác định colspan chính xác
     total_cols = len(df.columns)
     print(f"Tổng số cột: {total_cols}")
     print(f"Tên các cột: {list(df.columns)}")
-
-    # Build superheader row:
-    # Giả sử có 15 cột tổng cộng:
-    # - Cột 1: tên hàng (rowspan=2)
-    # - Cột 2-6: "Tổng cần phân bổ xuống cho ĐVML" (colspan=5)
-    # - Cột 7: cột trống (rowspan=2)
-    # - Cột 8-14: "KHU VỰC MẠNG LƯỚI" (colspan=7)
-    # - Cột 15: cột cuối (rowspan=2)
-
     superheader = (
         "<tr>"
         "<th rowspan='2'></th>"
@@ -48,21 +40,13 @@ def create_summary_html(period):
         f"<th rowspan='2'>{df.columns[-1]}</th>"
         "</tr>"
     )
-
-    # Build the second header row - chỉ cần các cột từ 2-6 và 8-14
-    # Bỏ qua cột 1 (index 0), cột 7 (index 6), và cột cuối (index -1)
     middle_columns = []
     for i, col in enumerate(df.columns):
-        if (
-            i == 0 or i == 6 or i == len(df.columns) - 1
-        ):  # Bỏ qua cột đầu, cột trống, và cột cuối
+        if i == 0 or i == 6 or i == len(df.columns) - 1:
             continue
         middle_columns.append(col)
-
     subheaders = "".join(f"<th>{col}</th>" for col in middle_columns)
     header_row = f"<tr>{subheaders}</tr>"
-
-    # Green cells
     green_rows = [
         "Thu nhập từ hoạt động thẻ",
         "Chi phí thuần KDV",
@@ -70,52 +54,35 @@ def create_summary_html(period):
         "Tổng thu nhập hoạt động",
         "Tổng chi phí hoạt động",
         "Chi phí dự phòng",
-    ]  # Function to format cell values
+    ]
 
     def format_cell_value(value, row_index, total_rows, column_index, total_columns):
-        """Format cell value: divide by 1,000,000 except rows 2-6 from bottom, convert 0/None to '-'"""
-        # Identify rows that should NOT be divided by 1,000,000 (rows 2-6 from bottom)
-        # If total_rows = 10, excluded rows are: [4, 5, 6, 7, 8] (indices for rows 6, 5, 4, 3, 2 from bottom)
         excluded_rows = list(range(total_rows - 6, total_rows - 1))
-
-        # Set values to null for last 6 rows (from bottom), columns 2-5 (indices 1-4)
         last_6_rows = list(range(total_rows - 6, total_rows))
         if row_index in last_6_rows and column_index in [1, 2, 3, 4]:
             return "-"
-
         if pd.isna(value) or value is None:
             return "-"
-
         if isinstance(value, (int, float)):
-            # Divide by 1,000,000 if NOT in excluded rows (rows 2-6 from bottom)
             if row_index not in excluded_rows:
                 value = value / 1000000
-
             if value == 0 or math.isclose(value, 0, abs_tol=1e-10):
                 return "-"
-
-            # Identify rows 2, 3, 4 from bottom (indices: total_rows-4, total_rows-3, total_rows-2)
             rows_2_3_4_from_bottom = [total_rows - 4, total_rows - 3, total_rows - 2]
-            last_column_index = total_columns - 1  # Last column index
-
+            last_column_index = total_columns - 1
             if (
                 row_index in rows_2_3_4_from_bottom
                 and column_index == last_column_index
             ):
-                # Round to nearest integer, no decimal places - NO negative formatting for these rows
                 rounded_value = round(value / 100)
                 return f"{rounded_value:,}"
             elif row_index in rows_2_3_4_from_bottom:
-                # For rows 2,3,4 from bottom in all other columns - NO negative formatting
                 return f"{value:,.2f}"
             else:
-                # Format number with 2 decimal places and comma separators
-                # Apply negative formatting (parentheses) for all other rows
                 if value < 0:
                     return f"({abs(value):,.2f})"
                 else:
                     return f"{value:,.2f}"
-
         if isinstance(value, str):
             if (
                 value.strip() == ""
@@ -123,34 +90,25 @@ def create_summary_html(period):
                 or value.strip().lower() in ["none", "null", "nan"]
             ):
                 return "-"
-
         return str(value)
 
-    # Build table body
     body_rows = []
     total_rows = len(df)
     total_columns = len(df.columns)
-
     for row_index, (_, row) in enumerate(df.iterrows()):
         cells = []
-        row_name = str(row.iloc[0]).strip()  # Get row name (first column)
+        row_name = str(row.iloc[0]).strip()
         is_green_row = row_name in green_rows
-
         for i, cell in enumerate(row):
-            # Format cell value before applying styling
-            # Only apply division by 1,000,000 to data columns (not the first column which contains row names)
             if i == 0:
-                formatted_cell = str(cell)  # Row name column - no numeric formatting
+                formatted_cell = str(cell)
             else:
                 formatted_cell = format_cell_value(
                     cell, row_index, total_rows, i, total_columns
                 )
-
-            if i == 6:  # Cột trống thứ 7 (index 6) - màu vàng
+            if i == 6:
                 cells.append(f"<td class='column-yellow'>{formatted_cell}</td>")
-            elif (
-                i == 0 and "Lợi nhuận trước thuế" in row_name
-            ):  # Ô đầu tiên của hàng "1. Lợi nhuận trước thuế"
+            elif i == 0 and "Lợi nhuận trước thuế" in row_name:
                 cells.append(f"<td class='cell-blue'>{formatted_cell}</td>")
             elif (
                 i != 6
@@ -163,8 +121,6 @@ def create_summary_html(period):
             elif i == 0 and row_name in green_rows:
                 cells.append(f"<td class='cell-green'>{formatted_cell}</td>")
             elif is_green_row and i != 0 and i != 6 and i != len(row) - 1:
-                # Cột từ 2-6 (index 1-5) và 8-14 (index 7-13) của green_rows - màu xám
-                # Bỏ qua cột đầu (i==0), cột trống (i==6), và cột cuối (i==len(row)-1)
                 cells.append(f"<td class='cell-gray'>{formatted_cell}</td>")
             elif (
                 row_name in ["1. Lợi nhuận trước thuế", "3. Chỉ số tài chính"]
@@ -173,23 +129,17 @@ def create_summary_html(period):
                 and i != len(row) - 1
             ):
                 cells.append(f"<td class='cell-orange'>{formatted_cell}</td>")
-            elif i == len(row) - 1:  # Cột cuối cùng (TOTAL) - màu xám
+            elif i == len(row) - 1:
                 cells.append(f"<td class='cell-gray'>{formatted_cell}</td>")
-            elif (
-                i == 0
-            ):  # Các cell còn lại ở cột đầu tiên (i = 0) chưa format - màu xám nhạt
+            elif i == 0:
                 cells.append(f"<td class='cell-light-gray'>{formatted_cell}</td>")
             else:
-                # Các cell chưa được format - màu vàng nhạt #fdffba
                 cells.append(f"<td class='cell-light-yellow'>{formatted_cell}</td>")
-
         body_rows.append(f"<tr>{''.join(cells)}</tr>")
-
     html = (
         "<table class='summary-table'>"
         "<thead>"
-        f"{superheader}"
-        f"{header_row}"
+        f"{superheader}{header_row}"
         "</thead>"
         "<tbody>" + "".join(body_rows) + "</tbody>"
         "</table>"
@@ -197,19 +147,17 @@ def create_summary_html(period):
     return html
 
 
-# --- HÀM create_ranking_table VÀ CÁC ROUTE CÒN LẠI GIỮ NGUYÊN ---
 def create_ranking_table(period):
+    # This function also correctly receives a period like "202305"
     df = get_ranking_data(period)
     if df.empty:
-        return "<p>No data available for ranking.</p>"
+        return (
+            f"<p>Không có dữ liệu cho kỳ báo cáo {period}. Vui lòng kiểm tra lại.</p>"
+        )
 
-    # Build superheader row with "QUY MÔ" spanning columns 7-16 (indices 6-15)
+    # The rest of the function for creating the HTML table is unchanged
     total_cols = len(df.columns)
-
-    # Create superheader
     superheader_cells = []
-
-    # Columns 1-6 (indices 0-5): individual headers with rowspan=2
     for i in range(6):
         if i < total_cols:
             column_name = df.columns[i]
@@ -234,26 +182,18 @@ def create_ranking_table(period):
                 )
             else:
                 superheader_cells.append(f"<th rowspan='2'>{column_name}</th>")
-
-    # Columns 7-16 (indices 6-15): "QUY MÔ" header with colspan=10
     if total_cols > 6:
-        quy_mo_colspan = min(10, total_cols - 6)  # Max 10 columns for QUY MÔ
+        quy_mo_colspan = min(10, total_cols - 6)
         superheader_cells.append(
             f"<th colspan='{quy_mo_colspan}' style='background-color: #4472C4; color: white; text-align: center;'>QUY MÔ</th>"
         )
-
-    # Columns 17+ (indices 16+): "TÀI CHÍNH" header
     if total_cols > 16:
-        tai_chinh_colspan = total_cols - 16  # All remaining columns
+        tai_chinh_colspan = total_cols - 16
         superheader_cells.append(
             f"<th colspan='{tai_chinh_colspan}' style='background-color: #FF6600; color: white; text-align: center;'>TÀI CHÍNH</th>"
         )
-
     superheader = f"<tr>{''.join(superheader_cells)}</tr>"
-
-    # Build second header row - for columns 7-16 (QUY MÔ) and 17+ (TÀI CHÍNH)
     subheader_cells = []
-    # Add columns for QUY MÔ (indices 6-15)
     for i in range(6, min(16, total_cols)):
         column_name = df.columns[i]
         if column_name.lower() in ["rank_ptkd", "rank_fin"]:
@@ -266,7 +206,6 @@ def create_ranking_table(period):
             subheader_cells.append(f"<th class='rank-final-header'>{column_name}</th>")
         else:
             subheader_cells.append(f"<th>{column_name}</th>")
-    # Add columns for TÀI CHÍNH (indices 16+)
     for i in range(16, total_cols):
         column_name = df.columns[i]
         if column_name.lower() in ["rank_ptkd", "rank_fin"]:
@@ -279,36 +218,27 @@ def create_ranking_table(period):
             subheader_cells.append(f"<th class='rank-final-header'>{column_name}</th>")
         else:
             subheader_cells.append(f"<th>{column_name}</th>")
-
     header_row = f"<tr>{''.join(subheader_cells)}</tr>"
-
-    # Build table body
     body_rows = []
     for _, row in df.iterrows():
         cells = []
         for i, cell in enumerate(row):
             column_name = df.columns[i]
-            # Format numeric values in "Tổng điểm" and "Điểm Quy Mô" columns as integers
             if (
                 "tổng điểm" in column_name.lower()
                 or "điểm quy mô" in column_name.lower()
             ):
                 if pd.notnull(cell) and isinstance(cell, (int, float)):
-                    # Round to integer and format
                     formatted_value = f"{int(round(cell))}"
                     cells.append(f"<td class='tong-diem-cell'>{formatted_value}</td>")
                 else:
                     cells.append(f"<td class='tong-diem-cell'>{cell}</td>")
-            # Format ltn_avg and hsbq_nhan_su with comma as thousand separator and 2 decimal places
             elif column_name.lower() in ["ltn_avg", "hsbq_nhan_su"]:
                 if pd.notnull(cell) and isinstance(cell, (int, float)):
-                    formatted_value = (
-                        f"{cell:,.2f}"  # Format with commas and 2 decimal places
-                    )
+                    formatted_value = f"{cell:,.2f}"
                     cells.append(f"<td>{formatted_value}</td>")
                 else:
                     cells.append(f"<td>{cell}</td>")
-            # Apply styling for rank columns
             elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
                 cells.append(f"<td class='rank-bold'>{cell}</td>")
             elif column_name.lower() == "rank_final":
@@ -316,12 +246,10 @@ def create_ranking_table(period):
             else:
                 cells.append(f"<td>{cell}</td>")
         body_rows.append(f"<tr>{''.join(cells)}</tr>")
-
     html = (
         "<table class='ranking-table' style='border-collapse: collapse; width: 100%;'>"
         "<thead>"
-        f"{superheader}"
-        f"{header_row}"
+        f"{superheader}{header_row}"
         "</thead>"
         "<tbody>" + "".join(body_rows) + "</tbody>"
         "</table>"
@@ -329,49 +257,68 @@ def create_ranking_table(period):
     return html
 
 
-# --- NEW: Route for the new home page ---
 @app.route("/")
 def home():
     return render_template("home.html")
 
 
-# --- Route for Summary Report (previously index) ---
 @app.route("/summary_report")
 def summary_report():
-    report_month = request.args.get("month", "202305")
-    summary_table_html = create_summary_html(report_month)
+    # Get the month selected by the user, which will be a "2025" value. Default to "202505".
+    report_month_display = request.args.get("month", "202505")
+
+    # ** THE FAKE LOGIC **
+    # Convert the "2025" display value to the "2023" data value for the backend.
+    report_month_data = report_month_display.replace("2025", "2023")
+
+    # Fetch data using the "2023" value.
+    summary_table_html = create_summary_html(report_month_data)
+
+    # The dropdown list will show "2025" to the user.
     months = [
-        {"value": "202301", "text": "Tháng 1, 2023"},
-        {"value": "202302", "text": "Tháng 2, 2023"},
-        {"value": "202303", "text": "Tháng 3, 2023"},
-        {"value": "202304", "text": "Tháng 4, 2023"},
-        {"value": "202305", "text": "Tháng 5, 2023"},
+        {"value": "202501", "text": "Tháng 1, 2025"},
+        {"value": "202502", "text": "Tháng 2, 2025"},
+        {"value": "202503", "text": "Tháng 3, 2025"},
+        {"value": "202504", "text": "Tháng 4, 2025"},
+        {"value": "202505", "text": "Tháng 5, 2025"},
     ]
+
+    # Render the template, passing the 2023 data but showing "2025" as the selected month.
     return render_template(
         "summary_report.html",
         summary_table_html=summary_table_html,
         months=months,
-        selected_month=report_month,
+        selected_month=report_month_display,  # Show 2025 in the UI
     )
 
 
-# --- Route for Ranking Report ---
 @app.route("/ranking_report")
 def ranking_report():
-    report_month = request.args.get("month", "202305")
-    ranking_table_html = create_ranking_table(report_month)
+    # Get the month selected by the user (a "2025" value). Default to "202505".
+    report_month_display = request.args.get("month", "202505")
+
+    # ** THE FAKE LOGIC **
+    # Convert the display value to the data value.
+    report_month_data = report_month_display.replace("2025", "2023")
+
+    # Fetch data using the "2023" value.
+    ranking_table_html = create_ranking_table(report_month_data)
+
+    # The dropdown list will show "2025".
     months = [
-        {"value": "202301", "text": "Tháng 1, 2023"},
-        {"value": "202302", "text": "Tháng 2, 2023"},
-        {"value": "202303", "text": "Tháng 3, 2023"},
-        {"value": "202304", "text": "Tháng 4, 2023"},
-        {"value": "202305", "text": "Tháng 5, 2023"},
+        {"value": "202501", "text": "Tháng 1, 2025"},
+        {"value": "202502", "text": "Tháng 2, 2025"},
+        {"value": "202503", "text": "Tháng 3, 2025"},
+        {"value": "202504", "text": "Tháng 4, 2025"},
+        {"value": "202505", "text": "Tháng 5, 2025"},
     ]
+
+    # Render the template with 2023 data, showing 2025 as selected.
     return render_template(
         "ranking_report.html",
         ranking_table_html=ranking_table_html,
         months=months,
-        selected_month=report_month,
+        selected_month=report_month_display,  # Show 2025 in the UI
     )
 
 
@@ -389,12 +336,15 @@ def send_approval_email():
         from run_all_reports import run_reports
 
         try:
-            run_reports(report_period, recipient_email)
+            # IMPORTANT: We pass the "data" period (2023) to the backend process
+            report_period_data = str(report_period).replace("2025", "2023")
+            run_reports(report_period_data, recipient_email)
             report_generated = True
         except Exception as e:
             report_generated = False
             print(f"Error generating reports: {str(e)}")
 
+        # The email subject will still show the "display" year (2025)
         subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
         google_drive_link = getattr(
             config,

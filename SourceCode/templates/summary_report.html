@@ -20,7 +20,7 @@
     </div>
 
     <div class="report">
-        <h2>Báo cáo Tổng hợp (Kỳ: {{ selected_month }})</h2>
+        <h2>Báo cáo Tổng hợp Tháng {{ selected_month[4:] }} Năm {{ selected_month[:4] }}</h2>
         {{ summary_table_html|safe }}
     </div>
     

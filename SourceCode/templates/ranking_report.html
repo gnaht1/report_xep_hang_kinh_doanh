@@ -20,7 +20,7 @@
     </div>
 
     <div class="report">
-        <h2>Báo cáo Xếp hạng ASM (Kỳ: {{ selected_month }})</h2>
+        <h2>Báo cáo Xếp hạng ASM Tháng {{ selected_month[4:] }} Năm {{ selected_month[:4] }}</h2>
         {{ ranking_table_html|safe }}
     </div>
 
