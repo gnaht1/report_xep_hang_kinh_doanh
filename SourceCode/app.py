@@ -26,20 +26,24 @@ def create_summary_html(period):
             f"<p>Không có dữ liệu cho kỳ báo cáo {period}. Vui lòng kiểm tra lại.</p>"
         )
 
-    # The rest of the function for creating the HTML table is unchanged
+    # Insert empty column and prepare table structure
     df.insert(6, " ", "")
     total_cols = len(df.columns)
     print(f"Tổng số cột: {total_cols}")
     print(f"Tên các cột: {list(df.columns)}")
+
+    # Create superheader with first column left-aligned
     superheader = (
         "<tr>"
-        "<th rowspan='2'></th>"
+        "<th rowspan='2' style='text-align: left;'></th>"
         "<th colspan='5' class='header-blue'>Tổng cần phân bổ xuống cho ĐVML</th>"
         "<th rowspan='2' class='column-yellow'></th>"
         "<th colspan='7' class='header-blue' >KHU VỰC MẠNG LƯỚI</th>"
         f"<th rowspan='2'>{df.columns[-1]}</th>"
         "</tr>"
     )
+
+    # Create middle columns for subheader
     middle_columns = []
     for i, col in enumerate(df.columns):
         if i == 0 or i == 6 or i == len(df.columns) - 1:
@@ -47,42 +51,62 @@ def create_summary_html(period):
         middle_columns.append(col)
     subheaders = "".join(f"<th>{col}</th>" for col in middle_columns)
     header_row = f"<tr>{subheaders}</tr>"
+
+    # Define green rows for special styling
     green_rows = [
-        "Thu nhập từ hoạt động thẻ",
-        "Chi phí thuần KDV",
-        "Chi phí thuần hoạt động khác",
-        "Tổng thu nhập hoạt động",
-        "Tổng chi phí hoạt động",
-        "Chi phí dự phòng",
+        "1. Thu nhập từ hoạt động thẻ",
+        "2. Chi phí thuần KDV",
+        "3. Chi phí thuần hoạt động khác",
+        "4. Tổng thu nhập hoạt động",
+        "5. Tổng chi phí hoạt động",
+        "6. Chi phí dự phòng",
     ]
 
     def format_cell_value(value, row_index, total_rows, column_index, total_columns):
+        # Exclude certain rows from division by 1,000,000
         excluded_rows = list(range(total_rows - 6, total_rows - 1))
         last_6_rows = list(range(total_rows - 6, total_rows))
+
+        # Set null values for specific cells in last 6 rows, columns 2-5
         if row_index in last_6_rows and column_index in [1, 2, 3, 4]:
             return "-"
+
+        # Handle null values
         if pd.isna(value) or value is None:
             return "-"
+
+        # Process numeric values
         if isinstance(value, (int, float)):
+            # Divide by 1,000,000 for most rows except excluded ones
             if row_index not in excluded_rows:
                 value = value / 1000000
+
+            # Return dash for zero values
             if value == 0 or math.isclose(value, 0, abs_tol=1e-10):
                 return "-"
+
+            # Special formatting for rows 2, 3, 4 from bottom
             rows_2_3_4_from_bottom = [total_rows - 4, total_rows - 3, total_rows - 2]
             last_column_index = total_columns - 1
+
+            # Round to integer for last column of specific rows
             if (
                 row_index in rows_2_3_4_from_bottom
                 and column_index == last_column_index
             ):
                 rounded_value = round(value / 100)
                 return f"{rounded_value:,}"
+            # Keep 2 decimal places for other cells in those rows
             elif row_index in rows_2_3_4_from_bottom:
                 return f"{value:,.2f}"
+            # Format negative values with parentheses for other rows
             else:
                 if value < 0:
                     return f"({abs(value):,.2f})"
                 else:
                     return f"{value:,.2f}"
+
+        # Handle string values
         if isinstance(value, str):
             if (
                 value.strip() == ""
@@ -92,38 +116,53 @@ def create_summary_html(period):
                 return "-"
         return str(value)
 
+    # Build table body rows
     body_rows = []
     total_rows = len(df)
     total_columns = len(df.columns)
+
     for row_index, (_, row) in enumerate(df.iterrows()):
         cells = []
         row_name = str(row.iloc[0]).strip()
         is_green_row = row_name in green_rows
+
         for i, cell in enumerate(row):
+            # Format cell value based on column position
             if i == 0:
                 formatted_cell = str(cell)
             else:
                 formatted_cell = format_cell_value(
                     cell, row_index, total_rows, i, total_columns
                 )
+
+            # Apply styling and alignment based on column and content
             if i == 6:
                 cells.append(f"<td class='column-yellow'>{formatted_cell}</td>")
-            elif i == 0 and "Lợi nhuận trước thuế" in row_name:
-                cells.append(f"<td class='cell-blue'>{formatted_cell}</td>")
+            elif i == 0 and "I. Lợi nhuận trước thuế" in row_name:
+                # Left-align first column cells with blue background
+                cells.append(
+                    f"<td class='cell-blue' style='text-align: left;'>{formatted_cell}</td>"
+                )
             elif (
                 i != 6
                 and i != len(row) - 1
-                and "Số lượng nhân sự ( Sale Manager )" in row_name
+                and "II. Số lượng nhân sự ( Sale Manager )" in row_name
             ):
                 cells.append(f"<td class='cell-yellow'>{formatted_cell}</td>")
-            elif i == 0 and "Chỉ số tài chính" in row_name:
-                cells.append(f"<td class='cell-orange'>{formatted_cell}</td>")
+            elif i == 0 and "III. Chỉ số tài chính" in row_name:
+                # Left-align first column cells with orange background
+                cells.append(
+                    f"<td class='cell-orange' style='text-align: left;'>{formatted_cell}</td>"
+                )
             elif i == 0 and row_name in green_rows:
-                cells.append(f"<td class='cell-green'>{formatted_cell}</td>")
+                # Left-align first column cells with green background
+                cells.append(
+                    f"<td class='cell-green' style='text-align: left;'>{formatted_cell}</td>"
+                )
             elif is_green_row and i != 0 and i != 6 and i != len(row) - 1:
                 cells.append(f"<td class='cell-gray'>{formatted_cell}</td>")
             elif (
-                row_name in ["1. Lợi nhuận trước thuế", "3. Chỉ số tài chính"]
+                row_name in ["I. Lợi nhuận trước thuế", "III. Chỉ số tài chính"]
                 and i != 0
                 and i != 6
                 and i != len(row) - 1
@@ -132,10 +171,15 @@ def create_summary_html(period):
             elif i == len(row) - 1:
                 cells.append(f"<td class='cell-gray'>{formatted_cell}</td>")
             elif i == 0:
-                cells.append(f"<td class='cell-light-gray'>{formatted_cell}</td>")
+                # Left-align all first column cells with light gray background
+                cells.append(
+                    f"<td class='cell-light-gray' style='text-align: left;'>{formatted_cell}</td>"
+                )
             else:
                 cells.append(f"<td class='cell-light-yellow'>{formatted_cell}</td>")
         body_rows.append(f"<tr>{''.join(cells)}</tr>")
+
+    # Construct final HTML table
     html = (
         "<table class='summary-table'>"
         "<thead>"
