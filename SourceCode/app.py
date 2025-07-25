@@ -275,6 +275,7 @@ def create_ranking_table(period):
             subheader_cells.append(
                 "<th class='rank-green'>Xếp Hạng Phát Triển Kinh Doanh</th>"
             )
+
         elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
             subheader_cells.append(f"<th class='rank-green'>{column_name}</th>")
         elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
@@ -288,7 +289,21 @@ def create_ranking_table(period):
 
     for i in range(16, total_cols):
         column_name = df.columns[i]
-        if column_name.lower() in ["rank_ptkd", "rank_fin"]:
+        if i == 17:
+            subheader_cells.append(f"<th>Xếp Hạng CIR</th>")
+        elif i == 19:
+            subheader_cells.append(f"<th>Xếp Hạng Margin</th>")
+        elif i == 20:
+            subheader_cells.append(f"<th>Hiệu Suất Vốn</th>")
+        elif i == 21:
+            subheader_cells.append(f"<th>Xếp Hạng Hiệu Suất Vốn</th>")
+        elif i == 22:
+            subheader_cells.append(f"<th>Hiệu Suất Bình Quân Nhân Sự</th>")
+        elif i == 23:
+            subheader_cells.append(f"<th>Xếp Hạng Hiệu Suất Bình Quân Nhân Sự</th>")
+        elif i == 25:
+            subheader_cells.append(f"<th class='rank-green'>Xếp Hạng Điểm FIN</th>")
+        elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
             subheader_cells.append(f"<th class='rank-green'>{column_name}</th>")
         elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
             subheader_cells.append(f"<th class='diem-header'>{column_name}</th>")
@@ -330,6 +345,20 @@ def create_ranking_table(period):
             elif column_name.lower() in ["ltn_avg", "hsbq_nhan_su"]:
                 if pd.notnull(cell) and isinstance(cell, (int, float)):
                     formatted_value = f"{cell:,.2f}"
+                    cells.append(f"<td>{formatted_value}</td>")
+
+                else:
+                    cells.append(f"<td>{cell}</td>")
+            # round to 8 decimal places
+            elif column_name.lower() in [
+                "approval_rate_avg",
+                "npl_truoc_wo_luy_ke",
+                "cir",
+                "margin",
+                "hs_von",
+            ]:
+                if pd.notnull(cell) and isinstance(cell, (int, float)):
+                    formatted_value = f"{cell:,.8f}"
                     cells.append(f"<td>{formatted_value}</td>")
                 else:
                     cells.append(f"<td>{cell}</td>")
