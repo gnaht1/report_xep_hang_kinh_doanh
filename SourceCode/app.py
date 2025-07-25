@@ -16,7 +16,6 @@ app = Flask(__name__)
 
 
 # --- FUNCTIONS TO CREATE HTML TABLES (create_summary_html, create_ranking_table) ---
-# --- These functions remain unchanged. ---
 def create_summary_html(period):
     # This function now correctly receives a period like "202305"
     df = get_summary_data(period)
@@ -192,40 +191,55 @@ def create_summary_html(period):
 
 
 def create_ranking_table(period):
-    # This function also correctly receives a period like "202305"
     df = get_ranking_data(period)
     if df.empty:
         return (
             f"<p>Không có dữ liệu cho kỳ báo cáo {period}. Vui lòng kiểm tra lại.</p>"
         )
 
-    # The rest of the function for creating the HTML table is unchanged
     total_cols = len(df.columns)
     superheader_cells = []
-    for i in range(6):
-        if i < total_cols:
-            column_name = df.columns[i]
-            if column_name.lower() in ["rank_ptkd", "rank_fin"]:
-                superheader_cells.append(
-                    f"<th rowspan='2' class='rank-green'>{column_name}</th>"
-                )
-            elif (
-                "điểm quy mô" in column_name.lower()
-                or "điểm fin" in column_name.lower()
-            ):
-                superheader_cells.append(
-                    f"<th rowspan='2' class='diem-header'>{column_name}</th>"
-                )
-            elif "tổng điểm" in column_name.lower():
-                superheader_cells.append(
-                    f"<th rowspan='2' class='tong-diem-header'>{column_name}</th>"
-                )
-            elif column_name.lower() == "rank_final":
-                superheader_cells.append(
-                    f"<th rowspan='2' class='rank-final-header'>{column_name}</th>"
-                )
-            else:
-                superheader_cells.append(f"<th rowspan='2'>{column_name}</th>")
+
+    # === MODIFICATION START: Change first column header ===
+    for i in range(total_cols):
+        # Only build for the first 6 columns in this loop
+        if i >= 6:
+            continue
+
+        column_name = df.columns[i]
+
+        # Check if it's the first column
+        if i == 0:
+            superheader_cells.append(f"<th rowspan='2'>Tháng Báo Cáo</th>")
+        elif i == 1:
+            superheader_cells.append(f"<th rowspan='2'>Mã Khu Vực</th>")
+        elif i == 2:
+            superheader_cells.append(f"<th rowspan='2'>Tên Khu Vực</th>")
+        elif i == 5:
+            superheader_cells.append(
+                f"<th rowspan='2' class='rank-final-header'>Xếp Hạng Cuối</th>"
+            )
+
+        elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
+            superheader_cells.append(
+                f"<th rowspan='2' class='rank-green'>{column_name}</th>"
+            )
+        elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
+            superheader_cells.append(
+                f"<th rowspan='2' class='diem-header'>{column_name}</th>"
+            )
+        elif "tổng điểm" in column_name.lower():
+            superheader_cells.append(
+                f"<th rowspan='2' class='tong-diem-header'>{column_name}</th>"
+            )
+        elif column_name.lower() == "Xếp Hạng Cuối":
+            superheader_cells.append(
+                f"<th rowspan='2' class='rank-final-header'>{column_name}</th>"
+            )
+        else:
+            superheader_cells.append(f"<th rowspan='2'>{column_name}</th>")
+
+    # Superheader
     if total_cols > 6:
         quy_mo_colspan = min(10, total_cols - 6)
         superheader_cells.append(
@@ -237,19 +251,27 @@ def create_ranking_table(period):
             f"<th colspan='{tai_chinh_colspan}' style='background-color: #FF6600; color: white; text-align: center;'>TÀI CHÍNH</th>"
         )
     superheader = f"<tr>{''.join(superheader_cells)}</tr>"
+
     subheader_cells = []
     for i in range(6, min(16, total_cols)):
         column_name = df.columns[i]
-        if column_name.lower() in ["rank_ptkd", "rank_fin"]:
+        if i == 6:
+            subheader_cells.append(f"<th>LTN TB</th>")
+        elif i == 7:
+            subheader_cells.append(f"<th>Xếp Hạng LTN TB</th>")
+        elif i == 8:
+            subheader_cells.append(f"<th>PSDN TB</th>")
+        elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
             subheader_cells.append(f"<th class='rank-green'>{column_name}</th>")
         elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
             subheader_cells.append(f"<th class='diem-header'>{column_name}</th>")
         elif "tổng điểm" in column_name.lower():
             subheader_cells.append(f"<th class='tong-diem-header'>{column_name}</th>")
-        elif column_name.lower() == "rank_final":
+        elif column_name.lower() == "Xếp Hạng Cuối":
             subheader_cells.append(f"<th class='rank-final-header'>{column_name}</th>")
         else:
             subheader_cells.append(f"<th>{column_name}</th>")
+
     for i in range(16, total_cols):
         column_name = df.columns[i]
         if column_name.lower() in ["rank_ptkd", "rank_fin"]:
@@ -258,17 +280,31 @@ def create_ranking_table(period):
             subheader_cells.append(f"<th class='diem-header'>{column_name}</th>")
         elif "tổng điểm" in column_name.lower():
             subheader_cells.append(f"<th class='tong-diem-header'>{column_name}</th>")
-        elif column_name.lower() == "rank_final":
+        elif column_name.lower() == "Xếp Hạng Cuối":
             subheader_cells.append(f"<th class='rank-final-header'>{column_name}</th>")
         else:
             subheader_cells.append(f"<th>{column_name}</th>")
     header_row = f"<tr>{''.join(subheader_cells)}</tr>"
+
     body_rows = []
     for _, row in df.iterrows():
         cells = []
         for i, cell in enumerate(row):
             column_name = df.columns[i]
-            if (
+
+            # === MODIFICATION START: Format first column's data ===
+            if i == 0:
+                # Format YYYYMM to MM/YYYY
+                formatted_value = f"{str(cell)[4:]}/{str(cell)[:4]}"
+
+                # extract month and year parts
+                month_part = str(cell)[4:]
+                year_part = "2025"
+                formatted_value = f"{month_part}/{year_part}"
+                cells.append(f"<td>{formatted_value}</td>")
+
+            # === MODIFICATION END ===
+            elif (
                 "tổng điểm" in column_name.lower()
                 or "điểm quy mô" in column_name.lower()
             ):
@@ -290,6 +326,7 @@ def create_ranking_table(period):
             else:
                 cells.append(f"<td>{cell}</td>")
         body_rows.append(f"<tr>{''.join(cells)}</tr>")
+
     html = (
         "<table class='ranking-table' style='border-collapse: collapse; width: 100%;'>"
         "<thead>"
@@ -308,17 +345,9 @@ def home():
 
 @app.route("/summary_report")
 def summary_report():
-    # Get the month selected by the user, which will be a "2025" value. Default to "202505".
     report_month_display = request.args.get("month", "202505")
-
-    # ** THE FAKE LOGIC **
-    # Convert the "2025" display value to the "2023" data value for the backend.
     report_month_data = report_month_display.replace("2025", "2023")
-
-    # Fetch data using the "2023" value.
     summary_table_html = create_summary_html(report_month_data)
-
-    # The dropdown list will show "2025" to the user.
     months = [
         {"value": "202501", "text": "Tháng 1, 2025"},
         {"value": "202502", "text": "Tháng 2, 2025"},
@@ -326,29 +355,19 @@ def summary_report():
         {"value": "202504", "text": "Tháng 4, 2025"},
         {"value": "202505", "text": "Tháng 5, 2025"},
     ]
-
-    # Render the template, passing the 2023 data but showing "2025" as the selected month.
     return render_template(
         "summary_report.html",
         summary_table_html=summary_table_html,
         months=months,
-        selected_month=report_month_display,  # Show 2025 in the UI
+        selected_month=report_month_display,
     )
 
 
 @app.route("/ranking_report")
 def ranking_report():
-    # Get the month selected by the user (a "2025" value). Default to "202505".
     report_month_display = request.args.get("month", "202505")
-
-    # ** THE FAKE LOGIC **
-    # Convert the display value to the data value.
     report_month_data = report_month_display.replace("2025", "2023")
-
-    # Fetch data using the "2023" value.
     ranking_table_html = create_ranking_table(report_month_data)
-
-    # The dropdown list will show "2025".
     months = [
         {"value": "202501", "text": "Tháng 1, 2025"},
         {"value": "202502", "text": "Tháng 2, 2025"},
@@ -356,46 +375,35 @@ def ranking_report():
         {"value": "202504", "text": "Tháng 4, 2025"},
         {"value": "202505", "text": "Tháng 5, 2025"},
     ]
-
-    # Render the template with 2023 data, showing 2025 as selected.
     return render_template(
         "ranking_report.html",
         ranking_table_html=ranking_table_html,
         months=months,
-        selected_month=report_month_display,  # Show 2025 in the UI
+        selected_month=report_month_display,
     )
 
 
 @app.route("/send-approval-email", methods=["POST"])
 def send_approval_email():
-    """
-    Handle report generation and send approval email to supervisor with Google Drive link
-    This function remains unchanged.
-    """
     data = request.get_json()
     report_period = data.get("report_period")
     recipient_email = data.get("email")
-
     try:
         from run_all_reports import run_reports
 
         try:
-            # IMPORTANT: We pass the "data" period (2023) to the backend process
             report_period_data = str(report_period).replace("2025", "2023")
             run_reports(report_period_data, recipient_email)
             report_generated = True
         except Exception as e:
             report_generated = False
             print(f"Error generating reports: {str(e)}")
-
-        # The email subject will still show the "display" year (2025)
         subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
         google_drive_link = getattr(
             config,
             "GOOGLE_DRIVE_FOLDER",
             f"https://drive.google.com/drive/folders/{report_period}",
         )
-
         body = f"""
         <html><body>
             <p>Xin chào cấp trên,</p>
@@ -406,7 +414,6 @@ def send_approval_email():
             <p>Trân trọng.</p>
         </body></html>
         """
-
         send_email(subject, body, recipient_email)
         return jsonify(
             {
