@@ -20,13 +20,21 @@ h2 {
     margin-bottom: 20px;
 }
 
+/* --- MODIFICATION START --- */
 .report {
-    margin-top: 30px;
+    margin-top: 0px;
     border: 1px solid #ccc;
     padding: 15px;
     border-radius: 5px;
     background-color: white;
+    overflow: auto;
+    /* Use 'auto' to enable both scrollbars when needed */
+    max-height: 75vh;
+    /* Limit the container's height to 75% of the screen height */
 }
+
+/* --- MODIFICATION END --- */
+
 
 /* Approval Button */
 #btnApprove {
@@ -144,6 +152,8 @@ h2 {
     border: 1px solid #ccc;
     padding: 8px;
     text-align: center;
+    white-space: nowrap;
+    /* Prevent text wrapping in cells */
 }
 
 .summary-table thead th,
@@ -237,4 +247,26 @@ h2 {
 
 .ranking-table .rank-final-cell {
     font-weight: bold !important;
+}
+
+/* --- Sticky Header for Ranking Table --- */
+/* This makes the header cells stick to the top of the scrolling container */
+.ranking-table thead th {
+    position: -webkit-sticky;
+    /* For Safari */
+    position: sticky;
+    z-index: 1;
+}
+
+/* First row of the header sticks at the very top */
+.ranking-table thead tr:nth-child(1) th {
+    top: 0;
+    z-index: 2;
+    /* Ensure super-header is above sub-header */
+}
+
+/* Second row of the header sticks just below the first one */
+/* Note: This value should match the height of the first header row. Adjust if you see a gap or overlap. */
+.ranking-table thead tr:nth-child(2) th {
+    top: 38px;
 }
