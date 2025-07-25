@@ -543,7 +543,6 @@ call prc_generate_summary_reports_monthly(202304);
 -- HÀM XUẤT BÁO CÁO TỔNG HỢP (PIVOT)
 --------------------------------------------------------------------------------
 
-DROP FUNCTION IF EXISTS fn_get_monthly_summary_report(BIGINT);
 
 CREATE OR REPLACE FUNCTION fn_get_monthly_summary_report(p_rp_month BIGINT)
 
@@ -615,7 +614,6 @@ SELECT * FROM fn_get_monthly_summary_report(202304);
 -- HÀM XUẤT BÁO CÁO XẾP HẠNG ASM
 --------------------------------------------------------------------------------
 
-DROP FUNCTION IF EXISTS fn_get_asm_ranking_report(BIGINT);
 
 CREATE OR REPLACE FUNCTION fn_get_asm_ranking_report(p_rp_month BIGINT)
 RETURNS TABLE (
@@ -649,7 +647,33 @@ RETURNS TABLE (
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT *
+    SELECT
+        f.month_key,
+        f.area_cde,
+        f.area_name,
+        f.email,
+        f.tongdiem,
+        f.rank_final,
+        f.ltn_avg,
+        f.rank_ltn_avg,
+        f.psdn_avg,
+        f.rank_psdn_avg,
+        f.approval_rate_avg,
+        f.rank_approval_rate_avg,
+        f.npl_truoc_wo_luy_ke * 100, -- Edit
+        f.rank_npl_truoc_wo_luy_ke,
+        f.diem_quy_mo,
+        f.rank_ptkd,
+        f.cir,
+        f.rank_cir,
+        f.margin,
+        f.rank_margin,
+        f.hs_von,
+        f.rank_hs_von,
+        f.hsbq_nhan_su,
+        f.rank_hsbq_nhan_su,
+        f.diem_fin,
+        f.rank_fin
     FROM fact_backdate_asm_monthly f
     WHERE f.month_key = p_rp_month
     ORDER BY f.rank_final;

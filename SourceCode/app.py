@@ -261,6 +261,20 @@ def create_ranking_table(period):
             subheader_cells.append(f"<th>Xếp Hạng LTN TB</th>")
         elif i == 8:
             subheader_cells.append(f"<th>PSDN TB</th>")
+        elif i == 9:
+            subheader_cells.append(f"<th>Xếp Hạng PSDN TB</th>")
+        elif i == 10:
+            subheader_cells.append(f"<th>Approval Rate TB</th>")
+        elif i == 11:
+            subheader_cells.append(f"<th>Xếp Hạng Approval Rate TB</th>")
+        elif i == 12:
+            subheader_cells.append(f"<th>NPL Trước Write Off Luỹ Kế</th>")
+        elif i == 13:
+            subheader_cells.append(f"<th>Xếp Hạng NPL Trước Write Off Luỹ Kế</th>")
+        elif i == 15:
+            subheader_cells.append(
+                "<th class='rank-green'>Xếp Hạng Phát Triển Kinh Doanh</th>"
+            )
         elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
             subheader_cells.append(f"<th class='rank-green'>{column_name}</th>")
         elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
