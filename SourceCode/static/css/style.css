@@ -3,6 +3,7 @@ body {
     font-family: sans-serif;
     margin: 0;
     background-color: #f4f7f6;
+    color: #333;
 }
 
 .container {
@@ -14,42 +15,6 @@ body {
 h1,
 h2 {
     color: #333;
-}
-
-.controls {
-    margin-bottom: 20px;
-}
-
-/* --- MODIFICATION START --- */
-.report {
-    margin-top: 0px;
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 5px;
-    background-color: white;
-    overflow: auto;
-    /* Use 'auto' to enable both scrollbars when needed */
-    max-height: 75vh;
-    /* Limit the container's height to 75% of the screen height */
-}
-
-/* --- MODIFICATION END --- */
-
-
-/* Approval Button */
-#btnApprove {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 20px;
-}
-
-#btnApprove:hover {
-    background-color: #45a049;
 }
 
 /* Menu Styles */
@@ -79,7 +44,252 @@ h2 {
     color: white;
 }
 
-/* Home Page Specific Styles */
+/* --- Report Page Specific Styles --- */
+
+/* Header with Title and Email Section */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.content-header h1 {
+    margin: 0;
+}
+
+/* Email Section */
+.email-section {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.email-section h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1em;
+    color: #333;
+    font-weight: 600;
+}
+
+.email-form {
+    display: flex;
+    align-items: center;
+}
+
+.email-form input[type="email"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    border-right: none;
+    outline: none;
+    transition: border-color 0.3s;
+    min-width: 220px;
+}
+
+.email-form input[type="email"]:focus {
+    border-color: #007bff;
+}
+
+.email-form button {
+    padding: 10px 15px;
+    border: 1px solid #007bff;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    transition: background-color 0.3s;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.email-form button:hover {
+    background-color: #0056b3;
+}
+
+/* --- MODIFICATION START: Prettier Dropdown --- */
+.controls {
+    margin-bottom: 20px;
+}
+
+.select-container {
+    display: inline-flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 5px 5px 5px 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.select-container:hover {
+    border-color: #007bff;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.select-container label {
+    font-weight: 600;
+    color: #333;
+    margin-right: 15px;
+    font-size: 0.95em;
+    white-space: nowrap;
+}
+
+.select-container select {
+    padding: 10px 35px 10px 15px;
+    border: none;
+    background-color: transparent;
+    font-size: 1em;
+    cursor: pointer;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 10px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.select-container select:hover {
+    background-color: #f0f0f0;
+}
+
+/* --- MODIFICATION END --- */
+
+
+/* Report Table Container (with scrolling) */
+.report {
+    margin-top: 0px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: white;
+    overflow: auto;
+    max-height: 75vh;
+}
+
+
+/* --- General Table Styles --- */
+.summary-table,
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.summary-table th,
+.summary-table td,
+.ranking-table th,
+.ranking-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.summary-table thead th,
+.ranking-table thead th {
+    font-weight: bold;
+}
+
+/* --- Summary Table Specific Styles (Preserved) --- */
+.summary-table thead th {
+    background-color: paleturquoise;
+}
+
+.summary-table .header-blue {
+    background-color: #007acc !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.summary-table .column-yellow {
+    background-color: #f7fc4b !important;
+}
+
+.summary-table .cell-blue {
+    background-color: #73b3eeff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-yellow {
+    background-color: #e0a80dff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-orange {
+    background-color: #e05b08ff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-green {
+    background-color: #0fa814ff !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-gray {
+    background-color: #d3d3d3 !important;
+    font-weight: bold;
+}
+
+.summary-table .cell-light-gray {
+    background-color: #f0f0f0 !important;
+}
+
+.summary-table .cell-light-yellow {
+    background-color: #f0f1d0ff !important;
+}
+
+
+/* --- Ranking Table Specific Styles (Preserved) --- */
+.ranking-table thead th {
+    background-color: #f0f0f0;
+    /* --- MODIFICATION: Sticky header removed. No position: sticky here. --- */
+}
+
+.ranking-table .rank-green {
+    background-color: #28a745 !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .rank-bold {
+    font-weight: bold !important;
+}
+
+.ranking-table .diem-header {
+    background-color: #bce9ff !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .tong-diem-cell {
+    font-weight: bold !important;
+}
+
+.ranking-table .tong-diem-header {
+    background-color: #E2EFD9 !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .rank-final-header {
+    background-color: #007acc !important;
+    color: white !important;
+    font-weight: bold !important;
+}
+
+.ranking-table .rank-final-cell {
+    font-weight: bold !important;
+}
+
+/* --- Home Page Specific Styles (Preserved) --- */
 .welcome-header {
     text-align: center;
     margin: 40px 0;
@@ -134,139 +344,4 @@ h2 {
 
 .card p {
     color: #95a5a6;
-}
-
-
-/* General Table Styles */
-.summary-table,
-.ranking-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.summary-table th,
-.summary-table td,
-.ranking-table th,
-.ranking-table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: center;
-    white-space: nowrap;
-    /* Prevent text wrapping in cells */
-}
-
-.summary-table thead th,
-.ranking-table thead th {
-    font-weight: bold;
-}
-
-/* Summary Table Specific Styles */
-.summary-table thead th {
-    background-color: paleturquoise;
-}
-
-.summary-table .header-blue {
-    background-color: #007acc !important;
-    color: white !important;
-    font-weight: bold;
-}
-
-.summary-table .column-yellow {
-    background-color: #f7fc4b !important;
-}
-
-.summary-table .cell-blue {
-    background-color: #73b3eeff !important;
-    font-weight: bold;
-}
-
-.summary-table .cell-yellow {
-    background-color: #e0a80dff !important;
-    font-weight: bold;
-}
-
-.summary-table .cell-orange {
-    background-color: #e05b08ff !important;
-    font-weight: bold;
-}
-
-.summary-table .cell-green {
-    background-color: #0fa814ff !important;
-    font-weight: bold;
-}
-
-.summary-table .cell-gray {
-    background-color: #d3d3d3 !important;
-    font-weight: bold;
-}
-
-.summary-table .cell-light-gray {
-    background-color: #f0f0f0 !important;
-}
-
-.summary-table .cell-light-yellow {
-    background-color: #f0f1d0ff !important;
-}
-
-
-/* Ranking Table Specific Styles */
-.ranking-table thead th {
-    background-color: #f0f0f0;
-}
-
-.ranking-table .rank-green {
-    background-color: #28a745 !important;
-    color: white !important;
-    font-weight: bold !important;
-}
-
-.ranking-table .rank-bold {
-    font-weight: bold !important;
-}
-
-.ranking-table .diem-header {
-    background-color: #bce9ff !important;
-    font-weight: bold !important;
-}
-
-.ranking-table .tong-diem-cell {
-    font-weight: bold !important;
-}
-
-.ranking-table .tong-diem-header {
-    background-color: #E2EFD9 !important;
-    font-weight: bold !important;
-}
-
-.ranking-table .rank-final-header {
-    background-color: #007acc !important;
-    color: white !important;
-    font-weight: bold !important;
-}
-
-.ranking-table .rank-final-cell {
-    font-weight: bold !important;
-}
-
-/* --- Sticky Header for Ranking Table --- */
-/* This makes the header cells stick to the top of the scrolling container */
-.ranking-table thead th {
-    position: -webkit-sticky;
-    /* For Safari */
-    position: sticky;
-    z-index: 1;
-}
-
-/* First row of the header sticks at the very top */
-.ranking-table thead tr:nth-child(1) th {
-    top: 0;
-    z-index: 2;
-    /* Ensure super-header is above sub-header */
-}
-
-/* Second row of the header sticks just below the first one */
-/* Note: This value should match the height of the first header row. Adjust if you see a gap or overlap. */
-.ranking-table thead tr:nth-child(2) th {
-    top: 38px;
 }
