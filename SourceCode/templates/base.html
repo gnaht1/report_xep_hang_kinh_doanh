@@ -18,17 +18,19 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const approveButton = document.getElementById('btnApprove');
-            if (approveButton) {
-                approveButton.addEventListener('click', function() {
+            // --- MODIFICATION START: Corrected the button ID from btnApprove to btnSendEmail ---
+            const sendEmailButton = document.getElementById('btnSendEmail');
+            if (sendEmailButton) {
+                sendEmailButton.addEventListener('click', function() {
                     var reportPeriodSelect = document.getElementById('month');
-                    // Ensure the month selector exists before trying to get its value
                     if (!reportPeriodSelect) {
                         alert('Không tìm thấy trường chọn tháng báo cáo!');
                         return;
                     }
                     var reportPeriod = reportPeriodSelect.value;
-                    var emailInput = document.getElementById('supervisorEmail');
+                    
+                    // --- MODIFICATION START: Corrected the input ID from supervisorEmail to recipientEmail ---
+                    var emailInput = document.getElementById('recipientEmail');
                     
                     if (!emailInput) {
                         alert('Không tìm thấy trường nhập email!');
@@ -64,7 +66,8 @@
                                 window.open(data.google_drive_link, '_blank');
                             }
                             
-                            document.getElementById('supervisorEmail').value = '';
+                            // --- MODIFICATION START: Clear the correct input field ---
+                            document.getElementById('recipientEmail').value = '';
                         } else {
                             alert('Lỗi: ' + data.message);
                         }
