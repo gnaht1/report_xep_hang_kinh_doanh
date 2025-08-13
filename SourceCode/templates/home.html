@@ -5,9 +5,9 @@
 {% block content %}
 <div class="welcome-header">
     <h1>Trung Tâm Báo cáo Kinh doanh</h1>
-    <p>Chào mừng bạn đến với trang tổng hợp báo cáo. Vui lòng chọn một trong các báo cáo dưới đây để bắt đầu xem dữ liệu chi tiết.</p>
+    <p>Chào mừng bạn đến với trang tổng hợp báo cáo. Vui lòng chọn một trong các báo cáo dưới đây để bắt đầu xem dữ liệu
+        chi tiết.</p>
 </div>
-
 <div class="nav-cards">
     <a href="{{ url_for('summary_report') }}" class="card">
         <div class="card-icon">📊</div>
@@ -21,4 +21,93 @@
         <p>Xem báo cáo xếp hạng chi tiết dành cho các ASM dựa trên KPI.</p>
     </a>
 </div>
+<div class="context-section">
+    <h2>Ngữ cảnh</h2>
+    <div class="context-content">
+        <p>Đây là trang web trung tâm báo cáo được phát triển để phục vụ công tác báo cáo cho <strong>phòng Tài chính -
+                Kế hoạch</strong> của công ty.</p>
+        <p>Hệ thống cung cấp hai báo cáo trọng điểm được phòng Tài chính - Kế hoạch đặt hàng:</p>
+
+
+        <div class="report-highlights">
+            <div class="highlight-item">
+                <span class="highlight-icon">📊</span>
+                <span class="highlight-text"><strong>Summary Report:</strong> Báo cáo tổng hợp hiệu suất kinh doanh theo
+                    khu vực</span>
+            </div>
+            <div class="highlight-item">
+                <span class="highlight-icon">🏆</span>
+                <span class="highlight-text"><strong>Ranking Report:</strong> Báo cáo xếp hạng ASM dựa trên các chỉ số
+                    KPI</span>
+            </div>
+        </div>
+        <!-- Flow chart section -->
+        <div class="flowchart-container">
+            <h3>Flowchart</h3>
+            <div class="flowchart-image">
+                <img id="flowchart-img" src="{{ url_for('static', filename='images/flow_chart.png') }}"
+                    alt="Quy trình báo cáo kinh doanh từ Excel đến SQL Server" class="flowchart-img"
+                    onerror="this.style.display='none'; document.getElementById('flowchart-debug').style.display='block';">
+
+                <div id="flowchart-debug" class="flowchart-placeholder" style="display:none;">
+                    <p>❌ <strong>Không tìm thấy ảnh.</strong></p>
+                    <p>Vui lòng kiểm tra lại đường dẫn và tên file.</p>
+                    <p class="flowchart-debug-link">
+                        <a href="{{ url_for('static', filename='images/flow_chart_report_ver_final.png') }}"
+                            target="_blank" rel="noopener">Nhấn vào đây để kiểm tra ảnh</a>
+                    </p>
+                    <p>Nếu link trên báo lỗi 404, hãy đảm bảo file <code>flow_chart_report_ver_final.png</code> tồn tại
+                        trong thư mục <code>SourceCode/static/images/</code>.</p>
+                </div>
+
+                <p class="flowchart-caption">Sơ đồ quy trình báo cáo từ thu thập dữ liệu Excel, xử lý qua
+                    DBeaver/PostgreSQL, đến tạo báo cáo cuối cùng và gửi email tự động</p>
+            </div>
+        </div>
+
+        <!-- Image Modal -->
+        <div id="imageModal" class="modal">
+            <span class="close-modal" title="Đóng cửa sổ" aria-label="Đóng cửa sổ">&times;</span>
+            <img class="modal-content" id="modal-img">
+            <div id="modal-caption"></div>
+        </div>
+
+        <script>
+            // filepath inline: templates/home.html
+            // Get the modal
+            var modal = document.getElementById("imageModal");
+            var modalImg = document.getElementById("modal-img");
+            var captionText = document.getElementById("modal-caption");
+
+            // Get the image and insert it inside the modal - use its "alt" text as a caption
+            var img = document.getElementById("flowchart-img");
+            if (img) {
+                img.onclick = function () {
+                    modal.style.display = "block";
+                    modalImg.src = this.src;
+                    captionText.innerHTML = this.alt;
+                }
+            }
+
+            // Get the <span> element that closes the modal
+            var span = document.getElementsByClassName("close-modal")[0];
+
+            // When the user clicks on <span> (x), close the modal
+            if (span) {
+                span.onclick = function () {
+                    modal.style.display = "none";
+                }
+            }
+
+            // Also close modal on clicking the background
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        </script>
+    </div>
+</div>
+
+
 {% endblock %}
