@@ -35,7 +35,7 @@ Both reports strictly follow the user-defined format and template requirements. 
 
 Flowchart:
 
-![flowchart_process](./Picture/flow_chart_report_ver_final.png)
+![flowchart_process](./Picture/flow_chart.png)
 
 <center>
 <em>Figure 1: Flow chart</em>
