@@ -389,7 +389,7 @@ def home():
 def summary_report():
     """Renders the summary report page for a selected month."""
     # Get the selected month from URL parameters, default to May 2025 for display
-    report_month_display = request.args.get("month", "202505")
+    report_month_display = request.args.get("month", "202502")
     # The backend data uses '2023', so we replace '2025' for the data fetching part
     report_month_data = report_month_display.replace("2025", "2023")
 
@@ -417,7 +417,7 @@ def summary_report():
 @app.route("/ranking_report")
 def ranking_report():
     """Renders the ranking report page for a selected month."""
-    report_month_display = request.args.get("month", "202505")
+    report_month_display = request.args.get("month", "202502")
     report_month_data = report_month_display.replace("2025", "2023")
 
     ranking_table_html = create_ranking_table(report_month_data)

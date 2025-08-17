@@ -21,7 +21,7 @@ ENABLE_EMAIL_NOTIFICATION = (
 SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "umldoomsday@gmail.com")
-SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD", "twiq wczd mddm eznv")
+SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD", "whre fgng xcez xitl")
 
 # Default email for manager/supervisor (now optional since email is provided in UI)
 MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL", "nphuthang15@gmail.com")
