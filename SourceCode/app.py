@@ -329,10 +329,12 @@ def create_ranking_table(period):
         for i, cell in enumerate(row):
             column_name = df.columns[i]
 
-            # Format the first column from 'YYYYMM' to 'MM/YYYY'
+            # Format the first column from 'YYYYMM' to 'MM/YYYY' and fake the year as 2025
             if i == 0:
                 if pd.notnull(cell) and len(str(cell)) == 6:
-                    formatted_value = f"{str(cell)[4:]}/{str(cell)[:4]}"
+                    month_part = str(cell)[4:]  # Extract month (MM)
+                    # Always display year as 2025 for frontend display
+                    formatted_value = f"{month_part}/2025"
                 else:
                     formatted_value = cell  # Fallback for unexpected format
                 cells.append(f"<td>{formatted_value}</td>")
@@ -449,42 +451,32 @@ def send_approval_email():
         # Import the report generation function
         from run_all_reports import run_reports
 
-        # Try to regenerate the report files with the latest data
+        # Generate reports and send email (run_reports handles email sending internally)
         try:
             report_period_data = str(report_period).replace("2025", "2023")
+            # This function will generate reports AND send email automatically
             run_reports(report_period_data, recipient_email)
             report_generated = True
         except Exception as e:
             report_generated = False
             print(f"Error generating reports: {str(e)}")
+            # Return error response if report generation fails
+            return jsonify(
+                {"status": "error", "message": f"Failed to generate reports: {str(e)}"}
+            )
 
-        # Prepare email subject and body
-        subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
+        # Prepare Google Drive link for response
         google_drive_link = getattr(
             config,
             "GOOGLE_DRIVE_FOLDER",
             f"https://drive.google.com/drive/folders/{report_period}",
         )
 
-        body = f"""
-        <html><body>
-            <p>Xin chào,</p>
-            <p>Báo cáo cho kỳ <strong>{report_period}</strong> đã được xem xét và gửi đi.</p>
-            {'<p><strong style="color:green;">✅ Báo cáo đã được tạo lại với dữ liệu mới nhất.</strong></p>' if report_generated else '<p><strong style="color:orange;">⚠️ Không thể tạo báo cáo mới. Email này đính kèm báo cáo hiện có.</strong></p>'}
-            <p>Bạn có thể xem báo cáo tại Google Drive tại đây:</p>
-            <p><a href="{google_drive_link}">Xem Báo Cáo trên Google Drive</a></p>
-            <p>Trân trọng.</p>
-        </body></html>
-        """
-
-        # Send the email
-        send_email(subject, body, recipient_email)
-
-        # Return a success response
+        # Return success response (email already sent by run_reports function)
         return jsonify(
             {
                 "status": "success",
-                "message": f"Báo cáo đã được tạo và email đã được gửi tới {recipient_email}",
+                "message": f"Reports have been generated and email has been sent to {recipient_email}",
                 "google_drive_link": google_drive_link,
                 "report_period": report_period,
             }
