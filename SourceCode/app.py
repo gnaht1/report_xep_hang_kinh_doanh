@@ -246,7 +246,7 @@ def create_ranking_table(period):
             superheader_cells.append(f"<th rowspan='2'>Tên Khu Vực</th>")
         elif i == 5:
             superheader_cells.append(
-                f"<th rowspan='2' class='rank-final-header'>Xếp Hạng Cuối</th>"
+                f"<th rowspan='2' class='rank-final-header'><div class='tooltip'>Xếp Hạng Cuối<span class='tooltiptext'>Xếp hạng tổng điểm XH từ thấp -> cao</span></div></th>"
             )
         elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
             superheader_cells.append(
@@ -283,24 +283,41 @@ def create_ranking_table(period):
         column_name = df.columns[i]
         # Using custom, more descriptive names for some columns
         if i == 6:
-            subheader_cells.append(f"<th>LTN TB</th>")
+            # Add tooltip
+            subheader_cells.append(
+                f"<th><div class='tooltip'>LTN TB<span class='tooltiptext'>Loan To New : Số dư nợ cho vay khách hàng mới trong tháng</span></div></th>"
+            )
         elif i == 7:
-            subheader_cells.append(f"<th>Xếp Hạng LTN TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng LTN TB<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 8:
-            subheader_cells.append(f"<th>PSDN TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>PSDN TB<span class='tooltiptext'>Phát Sinh Dư Nợ : Mỗi 1 khách hàng mới trong tháng có phát sinh dư nợ sẽ tính là 1</span></div></th>"
+            )
         elif i == 9:
-            subheader_cells.append(f"<th>Xếp Hạng PSDN TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng PSDN TB<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 10:
-            subheader_cells.append(f"<th>Approval Rate TB (%)</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Approval Rate TB (%)<span class='tooltiptext'>Tỷ lệ số lượng hồ sơ khách hàng được duyệt / hồ sơ khách hàng đăng ký</span></div></th>"
+            )
         elif i == 11:
-            subheader_cells.append(f"<th>Xếp Hạng Approval Rate TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Approval Rate TB<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 12:
-            subheader_cells.append(f"<th>NPL Trước Write Off Luỹ Kế (%)</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>NPL Trước Write Off Luỹ Kế (%)<span class='tooltiptext'>Tỷ lệ nợ xấu trước Write Off Luỹ Kế</span></div></th>"
+            )
         elif i == 13:
-            subheader_cells.append(f"<th>Xếp Hạng NPL Trước Write Off Luỹ Kế</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng NPL Trước Write Off Luỹ Kế	<span class='tooltiptext'>Lấy từ thấp -> cao.</span></div></th>"
+            )
         elif i == 15:
             subheader_cells.append(
-                "<th class='rank-green'>Xếp Hạng Phát Triển Kinh Doanh</th>"
+                "<th class='rank-green'><div class='tooltip'>Xếp Hạng Phát Triển Kinh Doanh<span class='tooltiptext'>Từ thấp -> cao.</span></div></th>"
             )
         # Apply styling based on column name
         elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
@@ -312,23 +329,41 @@ def create_ranking_table(period):
     for i in range(16, total_cols):
         column_name = df.columns[i]
         if i == 16:
-            subheader_cells.append(f"<th>CIR (%)</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>CIR (%)<span class='tooltiptext'>CIR của Tỉnh</span></div></th>"
+            )
         elif i == 17:
-            subheader_cells.append(f"<th>Xếp Hạng CIR</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng CIR<span class='tooltiptext'>Lấy từ thấp -> cao.</span></div></th>"
+            )
         elif i == 18:
-            subheader_cells.append(f"<th>Margin (%)</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Margin (%)<span class='tooltiptext'>Lợi nhuận trước thuế / tổng thu nhập</span></div></th>"
+            )
         elif i == 19:
-            subheader_cells.append(f"<th>Xếp Hạng Margin</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Margin<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 20:
-            subheader_cells.append(f"<th>Hiệu Suất Vốn (%)</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Hiệu Suất Vốn (%)<span class='tooltiptext'>Là khả năng lợi nhuận thu được so với chi phí trả lãi từ huy động vốn bỏ ra</span></div></th>"
+            )
         elif i == 21:
-            subheader_cells.append(f"<th>Xếp Hạng Hiệu Suất Vốn</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Hiệu Suất Vốn<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 22:
-            subheader_cells.append(f"<th>Hiệu Suất Bình Quân Nhân Sự</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Hiệu suất BQ/ Nhân sự(%)<span class='tooltiptext'>Bình quân lợi nhuận chia cho từng nhân sự cùng trực thuộc 1 cấp quản lý.</span></div></th>"
+            )
         elif i == 23:
-            subheader_cells.append(f"<th>Xếp Hạng Hiệu Suất Bình Quân Nhân Sự</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Hiệu suất BQ/ Nhân sự<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 25:
-            subheader_cells.append(f"<th class='rank-green'>Xếp Hạng Điểm FIN</th>")
+            subheader_cells.append(
+                f"<th class='rank-green'><div class='tooltip'>Xếp Hạng Điểm FIN<span class='tooltiptext'>Lấy từ thấp -> cao.</span></div></th>"
+            )
         else:
             subheader_cells.append(f"<th>{column_name}</th>")
     header_row = f"<tr>{''.join(subheader_cells)}</tr>"
