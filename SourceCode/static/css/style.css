@@ -287,6 +287,26 @@ h2 {
 
 .ranking-table .rank-final-cell {
     font-weight: bold !important;
+    background-color: #abe8ee !important;
+    /* Light blue background for rank_final column */
+}
+
+/* Top 5 and Bottom 5 ranking row styles */
+.ranking-table .top-5-row {
+    background-color: #d4f8d4 !important;
+    /* Light green for top 5 */
+}
+
+.ranking-table .bottom-5-row {
+    background-color: #f8d4d4 !important;
+    /* Light red for bottom 5 */
+}
+
+/* Ensure cell-specific styles still apply on colored rows */
+.ranking-table .top-5-row .rank-final-cell,
+.ranking-table .bottom-5-row .rank-final-cell {
+    background-color: #abe8ee !important;
+    /* Keep rank_final column color */
 }
 
 /* --- Home Page Specific Styles (Preserved) --- */
@@ -521,8 +541,13 @@ h2 {
 }
 
 @keyframes zoom {
-    from {transform: scale(0)}
-    to {transform: scale(1)}
+    from {
+        transform: scale(0)
+    }
+
+    to {
+        transform: scale(1)
+    }
 }
 
 .close-modal {

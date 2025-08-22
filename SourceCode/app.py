@@ -223,6 +223,13 @@ def create_ranking_table(period):
 
     total_cols = len(df.columns)
 
+    # Find rank_final column index for determining top/bottom 5
+    rank_final_col_index = None
+    for i, col in enumerate(df.columns):
+        if col.lower() == "rank_final":
+            rank_final_col_index = i
+            break
+
     # --- Superheader and Subheader Creation ---
     superheader_cells = []
     # First loop for columns that have a rowspan of 2
@@ -325,6 +332,20 @@ def create_ranking_table(period):
     # --- Build Table Body ---
     body_rows = []
     for _, row in df.iterrows():
+        # Determine row class based on rank_final value
+        row_class = ""
+        if rank_final_col_index is not None:
+            rank_final_value = row.iloc[rank_final_col_index]
+            if pd.notnull(rank_final_value):
+                try:
+                    rank_value = int(rank_final_value)
+                    if rank_value <= 5:
+                        row_class = " class='top-5-row'"
+                    elif rank_value >= len(df) - 4:  # Bottom 5 rows
+                        row_class = " class='bottom-5-row'"
+                except (ValueError, TypeError):
+                    pass  # If conversion fails, no special styling
+
         cells = []
         for i, cell in enumerate(row):
             column_name = df.columns[i]
@@ -364,7 +385,7 @@ def create_ranking_table(period):
                 cells.append(f"<td class='rank-final-cell'>{cell}</td>")
             else:
                 cells.append(f"<td>{cell}</td>")
-        body_rows.append(f"<tr>{''.join(cells)}</tr>")
+        body_rows.append(f"<tr{row_class}>{''.join(cells)}</tr>")
 
     # Construct the final HTML table
     html = (
