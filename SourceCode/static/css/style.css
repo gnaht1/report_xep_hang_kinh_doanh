@@ -309,6 +309,11 @@ h2 {
     /* Keep rank_final column color */
 }
 
+/* Left-aligned numeric values */
+.ranking-table .numeric-left {
+    text-align: left !important;
+}
+
 /* --- Home Page Specific Styles (Preserved) --- */
 .welcome-header {
     text-align: center;

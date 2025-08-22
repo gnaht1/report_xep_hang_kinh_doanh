@@ -291,11 +291,11 @@ def create_ranking_table(period):
         elif i == 9:
             subheader_cells.append(f"<th>Xếp Hạng PSDN TB</th>")
         elif i == 10:
-            subheader_cells.append(f"<th>Approval Rate TB</th>")
+            subheader_cells.append(f"<th>Approval Rate TB (%)</th>")
         elif i == 11:
             subheader_cells.append(f"<th>Xếp Hạng Approval Rate TB</th>")
         elif i == 12:
-            subheader_cells.append(f"<th>NPL Trước Write Off Luỹ Kế</th>")
+            subheader_cells.append(f"<th>NPL Trước Write Off Luỹ Kế (%)</th>")
         elif i == 13:
             subheader_cells.append(f"<th>Xếp Hạng NPL Trước Write Off Luỹ Kế</th>")
         elif i == 15:
@@ -311,12 +311,16 @@ def create_ranking_table(period):
     # Loop for 'TÀI CHÍNH' subheaders
     for i in range(16, total_cols):
         column_name = df.columns[i]
-        if i == 17:
+        if i == 16:
+            subheader_cells.append(f"<th>CIR (%)</th>")
+        elif i == 17:
             subheader_cells.append(f"<th>Xếp Hạng CIR</th>")
+        elif i == 18:
+            subheader_cells.append(f"<th>Margin (%)</th>")
         elif i == 19:
             subheader_cells.append(f"<th>Xếp Hạng Margin</th>")
         elif i == 20:
-            subheader_cells.append(f"<th>Hiệu Suất Vốn</th>")
+            subheader_cells.append(f"<th>Hiệu Suất Vốn (%)</th>")
         elif i == 21:
             subheader_cells.append(f"<th>Xếp Hạng Hiệu Suất Vốn</th>")
         elif i == 22:
@@ -359,16 +363,18 @@ def create_ranking_table(period):
                 else:
                     formatted_value = cell  # Fallback for unexpected format
                 cells.append(f"<td>{formatted_value}</td>")
-            # Format numeric cells based on column name
+            # Format numeric cells based on column name - keep points center-aligned
             elif (
                 "tổng điểm" in column_name.lower()
                 or "điểm quy mô" in column_name.lower()
+                or "điểm fin" in column_name.lower()
             ):
                 formatted_value = f"{int(round(cell))}" if pd.notnull(cell) else cell
                 cells.append(f"<td class='tong-diem-cell'>{formatted_value}</td>")
+            # Left-align numeric columns
             elif column_name.lower() in ["ltn_avg", "hsbq_nhan_su"]:
                 formatted_value = f"{cell:,.2f}" if pd.notnull(cell) else cell
-                cells.append(f"<td>{formatted_value}</td>")
+                cells.append(f"<td class='numeric-left'>{formatted_value}</td>")
             elif column_name.lower() in [
                 "approval_rate_avg",
                 "npl_truoc_wo_luy_ke",
@@ -376,13 +382,22 @@ def create_ranking_table(period):
                 "margin",
                 "hs_von",
             ]:
-                formatted_value = f"{cell:,.8f}" if pd.notnull(cell) else cell
-                cells.append(f"<td>{formatted_value}</td>")
-            # Apply bold styling to rank columns
+                formatted_value = f"{cell:,.2f}" if pd.notnull(cell) else cell
+                cells.append(f"<td class='numeric-left'>{formatted_value}</td>")
+            # Keep ranking columns center-aligned with bold styling
             elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
                 cells.append(f"<td class='rank-bold'>{cell}</td>")
             elif column_name.lower() == "rank_final":
                 cells.append(f"<td class='rank-final-cell'>{cell}</td>")
+            # Keep other ranking columns center-aligned
+            elif "xếp hạng" in column_name.lower() or "rank" in column_name.lower():
+                cells.append(f"<td>{cell}</td>")
+            # Left-align other numeric columns that aren't points or rankings
+            elif pd.notnull(cell) and isinstance(cell, (int, float)):
+                formatted_value = (
+                    f"{cell:,.2f}" if not isinstance(cell, int) else f"{cell:,}"
+                )
+                cells.append(f"<td class='numeric-left'>{formatted_value}</td>")
             else:
                 cells.append(f"<td>{cell}</td>")
         body_rows.append(f"<tr{row_class}>{''.join(cells)}</tr>")
