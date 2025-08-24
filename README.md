@@ -116,9 +116,10 @@ To ensure efficient processing and scalability, input data is loaded into normal
 </center> -->
 
 <p align="center">
-  <img src="./Picture/new_fact_backdate_funding_monthly.png" alt="fact_backdate_funding_monthly" />
-  <b>Figure 3:</b> fact_backdate_funding_monthly table <br>
+  <img src="./Picture/new_fact_backdate_funding_monthly.png" alt="fact_backdate_funding_monthly" width="400" /><br>
+  <b>Figure 3:</b> fact_backdate_funding_monthly table
 </p>
+
 
 
 ### 2.2.2. ASM Ranking Report:
@@ -134,7 +135,7 @@ To ensure efficient processing and scalability, input data is loaded into normal
 </center> -->
 
 <p align="center">
-  <img src="./Picture/fact_backdate_asm_monthly.png" alt="fact_backdate_asm_monthly"/>
+  <img src="./Picture/fact_backdate_asm_monthly.png" alt="fact_backdate_asm_monthly" /> <br>
   <b>Figure 4:</b> fact_backdate_asm_monthly table <br>
 </p>
 
@@ -167,7 +168,7 @@ When passing the target month as a parameter:
 </center> -->
 
 <p align="center">
-  <img src="./Picture/new_procedure.png" alt="dim_funding_structure"/>
+  <img src="./Picture/new_procedure.png" alt="dim_funding_structure"/> <br>
   <b>Figure 5: </b>Stored Procedure<br>
 </p>
 
@@ -237,7 +238,7 @@ Additionally, after a successful upload, the script will automatically send a st
 </center> -->
 
 <p align="center">
-  <img src="./Picture/email.png" alt="email"/>
+  <img src="./Picture/email.png" alt="email"/><br>
   <b>Figure 8:</b> Sending notification email.<br>
 </p>
 
