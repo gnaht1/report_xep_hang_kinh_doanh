@@ -110,15 +110,17 @@ To ensure efficient processing and scalability, input data is loaded into normal
 
     * _amount_: This is the column containing the value of the corresponding financial item. Based on the image, this column can store both positive values (e.g., revenue, profit) and negative values (e.g., costs, losses). It is the primary measure used in the financial reports.
   
-<!-- ![Fact](./Picture/new_fact_backdate_funding_monthly.png)
+![Fact](./Picture/new_fact_backdate_funding_monthly.png)
 <center>
-<em>Figure 3: fact_backdate_funding_monthly table</em>
-</center> -->
-
 <p align="center">
+  Figure 3: fact_backdate_funding_monthly table.
+</p>
+
+
+<!-- <p align="center">
   <img src="./Picture/new_fact_backdate_funding_monthly.png" alt="fact_backdate_funding_monthly" />
   <b>Figure 3:</b> fact_backdate_funding_monthly table <br>
-</p>
+</p> -->
 
 
 ### 2.2.2. ASM Ranking Report:
