@@ -116,7 +116,8 @@ To ensure efficient processing and scalability, input data is loaded into normal
 </center> -->
 
 <p align="center">
-  <img src="./Picture/new_fact_backdate_funding_monthly.png" alt="fact_backdate_funding_monthly"/>
+  <img src="./Picture/new_fact_backdate_funding_monthly.png" alt="fact_backdate_funding_monthly" />
+  
   <b>Figure 3:</b> fact_backdate_funding_monthly table <br>
 </p>
 
