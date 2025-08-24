@@ -359,6 +359,59 @@ h2 {
     opacity: 1;
 }
 
+/* Business Description Table Styles */
+.business-description-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.business-description-table th,
+.business-description-table td {
+    border: 1px solid #ccc;
+    padding: 12px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.business-description-table th {
+    background-color: #4472C4;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+.business-description-table td:first-child {
+    text-align: left;
+    font-weight: bold;
+}
+
+.business-description-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.business-description-table tr:hover {
+    background-color: #f0f8ff;
+}
+
+/* Special styling for main section rows */
+.business-description-table tr.section-main {
+    background-color: #fff3cd !important;
+}
+
+.business-description-table tr.section-main:hover {
+    background-color: #ffeaa7 !important;
+}
+
+/* Special styling for subsection rows */
+.business-description-table tr.section-sub {
+    background-color: #d4f8d4 !important;
+}
+
+.business-description-table tr.section-sub:hover {
+    background-color: #c3f0c3 !important;
+}
+
 /* --- Home Page Specific Styles (Preserved) --- */
 .welcome-header {
     text-align: center;

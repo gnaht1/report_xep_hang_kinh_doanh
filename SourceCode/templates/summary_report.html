@@ -5,6 +5,7 @@
 {% block content %}
     <div class="content-header">
         <h1>Báo cáo Tổng hợp</h1>
+        
         <div class="email-section">
             <h3>Send Report</h3>
             <h4>Nhập địa chỉ email để nhận báo cáo tháng cần theo dõi:</h4>
@@ -34,5 +35,6 @@
     <div class="report">
         <h2>Báo cáo Tổng hợp Tháng {{ selected_month[4:] }} Năm {{ selected_month[:4] }}</h2>
         {{ summary_table_html|safe }}
+        <h5>Đơn vị: Triệu đồng</h5>
     </div>
 {% endblock %}

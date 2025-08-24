@@ -511,6 +511,12 @@ def ranking_report():
     )
 
 
+@app.route("/business_description")
+def business_description():
+    """Renders the business description page."""
+    return render_template("business_description.html")
+
+
 @app.route("/send-approval-email", methods=["POST"])
 def send_approval_email():
     """API endpoint to handle sending the report email."""
