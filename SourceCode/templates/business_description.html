@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block title %}Mô Tả Nghiệp Vụ - Bảng điều khiển Báo cáo{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Mô Tả Nghiệp Vụ</h1>
+</div>
+
+<div class="report">
+    <table class="business-description-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">STT</th>
+                <th style="width: 20%;">Tên bảng, cột, hàng</th>
+                <th style="width: 25%;">Mô tả</th>
+                <th style="width: 10%;">Nguồn</th>
+                <th style="width: 40%;">Cách tính</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="section-main">
+                <td>1.</td>
+                <td>Dữ liệu đầu vào</td>
+                <td>Các bảng với dữ liệu thô</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr class="section-sub">
+                <td>1.1</td>
+                <td>fact_txn_month_raw_data</td>
+                <td>Lưu trữ tổng giá trị giao dịch của các hoạt động công ty thuộc về từng vùng vào cuối kỳ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.1.1</td>
+                <td>account_code</td>
+                <td>Mã riêng của từng đầu kế toán</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.1.2</td>
+                <td>analysis_code</td>
+                <td>Mã cấu trúc của mỗi transaction, cho biết được thông tin về vùng địa lý, thành phố nơi transaction xảy ra</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.1.3</td>
+                <td>transaction_date</td>
+                <td>Thời điểm cuối kỳ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.1.4</td>
+                <td>amount</td>
+                <td>Tổng giá trị giao dịch cuối kỳ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr class="section-sub">
+                <td>1.2</td>
+                <td>fact_kpi_month_raw_data</td>
+                <td>Lưu trữ tổng giá trị các khoản nợ trước WO, giá trị WO thuộc về từng tỉnh, thành phố vào cuối kỳ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.1</td>
+                <td>kpi_month</td>
+                <td>Thời điểm cuối kỳ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.2</td>
+                <td>pos_city</td>
+                <td>Thành phố nơi ghi nhận các khoản nợ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.3</td>
+                <td>outstanding_principal</td>
+                <td>Tổng giá trị dư nợ cuối kỳ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.4</td>
+                <td>psdn</td>
+                <td>Phát sinh dư nợ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.5</td>
+                <td>write_off_month</td>
+                <td>Thời điểm WO</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.6</td>
+                <td>max_bucket</td>
+                <td>Nhóm nợ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.7</td>
+                <td>write_off_balance_principal</td>
+                <td>Tổng giá trị WO</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.2.8</td>
+                <td>application_id</td>
+                <td>Mã khoản nợ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr class="section-sub">
+                <td>1.3</td>
+                <td>kpi_asm_data</td>
+                <td>Lưu trữ các chỉ số mà các ASM đã đạt được vào cuối kỳ</td>
+                <td>GL Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.1</td>
+                <td>month_key</td>
+                <td>Thời điểm cuối kỳ</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.2</td>
+                <td>area_name</td>
+                <td>Khu vực ASM hoạt động</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>1.3.3</td>
+                <td>sale_name</td>
+                <td>Tên ASM</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.4</td>
+                <td>email</td>
+                <td>Email của ASM</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.5</td>
+                <td>Loan To New</td>
+                <td>Tổng giá trị khoản vay ASM đã thuyết phục được khách hàng vay</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.6</td>
+                <td>Phát sinh dư nợ</td>
+                <td>Mỗi khoản vay được giải ngân sẽ tính 1 lần PSDN</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.7</td>
+                <td>App approved</td>
+                <td>Số hồ sơ vay được duyệt</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.8</td>
+                <td>App in</td>
+                <td>Số hồ sơ vay</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>1.3.9</td>
+                <td>Approval rate</td>
+                <td>Tỉ lệ hồ sơ vay được duyệt</td>
+                <td>PTKD SM Data</td>
+                <td></td>
+            </tr>
+
+            <tr class="section-main">
+                <td>2.</td>
+                <td>Đầu ra</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr class="section-sub">
+                <td>2.1</td>
+                <td>Báo cáo tổng hợp</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2.1.1</td>
+                <td>Tổng thu nhập từ hoạt động thẻ</td>
+                <td></td>
+                <td>fact_backdate_funding_monthly</td>
+                <td>=Sum (2.1.1.1) +(2.1.1.2) +... +(2.1.1.5)</td>
+            </tr>
+            <tr>
+                <td>2.1.1.1</td>
+                <td>Lãi trong hạn</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 702000030002, 702000030001,702000030102</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 9 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.1.2</td>
+                <td>Lãi quá hạn</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 702000030012, 702000030112</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 10 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.1.3</td>
+                <td>Phí bảo hiểm</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : '716000000001</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 11 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.1.4</td>
+                <td>Phí tăng hạn mức</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : '719000030002</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 12 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.1.5</td>
+                <td>Phí thanh toán chậm, thu từ ngoại bảng</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 719000030003,719000030103,790000030003,790000030103,790000030004,790000030104</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 13 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.2</td>
+                <td>Chi phí thuần KDV</td>
+                <td></td>
+                <td>tmp_txn_sums, tmp_regional_direct_card_income</td>
+                <td>= Sum (2.1.2.1) + (2.1.2.2)</td>
+            </tr>
+            <tr>
+                <td>2.1.2.1</td>
+                <td>CP vốn CCTG</td>
+                <td>Chi phí CCTG (tk kế toán : 803000000001) * thu nhập hoạt động từ thẻ vay ĐVML / ( doanh thu nguồn vốn toàn hàng + lãi thu từ thẻ vay toàn hàng )</td>
+                <td>tmp_txn_sums, tmp_regional_direct_card_income</td>
+                <td>Tỉ lệ phân bổ * số tiền phân bổ với funding_id = 17</td>
+            </tr>
+            <tr>
+                <td>2.1.2.2</td>
+                <td>CP vốn TT2</td>
+                <td>Chi phí vốn TT2 ( tk kế toán : '801000000001','802000000001' ) * thu nhập hoạt động từ thẻ vay ĐVML / ( doanh thu nguồn vốn toàn hàng + lãi thu từ thẻ vay toàn hàng )</td>
+                <td>tmp_txn_sums, tmp_regional_direct_card_income</td>
+                <td>Tỉ lệ phân bổ * số tiền phân bổ với funding_id = 15</td>
+            </tr>
+            <tr>
+                <td>2.1.3</td>
+                <td>Chi phí thuần hoạt động khác</td>
+                <td></td>
+                <td>dim_funding_structure, fact_backdate_funding_monthly</td>
+                <td>= SUM (2.1.3.1) + (2.1.3.2) + (2.1.3.3)</td>
+            </tr>
+            <tr>
+                <td>2.1.3.1</td>
+                <td>CP hoa hồng</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 816000000001,816000000002,816000000003</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 21 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.3.2</td>
+                <td>CP thuần KD khác</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 809000000002,809000000001,811000000001,811000000102,811000000002,811014000001,811037000001,811039000001,811041000001,815000000001,819000000002,819000000003,819000000001,790000000003,790000050101,790000000101,790037000001,849000000001,899000000003,899000000002,811000000101,819000060001</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 22 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.3.3</td>
+                <td>DT kinh doanh</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 702000010001,702000010002,704000000001,705000000001,709000000001,714000000002,714000000003,714037000001,714000000004,714014000001,715000000001,715037000001,719000000001,709000000101,719000000101</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 20 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.4</td>
+                <td>Tổng thu nhập hoạt động</td>
+                <td></td>
+                <td>dim_funding_structure, fact_backdate_funding_monthly	</td>
+                <td>= SUM (2.1.1) + (2.1.2) + (2.1.3)</td>
+            </tr>
+            <tr>
+                <td>2.1.5</td>
+                <td>Tổng thu nhập hoạt động</td>
+                <td></td>
+                <td>dim_funding_structure, fact_backdate_funding_monthly	</td>
+                <td>= SUM (2.1.5.1) + (2.1.5.2) + (2.1.5.3)</td>
+            </tr>
+            <tr>
+                <td>2.1.5.1</td>
+                <td>CP nhân viên</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 85x</td>
+                <td>tmp_txn_sums, tmp_sm_counts	</td>
+                <td>Cộng các mã có funding_id = 25 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.5.2</td>
+                <td>CP quản lý</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 86x</td>
+                <td>tmp_txn_sums, tmp_sm_counts	</td>
+                <td>Cộng các mã có funding_id = 26 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.5.3</td>
+                <td>CP tài sản</td>
+                <td>Lấy theo đầu kế toán với account_code thuộc : 87x</td>
+                <td>tmp_txn_sums, tmp_sm_counts	</td>
+                <td>Cộng các mã có funding_id = 27 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.6</td>
+                <td>Chi phí dự phòng</td>
+                <td>Dự phòng cho vay: 790000050001, 882200050001, 790000030001, 882200030001, 790000000001, 790000020101, 882200000001, 882200050101, 882200020101, 882200060001,790000050101 882200030101</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>Cộng các mã có funding_id = 28 và cộng thêm tỉ lệ phân bổ * số tiền phân bổ từ hội sở về từng vùng</td>
+            </tr>
+            <tr>
+                <td>2.1.7</td>
+                <td>Lợi nhuận trước thuế</td>
+                <td>Là lợi nhuận thu được sau khi trừ toàn bộ chi phí. Chưa tính thuế thu nhập doanh nghiệp.</td>
+                <td>tmp_txn_sums, tmp_kpi_ratios</td>
+                <td>= SUM (2.1.4) + (2.1.5) + (2.1.6)</td>
+            </tr>
+            <tr>
+                <td>2.1.8</td>
+                <td>Số lượng SM</td>
+                <td>Số lượng SM tính theo số lượng nhân sự phụ trách từng POS thuộc một BM ( Branch Manager - tương ứng với 1 tỉnh )</td>
+                <td>kpi_asm_data</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2.1.9</td>
+                <td>CIR (%)</td>
+                <td>CIR của Tỉnh</td>
+                <td>tmp_composite_metrics</td>
+                <td>Chia funding_id 8 cho funding_id 7</td>
+            </tr>
+            <tr>
+                <td>2.1.10</td>
+                <td>Margin (%)</td>
+                <td>Lợi nhuận trước thuế / tổng thu nhập</td>
+                <td>tmp_composite_metrics</td>
+                <td>= funding_id 1 / (funding_id 4 + funding_id 20)</td>
+            </tr>
+            <tr>
+                <td>2.1.11</td>
+                <td>Hiệu Suất Vốn (%)</td>
+                <td>Là khả năng lợi nhuận thu được so với chi phí trả lãi từ huy động vốn bỏ ra</td>
+                <td>tmp_composite_metrics</td>
+                <td>= - funding_id 1 / funding_id 5</td>
+            </tr>
+            <tr>
+                <td>2.1.12</td>
+                <td>Hiệu Suất BQ/Nhân Sự (%)</td>
+                <td>Bình quân lợi nhuận chia cho từng nhân sự cùng trực thuộc 1 cấp quản lý</td>
+                <td>tmp_composite_metrics</td>
+                <td>= funding_id 1 / funding_id 2</td>
+            </tr>
+            <tr class="section-sub">
+                <td>2.2</td>
+                <td>Xếp hạng ASM</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2.2.1</td>
+                <td>Sale Manager ( SM )</td>
+                <td>Tên trưởng bộ phận kinh doanh thuộc một địa bàn trong tỉnh. 1 BM quản lý nhiều SM</td>
+                <td></td>
+                <td></td>
+            </tr>
+            
+            <tr>
+                <td>2.2.2</td>
+                <td>LTN</td>
+                <td>Loan To New : Số dư nợ cho vay khách hàng mới trong tháng</td>
+                <td>kpi_asm, area_mapping</td>
+                <td>Lấy LTN trung bình, VD LTN T1,2 = (T1+T2)/2</td>
+            </tr>
+            <tr>
+                <td>2.2.3</td>
+                <td>PSDN</td>
+                <td>Phát Sinh Dư Nợ : Mỗi 1 khách hàng mới trong tháng có phát sinh dư nợ sẽ tính là 1</td>
+                <td>kpi_asm, area_mapping</td>
+                <td>Lấy PSDN trung bình, VD PSDN T1,2 = (T1+T2)/2</td>
+            </tr>
+            <tr>
+                <td>2.2.4</td>
+                <td>Approve rate ( approve/app-in)</td>
+                <td>Tỷ lệ số lượng hồ sơ khách hàng được duyệt / hồ sơ khách hàng đăng ký</td>
+                <td>kpi_asm, area_mapping</td>
+                <td>Approve rate = (approve/app-in) VD: Approve rate trung bình T1,2 = Approve TB T1,2/ app-in TB T1,2</td>
+            </tr>
+            <tr>
+                <td>2.2.5</td>
+                <td>NPL bef WO</td>
+                <td>Tỷ lệ nợ xấu trước Write Off</td>
+                <td>Báo cáo đã cung cấp số liệu tới tỉnh/thành phố</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2.2.6</td>
+                <td>Tổng điểm xếp hạng 1</td>
+                <td>Xếp hạng các chỉ số LTN,PSDN,active card và NPL bef WO</td>
+                <td>fact_backdate_asm_monthly</td>
+                <td>Các chỉ tiêu LTN,PSDN và aprove rate lấy từ cao -> thấp, chỉ tiêu NPL ngược lại</td>
+            </tr>
+            <tr>
+                <td>2.2.7</td>
+                <td>Xếp hạng 1</td>
+                <td>Dựa trên điểm xếp hạng lấy từ thấp đến cao</td>
+                <td>fact_backdate_asm_monthly</td>
+                <td>Các chỉ tiêu LTN,PSDN và aprove rate lấy từ cao -> thấp, chỉ tiêu NPL ngược lại</td>
+            </tr>
+            <tr>
+                <td>2.2.8</td>
+                <td>Tổng điểm xếp hạng 2</td>
+                <td>Xếp hạng các chỉ số CIR,Margin,HS/Vốn, NSBQ/nhân sự</td>
+                <td>fact_backdate_asm_monthly</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2.2.9</td>
+                <td>Xếp hạng 2</td>
+                <td>Dựa trên điểm xếp hạng lấy từ thấp đến cao</td>
+                <td>fact_backdate_asm_monthly</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2.2.10</td>
+                <td>Tổng điểm xếp hạng 3</td>
+                <td>Cộng tổng điểm XH 1 và 2</td>
+                <td>fact_backdate_asm_monthly</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>2.2.11</td>
+                <td>Xếp hạng 3</td>
+                <td>Xếp hạng tổng điểm XH 1 và 2 từ thấp -> cao</td>
+                <td>fact_backdate_asm_monthly</td>
+                <td></td>
+            </tr>
+            
+            
+        </tbody>
+    </table>
+</div>
+{% endblock %}

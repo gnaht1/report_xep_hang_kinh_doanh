@@ -223,6 +223,13 @@ def create_ranking_table(period):
 
     total_cols = len(df.columns)
 
+    # Find rank_final column index for determining top/bottom 5
+    rank_final_col_index = None
+    for i, col in enumerate(df.columns):
+        if col.lower() == "rank_final":
+            rank_final_col_index = i
+            break
+
     # --- Superheader and Subheader Creation ---
     superheader_cells = []
     # First loop for columns that have a rowspan of 2
@@ -239,7 +246,7 @@ def create_ranking_table(period):
             superheader_cells.append(f"<th rowspan='2'>Tên Khu Vực</th>")
         elif i == 5:
             superheader_cells.append(
-                f"<th rowspan='2' class='rank-final-header'>Xếp Hạng Cuối</th>"
+                f"<th rowspan='2' class='rank-final-header'><div class='tooltip'>Xếp Hạng Cuối<span class='tooltiptext'>Xếp hạng tổng điểm XH từ thấp -> cao</span></div></th>"
             )
         elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
             superheader_cells.append(
@@ -276,24 +283,41 @@ def create_ranking_table(period):
         column_name = df.columns[i]
         # Using custom, more descriptive names for some columns
         if i == 6:
-            subheader_cells.append(f"<th>LTN TB</th>")
+            # Add tooltip
+            subheader_cells.append(
+                f"<th><div class='tooltip'>LTN TB<span class='tooltiptext'>Loan To New : Số dư nợ cho vay khách hàng mới trong tháng</span></div></th>"
+            )
         elif i == 7:
-            subheader_cells.append(f"<th>Xếp Hạng LTN TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng LTN TB<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 8:
-            subheader_cells.append(f"<th>PSDN TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>PSDN TB<span class='tooltiptext'>Phát Sinh Dư Nợ : Mỗi 1 khách hàng mới trong tháng có phát sinh dư nợ sẽ tính là 1</span></div></th>"
+            )
         elif i == 9:
-            subheader_cells.append(f"<th>Xếp Hạng PSDN TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng PSDN TB<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 10:
-            subheader_cells.append(f"<th>Approval Rate TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Approval Rate TB (%)<span class='tooltiptext'>Tỷ lệ số lượng hồ sơ khách hàng được duyệt / hồ sơ khách hàng đăng ký</span></div></th>"
+            )
         elif i == 11:
-            subheader_cells.append(f"<th>Xếp Hạng Approval Rate TB</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Approval Rate TB<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 12:
-            subheader_cells.append(f"<th>NPL Trước Write Off Luỹ Kế</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>NPL Trước Write Off Luỹ Kế (%)<span class='tooltiptext'>Tỷ lệ nợ xấu trước Write Off Luỹ Kế</span></div></th>"
+            )
         elif i == 13:
-            subheader_cells.append(f"<th>Xếp Hạng NPL Trước Write Off Luỹ Kế</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng NPL Trước Write Off Luỹ Kế	<span class='tooltiptext'>Lấy từ thấp -> cao.</span></div></th>"
+            )
         elif i == 15:
             subheader_cells.append(
-                "<th class='rank-green'>Xếp Hạng Phát Triển Kinh Doanh</th>"
+                "<th class='rank-green'><div class='tooltip'>Xếp Hạng Phát Triển Kinh Doanh<span class='tooltiptext'>Từ thấp -> cao.</span></div></th>"
             )
         # Apply styling based on column name
         elif "điểm quy mô" in column_name.lower() or "điểm fin" in column_name.lower():
@@ -304,20 +328,42 @@ def create_ranking_table(period):
     # Loop for 'TÀI CHÍNH' subheaders
     for i in range(16, total_cols):
         column_name = df.columns[i]
-        if i == 17:
-            subheader_cells.append(f"<th>Xếp Hạng CIR</th>")
+        if i == 16:
+            subheader_cells.append(
+                f"<th><div class='tooltip'>CIR (%)<span class='tooltiptext'>CIR của Tỉnh</span></div></th>"
+            )
+        elif i == 17:
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng CIR<span class='tooltiptext'>Lấy từ thấp -> cao.</span></div></th>"
+            )
+        elif i == 18:
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Margin (%)<span class='tooltiptext'>Lợi nhuận trước thuế / tổng thu nhập</span></div></th>"
+            )
         elif i == 19:
-            subheader_cells.append(f"<th>Xếp Hạng Margin</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Margin<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 20:
-            subheader_cells.append(f"<th>Hiệu Suất Vốn</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Hiệu Suất Vốn (%)<span class='tooltiptext'>Là khả năng lợi nhuận thu được so với chi phí trả lãi từ huy động vốn bỏ ra</span></div></th>"
+            )
         elif i == 21:
-            subheader_cells.append(f"<th>Xếp Hạng Hiệu Suất Vốn</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Hiệu Suất Vốn<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 22:
-            subheader_cells.append(f"<th>Hiệu Suất Bình Quân Nhân Sự</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Hiệu suất BQ/ Nhân sự(%)<span class='tooltiptext'>Bình quân lợi nhuận chia cho từng nhân sự cùng trực thuộc 1 cấp quản lý.</span></div></th>"
+            )
         elif i == 23:
-            subheader_cells.append(f"<th>Xếp Hạng Hiệu Suất Bình Quân Nhân Sự</th>")
+            subheader_cells.append(
+                f"<th><div class='tooltip'>Xếp Hạng Hiệu suất BQ/ Nhân sự<span class='tooltiptext'>Lấy từ cao -> thấp.</span></div></th>"
+            )
         elif i == 25:
-            subheader_cells.append(f"<th class='rank-green'>Xếp Hạng Điểm FIN</th>")
+            subheader_cells.append(
+                f"<th class='rank-green'><div class='tooltip'>Xếp Hạng Điểm FIN<span class='tooltiptext'>Lấy từ thấp -> cao.</span></div></th>"
+            )
         else:
             subheader_cells.append(f"<th>{column_name}</th>")
     header_row = f"<tr>{''.join(subheader_cells)}</tr>"
@@ -325,27 +371,45 @@ def create_ranking_table(period):
     # --- Build Table Body ---
     body_rows = []
     for _, row in df.iterrows():
+        # Determine row class based on rank_final value
+        row_class = ""
+        if rank_final_col_index is not None:
+            rank_final_value = row.iloc[rank_final_col_index]
+            if pd.notnull(rank_final_value):
+                try:
+                    rank_value = int(rank_final_value)
+                    if rank_value <= 5:
+                        row_class = " class='top-5-row'"
+                    elif rank_value >= len(df) - 4:  # Bottom 5 rows
+                        row_class = " class='bottom-5-row'"
+                except (ValueError, TypeError):
+                    pass  # If conversion fails, no special styling
+
         cells = []
         for i, cell in enumerate(row):
             column_name = df.columns[i]
 
-            # Format the first column from 'YYYYMM' to 'MM/YYYY'
+            # Format the first column from 'YYYYMM' to 'MM/YYYY' and fake the year as 2025
             if i == 0:
                 if pd.notnull(cell) and len(str(cell)) == 6:
-                    formatted_value = f"{str(cell)[4:]}/{str(cell)[:4]}"
+                    month_part = str(cell)[4:]  # Extract month (MM)
+                    # Always display year as 2025 for frontend display
+                    formatted_value = f"{month_part}/2025"
                 else:
                     formatted_value = cell  # Fallback for unexpected format
                 cells.append(f"<td>{formatted_value}</td>")
-            # Format numeric cells based on column name
+            # Format numeric cells based on column name - keep points center-aligned
             elif (
                 "tổng điểm" in column_name.lower()
                 or "điểm quy mô" in column_name.lower()
+                or "điểm fin" in column_name.lower()
             ):
                 formatted_value = f"{int(round(cell))}" if pd.notnull(cell) else cell
                 cells.append(f"<td class='tong-diem-cell'>{formatted_value}</td>")
+            # Left-align numeric columns
             elif column_name.lower() in ["ltn_avg", "hsbq_nhan_su"]:
                 formatted_value = f"{cell:,.2f}" if pd.notnull(cell) else cell
-                cells.append(f"<td>{formatted_value}</td>")
+                cells.append(f"<td class='numeric-left'>{formatted_value}</td>")
             elif column_name.lower() in [
                 "approval_rate_avg",
                 "npl_truoc_wo_luy_ke",
@@ -353,16 +417,25 @@ def create_ranking_table(period):
                 "margin",
                 "hs_von",
             ]:
-                formatted_value = f"{cell:,.8f}" if pd.notnull(cell) else cell
-                cells.append(f"<td>{formatted_value}</td>")
-            # Apply bold styling to rank columns
+                formatted_value = f"{cell:,.2f}" if pd.notnull(cell) else cell
+                cells.append(f"<td class='numeric-left'>{formatted_value}</td>")
+            # Keep ranking columns center-aligned with bold styling
             elif column_name.lower() in ["rank_ptkd", "rank_fin"]:
                 cells.append(f"<td class='rank-bold'>{cell}</td>")
             elif column_name.lower() == "rank_final":
                 cells.append(f"<td class='rank-final-cell'>{cell}</td>")
+            # Keep other ranking columns center-aligned
+            elif "xếp hạng" in column_name.lower() or "rank" in column_name.lower():
+                cells.append(f"<td>{cell}</td>")
+            # Left-align other numeric columns that aren't points or rankings
+            elif pd.notnull(cell) and isinstance(cell, (int, float)):
+                formatted_value = (
+                    f"{cell:,.2f}" if not isinstance(cell, int) else f"{cell:,}"
+                )
+                cells.append(f"<td class='numeric-left'>{formatted_value}</td>")
             else:
                 cells.append(f"<td>{cell}</td>")
-        body_rows.append(f"<tr>{''.join(cells)}</tr>")
+        body_rows.append(f"<tr{row_class}>{''.join(cells)}</tr>")
 
     # Construct the final HTML table
     html = (
@@ -438,6 +511,12 @@ def ranking_report():
     )
 
 
+@app.route("/business_description")
+def business_description():
+    """Renders the business description page."""
+    return render_template("business_description.html")
+
+
 @app.route("/send-approval-email", methods=["POST"])
 def send_approval_email():
     """API endpoint to handle sending the report email."""
@@ -449,42 +528,32 @@ def send_approval_email():
         # Import the report generation function
         from run_all_reports import run_reports
 
-        # Try to regenerate the report files with the latest data
+        # Generate reports and send email (run_reports handles email sending internally)
         try:
             report_period_data = str(report_period).replace("2025", "2023")
+            # This function will generate reports AND send email automatically
             run_reports(report_period_data, recipient_email)
             report_generated = True
         except Exception as e:
             report_generated = False
             print(f"Error generating reports: {str(e)}")
+            # Return error response if report generation fails
+            return jsonify(
+                {"status": "error", "message": f"Failed to generate reports: {str(e)}"}
+            )
 
-        # Prepare email subject and body
-        subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
+        # Prepare Google Drive link for response
         google_drive_link = getattr(
             config,
             "GOOGLE_DRIVE_FOLDER",
             f"https://drive.google.com/drive/folders/{report_period}",
         )
 
-        body = f"""
-        <html><body>
-            <p>Xin chào,</p>
-            <p>Báo cáo cho kỳ <strong>{report_period}</strong> đã được xem xét và gửi đi.</p>
-            {'<p><strong style="color:green;">✅ Báo cáo đã được tạo lại với dữ liệu mới nhất.</strong></p>' if report_generated else '<p><strong style="color:orange;">⚠️ Không thể tạo báo cáo mới. Email này đính kèm báo cáo hiện có.</strong></p>'}
-            <p>Bạn có thể xem báo cáo tại Google Drive tại đây:</p>
-            <p><a href="{google_drive_link}">Xem Báo Cáo trên Google Drive</a></p>
-            <p>Trân trọng.</p>
-        </body></html>
-        """
-
-        # Send the email
-        send_email(subject, body, recipient_email)
-
-        # Return a success response
+        # Return success response (email already sent by run_reports function)
         return jsonify(
             {
                 "status": "success",
-                "message": f"Báo cáo đã được tạo và email đã được gửi tới {recipient_email}",
+                "message": f"Reports have been generated and email has been sent to {recipient_email}",
                 "google_drive_link": google_drive_link,
                 "report_period": report_period,
             }

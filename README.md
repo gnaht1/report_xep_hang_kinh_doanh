@@ -14,6 +14,7 @@
   - [2.7. Execute with Python:](#27-execute-with-python)
   - [2.8. Auto-Upload to Google Drive](#28-auto-upload-to-google-drive)
   - [2.9. Scheduled task](#29-scheduled-task)
+  - [2.10. Webview](#210-webview)
 - [3. Skills and Achievements After Completing the Project](#3-skills-and-achievements-after-completing-the-project)
   - [3.1. Tool Skills](#31-tool-skills)
   - [3.2. Technical Skills](#32-technical-skills)
@@ -33,13 +34,19 @@ Both reports strictly follow the user-defined format and template requirements. 
 
 # 2. Implementation
 
-Flowchart:
+<!-- **Flowchart**: -->
 
-![flowchart_process](./Picture/flow_chart.png)
+<!-- ![flowchart_process](./Picture/flow_chart.png)
 
 <center>
 <em>Figure 1: Flow chart</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/flow_chart.png" alt="Flow Chart"/>
+  <b>Figure 1:</b> Flow chart <br>
+</p>
+
 
 Description of Implementation Steps:
 
@@ -85,10 +92,15 @@ To ensure efficient processing and scalability, input data is loaded into normal
 
     * _sortorder_: This column is used to determine the display order of items on a report. Items are sorted based on this value, ensuring that reports always have a consistent and structured layout as required by the Finance department.
 
-![Dim](./Picture/dim_funding_structure.png)
+<!-- ![Dim](./Picture/dim_funding_structure.png)
 <center>
 <em>Figure 2: dim_funding_structure table</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/dim_funding_structure.png" alt="dim_funding_structure"/>
+  <b>Figure 2:</b> dim_funding_structure table <br>
+</p>
     
 * Fact table: fact_backdate_funding_monthly
 
@@ -97,10 +109,17 @@ To ensure efficient processing and scalability, input data is loaded into normal
     * _area_code_: This column represents the business area or geographical region where the financial data is recorded (e.g., 'A', 'B', 'C'). It allows you to analyze financial performance by region.
 
     * _amount_: This is the column containing the value of the corresponding financial item. Based on the image, this column can store both positive values (e.g., revenue, profit) and negative values (e.g., costs, losses). It is the primary measure used in the financial reports.
-![Fact](./Picture/new_fact_backdate_funding_monthly.png)
+  
+<!-- ![Fact](./Picture/new_fact_backdate_funding_monthly.png)
 <center>
 <em>Figure 3: fact_backdate_funding_monthly table</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/new_fact_backdate_funding_monthly.png" alt="fact_backdate_funding_monthly" width="400" /><br>
+  <b>Figure 3:</b> fact_backdate_funding_monthly table
+</p>
+
 
 
 ### 2.2.2. ASM Ranking Report:
@@ -110,10 +129,15 @@ To ensure efficient processing and scalability, input data is loaded into normal
     * _area_cde_: A code that represents the business region the ASM belongs to (e.g., 'F', 'B', 'C').
 
 
-![Fact2](./Picture/fact_backdate_asm_monthly.png)
+<!-- ![Fact2](./Picture/fact_backdate_asm_monthly.png)
 <center>
 <em>Figure 4: fact_backdate_asm_monthly table</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/fact_backdate_asm_monthly.png" alt="fact_backdate_asm_monthly" /> <br>
+  <b>Figure 4:</b> fact_backdate_asm_monthly table <br>
+</p>
 
 
 
@@ -138,10 +162,15 @@ When passing the target month as a parameter:
 * Load new processed data into the tables.
 * Construct SQL queries to retrieve data in the required format for the two report sheets.
 
-![procedure](./Picture/new_procedure.png)
+<!-- ![procedure](./Picture/new_procedure.png)
 <center>
 <em>Figure 5: Stored Procedure</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/new_procedure.png" alt="dim_funding_structure"/> <br>
+  <b>Figure 5: </b>Stored Procedure<br>
+</p>
 
 
 **Note**: After the procedure is developed, it must be executed to validate the output against the sample report.
@@ -174,54 +203,93 @@ Develop SQL functions to retrieve data in the exact format required for each she
 * Write the results to an Excel file.
 
 
-![format](./Picture/report_tonghop.png)
+<!-- ![format](./Picture/report_tonghop.png)
 
 <center>
 <em>Figure 6: BaoCaoTongHop formatted</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/report_tonghop.png" alt="report_tonghop"/>
+  <b>Figure 6:</b> BaoCaoTongHop formatted<br>
+</p>
 
 ## 2.8. Auto-Upload to Google Drive
 
 After generating and formatting the Excel file, use Python’s Google Drive API client to authenticate (via OAuth or service account) and automatically upload or overwrite the file in a specified Drive folder, ensuring access permissions are configured so that only members of the Finance department can view the report.
 
-![drive](./Picture/new_gg_drive.png)
+<!-- ![drive](./Picture/new_gg_drive.png)
 
 <center>
 <em>Figure 7: Finance department folder</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/new_gg_drive.png" alt="new_gg_drive"/>
+  <b>Figure 7:</b> Finance department folder <br>
+</p>
 
 Additionally, after a successful upload, the script will automatically send a status notification email to relevant department staff to confirm the upload, including a link to the new report file.
 
-![email](./Picture/email.png)
+<!-- ![email](./Picture/email.png)
 
 <center>
 <em>Figure 8: Sending notification email</em>
-</center>
+</center> -->
+
+<p align="center">
+  <img src="./Picture/email.png" alt="email"/><br>
+  <b>Figure 8:</b> Sending notification email.<br>
+</p>
 
 ## 2.9. Scheduled task
 To automate report generation, set up a scheduled job in Windows Task Scheduler to run the Python script on the first day of each month
 
+## 2.10. Webview
+
+To enhance accessibility and data visualization, I developed an **Online reporting demo web application**:
+
+* **Technologies used**:
+  * **Flask**: built a lightweight web application serving as the backend to handle requests and deliver results.
+  * **Python + Pandas**: processed, aggregated, and formatted data from the database.
+  * **HTML + CSS**: designed the reporting interface, displaying tables and metrics in a clear and user-friendly layout.
+
+* **Deployment**:
+  * Deployed the application on a **VPS running Ubuntu**.
+  * Used **tmux** to keep the Flask server running persistently in the background.
+  
+
+* **Results**:
+  * Users can access reports directly online instead of relying solely on Excel files.
+  * The system can also send important reports or monitoring updates to users via **email notifications**.
+  * The interface is intuitive and can be expanded in the future to include charts or interactive dashboards.
+
+
 
 # 3. Skills and Achievements After Completing the Project
 ## 3.1. Tool Skills
-* PostgreSQL: Wrote and executed Stored Procedures and complex SQL queries to process and extract reporting data.
+* **PostgreSQL**: Wrote and executed Stored Procedures and complex SQL queries to process and extract reporting data.
 
-* Python: Used Python to orchestrate the entire workflow, from executing SQL queries to creating and formatting the Excel file.
+* **Python**: Used Python to orchestrate the entire workflow, from executing SQL queries to creating and formatting the Excel file.
 
-* Excel: Formated and Exported Excel reports with complex custom formatting (e.g., fonts, colors, column widths) using Python.
+* **Excel**: Formated and Exported Excel reports with complex custom formatting (e.g., fonts, colors, column widths) using Python.
 
-* Google Drive API: Utilized the Google Drive API to automate the upload of the final report file to a specified folder.
+* **Google Drive API**: Utilized the Google Drive API to automate the upload of the final report file to a specified folder.
 
-* Windows Task Scheduler: Configured and used the Windows tool to set up a job for automatic, scheduled monthly execution.
+* **Windows Task Scheduler**: Configured and used the Windows tool to set up a job for automatic, scheduled monthly execution.
+
+* **Flask**: built and deployed a lightweight web application for online reporting.
+
+* **tmux**: maintained long-running Flask processes in a stable session on VPS.
 
 ## 3.2. Technical Skills
-* Advanced SQL:
+* **Advanced SQL**:
 
     * Developed parameterized Stored Procedures to perform business logic, such as flexibly deleting and reloading data.
 
     * Optimized query performance by creating and applying indexes on key data columns.
 
-* Python Programming:
+* **Python Programming**:
 
     * Integrated Python with a PostgreSQL database to execute data processing routines.
 
@@ -229,17 +297,26 @@ To automate report generation, set up a scheduled job in Windows Task Scheduler 
 
     * Integrated with external services via API, specifically Google Drive for file uploads and sending email notifications.
 
-* Data Model Design:
+* **Data Model Design**:
 
     * Organized and built a data model using Dimension and Fact tables (dim_funding_structure, fact_backdate_funding_monthly, etc) to optimize for querying and maintenance.
 
     * Designed tables with specific columns like month_key to support reprocessing past data ("backdating").
 
-* Process Automation:
+* **Notification & Automation**:
 
     * Built a complete, end-to-end automated workflow, from ingesting input data, processing it, generating reports, to delivering the final product to the user.
 
     * Set up the process to run on a recurring schedule, ensuring reports are delivered on time without manual intervention.
+    * Implemented automated email notifications to deliver critical reports directly to users.
+
+* **Web Development**:
+
+    * Designed a reporting web interface with HTML + CSS for user-friendly data visualization.
+
+    * Integrated Pandas with Flask to process and serve dynamic reporting data.
+
+* **Deployment & Server Management**: Deployed web applications on Ubuntu VPS using **tmux**.
 
 ## 3.3. Domain Knowledge
 * Finance & Business Reporting:

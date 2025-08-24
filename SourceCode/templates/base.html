@@ -10,6 +10,7 @@
         <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">Trang chủ</a>
         <a href="{{ url_for('summary_report') }}" class="{{ 'active' if request.endpoint == 'summary_report' else '' }}">Báo cáo Tổng hợp</a>
         <a href="{{ url_for('ranking_report') }}" class="{{ 'active' if request.endpoint == 'ranking_report' else '' }}">Báo cáo Xếp hạng ASM</a>
+        <a href="{{ url_for('business_description') }}" class="{{ 'active' if request.endpoint == 'business_description' else '' }}">Mô Tả Nghiệp Vụ</a>
     </div>
 
     <div class="container">

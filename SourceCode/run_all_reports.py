@@ -59,12 +59,15 @@ def run_reports(report_period, recipient_email):
             drive_folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
 
         if success:
-            email_subject = f"✅ Success: Report for {report_period} Completed"
+            email_subject = f"✅ Phê duyệt Báo cáo tháng {report_period}"
             email_body = f"""
             <html><body>
-                <p>The report generation for period <strong>{report_period}</strong> has completed successfully.</p>
-                <p>Total execution time: {total_time:.2f} seconds.</p>
-                {'<p>You can view the reports here: <a href="' + drive_folder_url + '">View Google Drive Folder</a></p>' if drive_folder_url else ""}
+                <p>Xin chào,</p>
+                <p>Báo cáo cho kỳ <strong>{report_period}</strong> đã được xem xét và gửi đi.</p>
+                <p><strong style="color:green;">✅ Báo cáo đã được tạo lại với dữ liệu mới nhất.</strong></p>
+                <p>Tổng thời gian thực thi: {total_time:.2f} giây.</p>
+                {'<p>Bạn có thể xem báo cáo tại đây: <a href="' + drive_folder_url + '">Xem thư mục Google Drive</a></p>' if drive_folder_url else ""}
+                <p>Trân trọng.</p>
             </body></html>"""
         else:
             email_subject = f"❌ Failure: Report for {report_period} Failed"

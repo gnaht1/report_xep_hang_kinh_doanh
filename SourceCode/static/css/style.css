@@ -287,6 +287,129 @@ h2 {
 
 .ranking-table .rank-final-cell {
     font-weight: bold !important;
+    background-color: #abe8ee !important;
+    /* Light blue background for rank_final column */
+}
+
+/* Top 5 and Bottom 5 ranking row styles */
+.ranking-table .top-5-row {
+    background-color: #d4f8d4 !important;
+    /* Light green for top 5 */
+}
+
+.ranking-table .bottom-5-row {
+    background-color: #f8d4d4 !important;
+    /* Light red for bottom 5 */
+}
+
+/* Ensure cell-specific styles still apply on colored rows */
+.ranking-table .top-5-row .rank-final-cell,
+.ranking-table .bottom-5-row .rank-final-cell {
+    background-color: #abe8ee !important;
+    /* Keep rank_final column color */
+}
+
+/* Left-aligned numeric values */
+.ranking-table .numeric-left {
+    text-align: left !important;
+}
+
+/* Tooltip styles */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 350px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 12px 15px;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -175px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Business Description Table Styles */
+.business-description-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.business-description-table th,
+.business-description-table td {
+    border: 1px solid #ccc;
+    padding: 12px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.business-description-table th {
+    background-color: #4472C4;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+.business-description-table td:first-child {
+    text-align: left;
+    font-weight: bold;
+}
+
+.business-description-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.business-description-table tr:hover {
+    background-color: #f0f8ff;
+}
+
+/* Special styling for main section rows */
+.business-description-table tr.section-main {
+    background-color: #fff3cd !important;
+}
+
+.business-description-table tr.section-main:hover {
+    background-color: #ffeaa7 !important;
+}
+
+/* Special styling for subsection rows */
+.business-description-table tr.section-sub {
+    background-color: #d4f8d4 !important;
+}
+
+.business-description-table tr.section-sub:hover {
+    background-color: #c3f0c3 !important;
 }
 
 /* --- Home Page Specific Styles (Preserved) --- */
@@ -521,8 +644,13 @@ h2 {
 }
 
 @keyframes zoom {
-    from {transform: scale(0)}
-    to {transform: scale(1)}
+    from {
+        transform: scale(0)
+    }
+
+    to {
+        transform: scale(1)
+    }
 }
 
 .close-modal {
