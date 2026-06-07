@@ -309,19 +309,21 @@ h2 {
 
 /* Email Section */
 .email-section {
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
 }
 
 .email-section h3 {
     margin-top: 0;
     margin-bottom: 12px;
     font-size: 1em;
-    color: #333;
-    font-weight: 600;
+    color: #1d1d1f;
+    font-weight: 700;
 }
 
 .email-form {
@@ -331,33 +333,36 @@ h2 {
 
 .email-form input[type="email"] {
     flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px 0 0 4px;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px 0 0 10px;
     border-right: none;
     outline: none;
-    transition: border-color 0.3s;
+    background: rgba(255, 255, 255, 0.85);
+    transition: border-color 0.2s, box-shadow 0.2s;
     min-width: 220px;
 }
 
 .email-form input[type="email"]:focus {
-    border-color: #007bff;
+    border-color: #0a84ff;
+    box-shadow: inset 0 0 0 1px rgba(10, 132, 255, 0.4);
 }
 
 .email-form button {
-    padding: 10px 15px;
-    border: 1px solid #007bff;
-    background-color: #007bff;
+    padding: 10px 18px;
+    border: none;
+    background: linear-gradient(135deg, #0a84ff, #5e5ce6);
     color: white;
     cursor: pointer;
-    border-radius: 0 4px 4px 0;
-    transition: background-color 0.3s;
-    font-weight: bold;
+    border-radius: 0 10px 10px 0;
+    transition: transform 0.15s, box-shadow 0.2s;
+    font-weight: 600;
     white-space: nowrap;
 }
 
 .email-form button:hover {
-    background-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(10, 132, 255, 0.35);
 }
 
 /* --- MODIFICATION START: Prettier Dropdown --- */
@@ -368,22 +373,24 @@ h2 {
 .select-container {
     display: inline-flex;
     align-items: center;
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
     padding: 5px 5px 5px 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s, border-color 0.3s;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
+    transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .select-container:hover {
-    border-color: #007bff;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+    border-color: rgba(10, 132, 255, 0.5);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
 }
 
 .select-container label {
     font-weight: 600;
-    color: #333;
+    color: #1d1d1f;
     margin-right: 15px;
     font-size: 0.95em;
     white-space: nowrap;
@@ -408,7 +415,7 @@ h2 {
 }
 
 .select-container select:hover {
-    background-color: #f0f0f0;
+    background-color: rgba(10, 132, 255, 0.08);
 }
 
 /* --- MODIFICATION END --- */
@@ -417,12 +424,27 @@ h2 {
 /* Report Table Container (with scrolling) */
 .report {
     margin-top: 0px;
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 5px;
-    background-color: white;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    padding: 20px 22px;
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
     overflow: auto;
     max-height: 75vh;
+}
+
+.report h2 {
+    margin: 0 0 4px;
+    font-size: 1.25em;
+    font-weight: 700;
+}
+
+.report h5 {
+    margin: 14px 0 0;
+    font-weight: 500;
+    color: #6e6e73;
 }
 
 
@@ -430,82 +452,92 @@ h2 {
 .summary-table,
 .ranking-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 20px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .summary-table th,
 .summary-table td,
 .ranking-table th,
 .ranking-table td {
-    border: 1px solid #ccc;
-    padding: 8px;
+    border-right: 1px solid rgba(0, 0, 0, 0.07);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    padding: 9px 10px;
     text-align: center;
     white-space: nowrap;
 }
 
 .summary-table thead th,
 .ranking-table thead th {
-    font-weight: bold;
+    font-weight: 700;
+}
+
+.summary-table tbody tr:hover td,
+.ranking-table tbody tr:hover td {
+    background-color: rgba(10, 132, 255, 0.06);
 }
 
 /* --- Summary Table Specific Styles (Preserved) --- */
 .summary-table thead th {
-    background-color: paleturquoise;
+    background-color: #d8eef0;
 }
 
 .summary-table .header-blue {
-    background-color: #007acc !important;
+    background-color: #0a84ff !important;
     color: white !important;
     font-weight: bold;
 }
 
 .summary-table .column-yellow {
-    background-color: #f7fc4b !important;
+    background-color: #fdf3c4 !important;
 }
 
 .summary-table .cell-blue {
-    background-color: #73b3eeff !important;
+    background-color: #cfe4fb !important;
     font-weight: bold;
 }
 
 .summary-table .cell-yellow {
-    background-color: #e0a80dff !important;
+    background-color: #f3dd92 !important;
     font-weight: bold;
 }
 
 .summary-table .cell-orange {
-    background-color: #e05b08ff !important;
+    background-color: #f6c6a3 !important;
     font-weight: bold;
 }
 
 .summary-table .cell-green {
-    background-color: #0fa814ff !important;
+    background-color: #b9e6bb !important;
     font-weight: bold;
 }
 
 .summary-table .cell-gray {
-    background-color: #d3d3d3 !important;
+    background-color: #e4e6ea !important;
     font-weight: bold;
 }
 
 .summary-table .cell-light-gray {
-    background-color: #f0f0f0 !important;
+    background-color: #f4f5f7 !important;
 }
 
 .summary-table .cell-light-yellow {
-    background-color: #f0f1d0ff !important;
+    background-color: #f7f6df !important;
 }
 
 
 /* --- Ranking Table Specific Styles (Preserved) --- */
 .ranking-table thead th {
-    background-color: #f0f0f0;
+    background-color: #eef0f4;
     /* --- MODIFICATION: Sticky header removed. No position: sticky here. --- */
 }
 
 .ranking-table .rank-green {
-    background-color: #28a745 !important;
+    background-color: #5fcf7a !important;
     color: white !important;
     font-weight: bold !important;
 }
@@ -515,7 +547,7 @@ h2 {
 }
 
 .ranking-table .diem-header {
-    background-color: #bce9ff !important;
+    background-color: #d3ecff !important;
     font-weight: bold !important;
 }
 
@@ -524,37 +556,37 @@ h2 {
 }
 
 .ranking-table .tong-diem-header {
-    background-color: #E2EFD9 !important;
+    background-color: #e2efd9 !important;
     font-weight: bold !important;
 }
 
 .ranking-table .rank-final-header {
-    background-color: #007acc !important;
+    background-color: #0a84ff !important;
     color: white !important;
     font-weight: bold !important;
 }
 
 .ranking-table .rank-final-cell {
     font-weight: bold !important;
-    background-color: #abe8ee !important;
+    background-color: #c7eef2 !important;
     /* Light blue background for rank_final column */
 }
 
 /* Top 5 and Bottom 5 ranking row styles */
 .ranking-table .top-5-row {
-    background-color: #d4f8d4 !important;
-    /* Light green for top 5 */
+    background-color: #d6f5e0 !important;
+    /* Mint green for top 5 */
 }
 
 .ranking-table .bottom-5-row {
-    background-color: #f8d4d4 !important;
-    /* Light red for bottom 5 */
+    background-color: #fbdce0 !important;
+    /* Soft pink for bottom 5 */
 }
 
 /* Ensure cell-specific styles still apply on colored rows */
 .ranking-table .top-5-row .rank-final-cell,
 .ranking-table .bottom-5-row .rank-final-cell {
-    background-color: #abe8ee !important;
+    background-color: #c7eef2 !important;
     /* Keep rank_final column color */
 }
 

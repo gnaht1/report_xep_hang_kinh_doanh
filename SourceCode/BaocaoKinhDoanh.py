@@ -4,15 +4,9 @@
 
 import psycopg2
 import pandas as pd
+import config
 
-# Same connection params used by the other report modules.
-DB_PARAMS = {
-    "host": "localhost",
-    "port": "5432",
-    "dbname": "final_project",
-    "user": "postgres",
-    "password": "1234",
-}
+DB_PARAMS = config.DB_PARAMS
 
 # Order of the 7 network areas (B-H) shown in the comparison charts.
 REGION_ORDER = ["B", "C", "D", "E", "F", "G", "H"]
