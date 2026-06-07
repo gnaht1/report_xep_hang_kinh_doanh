@@ -9,8 +9,14 @@
         chi tiết.</p>
 </div>
 <div class="nav-cards">
-    <a href="{{ url_for('summary_report') }}" class="card">
+    <a href="{{ url_for('business_dashboard') }}" class="card">
         <div class="card-icon">📊</div>
+        <h3>Báo cáo Kinh doanh</h3>
+        <p>Dashboard tổng quan KPI, biểu đồ doanh thu - chi phí - lợi nhuận theo khu vực.</p>
+    </a>
+
+    <a href="{{ url_for('summary_report') }}" class="card">
+        <div class="card-icon">📋</div>
         <h3>Báo cáo Tổng hợp</h3>
         <p>Xem báo cáo tổng hợp hiệu suất kinh doanh theo từng khu vực.</p>
     </a>

@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 # Import custom modules for data fetching and email functionality
 from BaocaoTonghop_formatted import get_summary_data
 from BaocaoXepHangASM_formatted import get_ranking_data
+from BaocaoKinhDoanh import get_business_dashboard_data
 from run_all_reports import send_email
 import config
 
@@ -515,6 +516,45 @@ def ranking_report():
 def business_description():
     """Renders the business description page."""
     return render_template("business_description.html")
+
+
+@app.route("/business_dashboard")
+def business_dashboard():
+    """Renders the macOS-style business KPI dashboard for a selected month/area."""
+    report_month_display = request.args.get("month", "202503")
+    selected_area = request.args.get("area", "ALL")
+    # Backend data uses '2023'; the UI displays '2025' (same convention as other reports).
+    report_month_data = report_month_display.replace("2025", "2023")
+
+    dashboard_data = get_business_dashboard_data(report_month_data, selected_area)
+
+    months = [
+        {"value": "202501", "text": "Tháng 1, 2025"},
+        {"value": "202502", "text": "Tháng 2, 2025"},
+        {"value": "202503", "text": "Tháng 3, 2025"},
+        {"value": "202504", "text": "Tháng 4, 2025"},
+        {"value": "202505", "text": "Tháng 5, 2025"},
+    ]
+
+    areas = [
+        {"value": "ALL", "text": "Tất cả"},
+        {"value": "B", "text": "Đông Bắc Bộ"},
+        {"value": "C", "text": "Tây Bắc Bộ"},
+        {"value": "D", "text": "Đồng Bằng Sông Hồng"},
+        {"value": "E", "text": "Bắc Trung Bộ"},
+        {"value": "F", "text": "Nam Trung Bộ"},
+        {"value": "G", "text": "Tây Nam Bộ"},
+        {"value": "H", "text": "Đông Nam Bộ"},
+    ]
+
+    return render_template(
+        "business_dashboard.html",
+        dashboard_data=dashboard_data,
+        months=months,
+        areas=areas,
+        selected_month=report_month_display,
+        selected_area=selected_area,
+    )
 
 
 @app.route("/send-approval-email", methods=["POST"])

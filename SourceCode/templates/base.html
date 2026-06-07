@@ -2,19 +2,51 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Bảng điều khiển Báo cáo{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="navbar">
-        <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">Trang chủ</a>
-        <a href="{{ url_for('summary_report') }}" class="{{ 'active' if request.endpoint == 'summary_report' else '' }}">Báo cáo Tổng hợp</a>
-        <a href="{{ url_for('ranking_report') }}" class="{{ 'active' if request.endpoint == 'ranking_report' else '' }}">Báo cáo Xếp hạng ASM</a>
-        <a href="{{ url_for('business_description') }}" class="{{ 'active' if request.endpoint == 'business_description' else '' }}">Mô Tả Nghiệp Vụ</a>
-    </div>
+    <div class="mac-window">
+        <div class="mac-titlebar">
+            <div class="mac-traffic">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+            </div>
+            <div class="mac-title">Trung Tâm Báo Cáo Kinh Doanh</div>
+            <div class="mac-search">🔍 Tìm kiếm báo cáo...</div>
+        </div>
 
-    <div class="container">
-        {% block content %}{% endblock %}
+        <div class="mac-body">
+            <nav class="mac-sidebar">
+                <div class="mac-brand">
+                    <span class="mac-brand-logo">📈</span>
+                    <span class="mac-brand-name">FIN DASH</span>
+                </div>
+                <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">
+                    <span class="nav-ico">🏠</span> Trang chủ
+                </a>
+                <a href="{{ url_for('business_dashboard') }}" class="{{ 'active' if request.endpoint == 'business_dashboard' else '' }}">
+                    <span class="nav-ico">📊</span> Báo cáo Kinh doanh
+                </a>
+                <a href="{{ url_for('summary_report') }}" class="{{ 'active' if request.endpoint == 'summary_report' else '' }}">
+                    <span class="nav-ico">📋</span> Báo cáo Tổng hợp
+                </a>
+                <a href="{{ url_for('ranking_report') }}" class="{{ 'active' if request.endpoint == 'ranking_report' else '' }}">
+                    <span class="nav-ico">🏆</span> Báo cáo Xếp hạng ASM
+                </a>
+                <a href="{{ url_for('business_description') }}" class="{{ 'active' if request.endpoint == 'business_description' else '' }}">
+                    <span class="nav-ico">📖</span> Mô Tả Nghiệp Vụ
+                </a>
+            </nav>
+
+            <main class="mac-main">
+                <div class="container">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
     </div>
 
     <script>
@@ -124,5 +156,6 @@
             }
         }
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

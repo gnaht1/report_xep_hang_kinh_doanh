@@ -1,23 +1,166 @@
-/* General Body and Container Styles */
+/* ============================================================
+   macOS Big Sur theme — global shell
+   ============================================================ */
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, sans-serif;
     margin: 0;
-    background-color: #f4f7f6;
+    min-height: 100vh;
+    color: #1d1d1f;
+    background: linear-gradient(135deg, #ff9a8b 0%, #ff6a88 18%, #ff99ac 33%,
+        #fbc2eb 50%, #a6c1ee 70%, #84fab0 100%);
+    background-attachment: fixed;
+    padding: 22px;
+}
+
+/* The whole app lives inside a frosted "macOS window" */
+.mac-window {
+    max-width: 1700px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 18px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+/* Title bar with traffic-light buttons */
+.mac-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 18px;
+    background: rgba(245, 245, 247, 0.7);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.mac-traffic {
+    display: flex;
+    gap: 8px;
+}
+
+.mac-traffic .dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-red {
+    background: #ff5f57;
+}
+
+.dot-yellow {
+    background: #febc2e;
+}
+
+.dot-green {
+    background: #28c840;
+}
+
+.mac-title {
+    font-weight: 600;
+    font-size: 0.95em;
+    color: #444;
+    flex: 1;
+    text-align: center;
+}
+
+.mac-search {
+    font-size: 0.82em;
+    color: #888;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 6px 14px;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+/* Body: sidebar + main */
+.mac-body {
+    display: flex;
+    min-height: 78vh;
+}
+
+.mac-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 18px 14px;
+    background: rgba(255, 255, 255, 0.35);
+    border-right: 1px solid rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mac-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px 18px;
+}
+
+.mac-brand-logo {
+    font-size: 1.5em;
+}
+
+.mac-brand-name {
+    font-weight: 700;
+    letter-spacing: 0.5px;
     color: #333;
 }
 
+.mac-sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    color: #3a3a3c;
+    text-decoration: none;
+    font-size: 0.95em;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.mac-sidebar a .nav-ico {
+    font-size: 1.05em;
+}
+
+.mac-sidebar a:hover {
+    background: rgba(255, 255, 255, 0.6);
+    transform: translateX(2px);
+}
+
+.mac-sidebar a.active {
+    background: linear-gradient(135deg, #0a84ff, #5e5ce6);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(10, 132, 255, 0.35);
+}
+
+.mac-main {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+}
+
 .container {
-    max-width: 1600px;
+    max-width: 100%;
     margin: auto;
     padding: 2em;
 }
 
 h1,
 h2 {
-    color: #333;
+    color: #1d1d1f;
 }
 
-/* Menu Styles */
+/* Legacy top navbar kept for safety (no longer rendered) */
 .navbar {
     overflow: hidden;
     background-color: #333;
@@ -694,4 +837,186 @@ h2 {
 .flowchart-debug-link a {
     color: #0d6efd;
     text-decoration: underline;
+}
+
+/* ============================================================
+   Business Dashboard ("Báo cáo Kinh doanh") — macOS cards
+   ============================================================ */
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.dash-header h1 {
+    margin: 0;
+    font-size: 1.7em;
+}
+
+/* Filter rail (month + area) */
+.dash-filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.dash-filters .select-container {
+    background: rgba(255, 255, 255, 0.75);
+}
+
+/* Grid: KPI column on the left, charts area on the right */
+.dash-grid {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+.dash-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.dash-right .span-2 {
+    grid-column: span 2;
+}
+
+.kpi-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.kpi-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    padding: 18px 16px;
+    text-align: center;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.kpi-value {
+    font-size: 1.7em;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.kpi-value.positive {
+    color: #0a84ff;
+}
+
+.kpi-value.negative {
+    color: #ff453a;
+}
+
+.kpi-label {
+    margin-top: 6px;
+    font-size: 0.8em;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    color: #6e6e73;
+    text-transform: uppercase;
+}
+
+/* Chart cards */
+.dash-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+    padding: 16px 18px 18px;
+    overflow: hidden;
+}
+
+.dash-card.span-2 {
+    grid-column: span 2;
+}
+
+.dash-card h3 {
+    margin: 0 0 12px;
+    font-size: 1em;
+    font-weight: 700;
+    color: #1d1d1f;
+    border-left: 4px solid #0a84ff;
+    padding-left: 10px;
+}
+
+.dash-card .chart-wrap {
+    position: relative;
+    height: 260px;
+}
+
+.dash-card.span-2 .chart-wrap {
+    height: 300px;
+}
+
+/* Insight / commentary box */
+.dash-insights {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+    padding: 18px 22px;
+}
+
+.dash-insights h3 {
+    margin: 0 0 12px;
+    font-size: 1em;
+    font-weight: 700;
+    border-left: 4px solid #5e5ce6;
+    padding-left: 10px;
+}
+
+.dash-insights ul {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.7;
+    color: #3a3a3c;
+}
+
+.dash-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    grid-column: span 2;
+}
+
+@media (max-width: 1100px) {
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-right {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-right .span-2 {
+        grid-column: span 1;
+    }
+
+    .kpi-column {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .kpi-card {
+        flex: 1 1 140px;
+    }
 }
