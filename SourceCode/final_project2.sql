@@ -737,7 +737,8 @@ RETURNS TABLE (
 )
 AS $$
 DECLARE
-    v_start_month BIGINT := (p_rp_month / 100) * 100 + 1; -- Tháng 01 cùng năm
+    v_start_month BIGINT := (p_rp_month / 100) * 100 + 1;   -- Tháng 01 cùng năm
+    v_end_month   BIGINT := (p_rp_month / 100) * 100 + 12;  -- Tháng 12 cùng năm
 BEGIN
     RETURN QUERY
     SELECT
@@ -747,7 +748,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN f.funding_id = 4 THEN f.amount END), 0) AS tong_thu_nhap
     FROM fact_backdate_funding_monthly f
     JOIN area_mapping am ON f.area_code = am.area_cde
-    WHERE f.month_key BETWEEN v_start_month AND p_rp_month
+    WHERE f.month_key BETWEEN v_start_month AND v_end_month
       AND f.area_code <> 'A'
     GROUP BY f.month_key, f.area_code, am.area_name
     ORDER BY f.month_key, f.area_code;

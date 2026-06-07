@@ -11,6 +11,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from BaocaoTonghop_formatted import get_summary_data
 from BaocaoXepHangASM_formatted import get_ranking_data
 from BaocaoKinhDoanh import get_business_dashboard_data
+from DanhGiaASM import get_asm_evaluation_data
 from run_all_reports import send_email
 import config
 
@@ -526,7 +527,9 @@ def business_dashboard():
     # Backend data uses '2023'; the UI displays '2025' (same convention as other reports).
     report_month_data = report_month_display.replace("2025", "2023")
 
-    dashboard_data = get_business_dashboard_data(report_month_data, selected_area)
+    dashboard_data = get_business_dashboard_data(
+        report_month_data, selected_area, display_period=report_month_display
+    )
 
     months = [
         {"value": "202501", "text": "Tháng 1, 2025"},
@@ -554,6 +557,33 @@ def business_dashboard():
         areas=areas,
         selected_month=report_month_display,
         selected_area=selected_area,
+    )
+
+
+@app.route("/asm_evaluation")
+def asm_evaluation():
+    """Renders the macOS-style ASM evaluation dashboard for a selected month."""
+    report_month_display = request.args.get("month", "202503")
+    # Backend data uses '2023'; the UI displays '2025' (same convention as other reports).
+    report_month_data = report_month_display.replace("2025", "2023")
+
+    dashboard_data = get_asm_evaluation_data(
+        report_month_data, display_period=report_month_display
+    )
+
+    months = [
+        {"value": "202501", "text": "202501"},
+        {"value": "202502", "text": "202502"},
+        {"value": "202503", "text": "202503"},
+        {"value": "202504", "text": "202504"},
+        {"value": "202505", "text": "202505"},
+    ]
+
+    return render_template(
+        "asm_evaluation.html",
+        dashboard_data=dashboard_data,
+        months=months,
+        selected_month=report_month_display,
     )
 
 

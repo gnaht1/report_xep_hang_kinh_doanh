@@ -79,7 +79,15 @@ def _build_insights(kpi_df, region_rows):
     ]
 
 
-def get_business_dashboard_data(report_period, area_code="ALL"):
+def _month_label(month_key, year_shift=0):
+    """Convert 202303 -> 'T03/2025' (with year_shift = +2)."""
+    m = int(month_key)
+    yyyy = m // 100 + year_shift
+    mm = m % 100
+    return f"T{mm:02d}/{yyyy}"
+
+
+def get_business_dashboard_data(report_period, area_code="ALL", display_period=None):
     """
     Fetch and shape all data needed by the business dashboard.
 
@@ -177,9 +185,9 @@ def get_business_dashboard_data(report_period, area_code="ALL"):
     # --- Trend (one line per area, x-axis = month_key) ---
     trend = {"labels": [], "series": []}
     if not trend_df.empty:
-        months = sorted(trend_df["month_key"].unique())
-        trend["labels"] = [str(int(m)) for m in months]
+        months = sorted(int(m) for m in trend_df["month_key"].unique())
         trend_codes = REGION_ORDER if area_code == "ALL" else [area_code]
+        raw_series = []
         for code in trend_codes:
             area_slice = trend_df[trend_df["area_code"] == code]
             if area_slice.empty:
@@ -188,12 +196,20 @@ def get_business_dashboard_data(report_period, area_code="ALL"):
                 zip(area_slice["month_key"], area_slice["tong_thu_nhap"])
             )
             name = area_slice.iloc[0]["area_name"]
-            trend["series"].append(
+            raw_series.append(
                 {
                     "name": name,
                     "data": [float(by_month.get(m, 0) or 0) for m in months],
                 }
             )
+
+        # Year shift: DB 2023 → hiển thị 2025 (chỉ đổi label).
+        try:
+            year_shift = (int(display_period) // 100) - (months[0] // 100) if display_period and months else 0
+        except Exception:
+            year_shift = 0
+        trend["labels"] = [_month_label(m, year_shift) for m in months]
+        trend["series"] = raw_series
 
     return {
         "kpi": kpi,

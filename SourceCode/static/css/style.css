@@ -72,13 +72,119 @@ body {
 }
 
 .mac-search {
-    font-size: 0.82em;
-    color: #888;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     background: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 6px 14px;
+    padding: 4px 10px;
     border-radius: 8px;
+    width: 280px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.mac-search:focus-within {
+    background: #fff;
+    border-color: #0a84ff;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.18);
+}
+
+.mac-search-ico {
+    font-size: 0.85em;
+    color: #888;
+    line-height: 1;
+}
+
+.mac-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 0.85em;
+    color: #1d1d1f;
+    padding: 4px 0;
+    min-width: 0;
+}
+
+.mac-search input::placeholder {
+    color: #888;
+}
+
+.mac-search-results {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.mac-search-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.mac-search-item.active,
+.mac-search-item:hover {
+    background: linear-gradient(135deg, #0a84ff, #5e5ce6);
+    color: #fff;
+}
+
+.mac-search-item-ico {
+    font-size: 1.1em;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.mac-search-item-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mac-search-item-title {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: inherit;
+}
+
+.mac-search-item-desc {
+    font-size: 0.78em;
+    color: #6e6e73;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mac-search-item.active .mac-search-item-desc,
+.mac-search-item:hover .mac-search-item-desc {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.mac-search-empty {
+    padding: 10px 12px;
+    font-size: 0.85em;
+    color: #888;
+    text-align: center;
+    list-style: none;
 }
 
 /* Body: sidebar + main */
@@ -555,33 +661,38 @@ h2 {
     background-color: #c3f0c3 !important;
 }
 
-/* --- Home Page Specific Styles (Preserved) --- */
+/* --- Home Page Specific Styles --- */
 .welcome-header {
     text-align: center;
-    margin: 40px 0;
+    margin: 24px 0 8px;
 }
 
 .welcome-header h1 {
-    color: #2c3e50;
-    font-size: 2.5em;
+    color: #1d1d1f;
+    font-size: 2.3em;
+    margin: 0 0 10px;
 }
 
 .welcome-header p {
-    color: #7f8c8d;
-    font-size: 1.2em;
-    max-width: 600px;
+    color: #6e6e73;
+    font-size: 1.1em;
+    max-width: 640px;
     margin: 0 auto;
+    line-height: 1.5;
 }
 
 /* Context section styles */
 .context-section {
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    padding: 40px;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.10);
+    padding: 36px 40px;
     margin: 40px auto;
-    max-width: 800px;
-    border-left: 4px solid #3498db;
+    max-width: 1100px;
+    border-left: 4px solid #0a84ff;
 }
 
 .context-section h2 {
@@ -695,22 +806,21 @@ h2 {
 .report-highlights {
     margin-top: 25px;
     padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
+    background-color: rgba(248, 249, 250, 0.85);
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
 }
 
 .highlight-item {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: #ffffff;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.highlight-item:last-child {
     margin-bottom: 0;
+    padding: 12px 14px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .highlight-icon {
@@ -726,42 +836,53 @@ h2 {
 }
 
 .nav-cards {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 50px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 22px;
+    margin: 40px auto 0;
+    max-width: 1100px;
+    padding: 0 10px;
 }
 
 .card {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 300px;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
     text-align: center;
-    padding: 30px;
+    padding: 28px 22px;
     text-decoration: none;
     color: inherit;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 .card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
 }
 
 .card-icon {
-    font-size: 3em;
-    color: #3498db;
+    font-size: 2.6em;
+    line-height: 1;
 }
 
 .card h3 {
-    margin-top: 20px;
-    color: #34495e;
+    margin: 6px 0 0;
+    color: #1d1d1f;
+    font-size: 1.1em;
 }
 
 .card p {
-    color: #95a5a6;
+    margin: 0;
+    color: #6e6e73;
+    font-size: 0.92em;
+    line-height: 1.45;
 }
 
 /* Modal Styles */
@@ -1018,5 +1139,122 @@ h2 {
 
     .kpi-card {
         flex: 1 1 140px;
+    }
+}
+
+/* ============================================================
+   ASM Evaluation ("Đánh giá ASM") dashboard
+   ============================================================ */
+.asm-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 0.85fr);
+    gap: 18px;
+    align-items: stretch;
+}
+
+/* Scrollable table body inside a card */
+.asm-scroll {
+    max-height: 340px;
+    overflow: auto;
+}
+
+.asm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84em;
+}
+
+.asm-table thead th {
+    position: sticky;
+    top: 0;
+    background: #1d3a8a;
+    color: #fff;
+    font-weight: 600;
+    padding: 7px 8px;
+    text-align: center;
+    /* Allow long Vietnamese headers to wrap so every column stays visible */
+    white-space: normal;
+    vertical-align: bottom;
+    min-width: 58px;
+    z-index: 1;
+}
+
+.asm-table thead th.asm-left {
+    min-width: 190px;
+}
+
+.asm-table th.asm-left,
+.asm-table td.asm-left {
+    text-align: left;
+}
+
+.asm-table td {
+    padding: 7px 10px;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    white-space: nowrap;
+}
+
+.asm-table tbody tr:nth-child(even) {
+    background: rgba(29, 58, 138, 0.05);
+}
+
+.asm-table tbody tr:hover {
+    background: rgba(10, 132, 255, 0.12);
+}
+
+.asm-table .asm-email {
+    color: #0a84ff;
+    font-weight: 500;
+}
+
+.asm-table .asm-total-row {
+    position: sticky;
+    bottom: 0;
+    background: #e8edf7;
+    font-weight: 700;
+}
+
+.asm-table .asm-total-row td {
+    border-top: 2px solid #1d3a8a;
+}
+
+/* Month slicer card */
+.asm-month-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.asm-month-btn {
+    display: block;
+    text-align: center;
+    padding: 12px 16px;
+    border: 1px solid #1d3a8a;
+    border-radius: 8px;
+    color: #1d3a8a;
+    font-weight: 600;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.85);
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.asm-month-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(29, 58, 138, 0.18);
+}
+
+.asm-month-btn.active {
+    background: linear-gradient(135deg, #0a84ff, #1d3a8a);
+    color: #fff;
+}
+
+.asm-insights {
+    font-size: 0.92em;
+}
+
+@media (max-width: 1100px) {
+    .asm-grid {
+        grid-template-columns: 1fr;
     }
 }
