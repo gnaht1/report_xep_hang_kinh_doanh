@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Ngữ cảnh{% endblock %}
+
+{% block content %}
+<div class="context-section context-page">
+    <h1>Ngữ cảnh</h1>
+
+    <section class="context-block">
+        <h2>Mục tiêu</h2>
+        <p>Ban điều hành (BOD) muốn biết được hiệu quả kinh doanh của doanh nghiệp tài chính và các khu vực mạng lưới trên toàn quốc, đồng thời đánh giá năng lực của các nhân sự ASM.</p>
+    </section>
+
+    <section class="context-block">
+        <h2>Input</h2>
+        <ul class="context-list">
+            <li><strong>fact_kpi_month_raw_data:</strong> nguồn sao kê dư nợ thẻ theo khách hàng tại thời điểm cuối mỗi tháng.</li>
+            <li><strong>fact_txn_month_raw_data:</strong> nguồn dữ liệu các khoản phát sinh được hạch toán vào sổ cái kế toán (General Ledger).</li>
+            <li><strong>kpi_asm_data:</strong> nguồn số liệu về doanh số kinh doanh theo từng tháng của các ASM (Area Sales Manager).</li>
+        </ul>
+    </section>
+
+    <section class="context-block">
+        <h2>Output</h2>
+        <ul class="context-list">
+            <li><strong>Báo cáo tổng hợp:</strong> ghi nhận tình hình kinh doanh của các khu vực mạng lưới trên toàn quốc.</li>
+            <li><strong>Báo cáo xếp hạng:</strong> đánh giá nhân sự ASM theo các chỉ số tài chính và các chỉ số kinh doanh.</li>
+            <li><strong>Báo cáo kinh doanh:</strong> thống kê, phân tích tình hình kinh doanh của các khu vực mạng lưới trên toàn quốc.</li>
+            <li><strong>Đánh giá ASM:</strong> thống kê, phân tích và đánh giá mức độ hiệu quả của các nhân sự ASM theo chỉ số tài chính và chỉ số kinh doanh.</li>
+        </ul>
+    </section>
+
+    <section class="context-block">
+        <h2>Flowchart</h2>
+        <div class="flowchart-container">
+            <div class="flowchart-image">
+                <img id="flowchart-img" src="{{ url_for('static', filename='images/flow_chart.png') }}"
+                    alt="Flowchart quy trình báo cáo kinh doanh" class="flowchart-img"
+                    onerror="this.style.display='none'; document.getElementById('flowchart-debug').style.display='block';">
+
+                <div id="flowchart-debug" class="flowchart-placeholder" style="display:none;">
+                    <p><strong>Không tìm thấy ảnh flowchart.</strong></p>
+                    <p>Vui lòng kiểm tra file <code>SourceCode/static/images/flow_chart.png</code>.</p>
+                </div>
+
+                <p class="flowchart-caption">Sơ đồ quy trình từ dữ liệu đầu vào, import qua DBeaver/PostgreSQL, xử lý bằng DDL/procedure, đến báo cáo và dashboard trực quan hóa.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="imageModal" class="modal">
+    <span class="close-modal" title="Đóng cửa sổ" aria-label="Đóng cửa sổ">&times;</span>
+    <img class="modal-content" id="modal-img" alt="">
+    <div id="modal-caption"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const modal = document.getElementById("imageModal");
+    const modalImg = document.getElementById("modal-img");
+    const captionText = document.getElementById("modal-caption");
+    const flowchartImg = document.getElementById("flowchart-img");
+    const closeModal = document.querySelector(".close-modal");
+
+    if (flowchartImg && modal && modalImg && captionText) {
+        flowchartImg.addEventListener("click", function () {
+            modal.style.display = "block";
+            modalImg.src = this.src;
+            modalImg.alt = this.alt;
+            captionText.textContent = this.alt;
+        });
+    }
+
+    if (closeModal && modal) {
+        closeModal.addEventListener("click", function () {
+            modal.style.display = "none";
+        });
+    }
+
+    if (modal) {
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+    }
+</script>
+{% endblock %}
