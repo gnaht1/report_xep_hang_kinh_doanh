@@ -12,8 +12,8 @@
         <div class="mac-titlebar">
             <button class="mac-hamburger" id="sidebarToggle" aria-label="Mở menu" aria-expanded="false">☰</button>
             {% set page_titles = {
-                'home': 'Trang chủ',
-                'context': 'Ngữ cảnh',
+                'home': 'Trung tâm báo cáo',
+                'context': 'Giới thiệu đề tài',
                 'business_description': 'Mô Tả Nghiệp Vụ',
                 'summary_report': 'Báo cáo Tổng hợp',
                 'ranking_report': 'Báo cáo Xếp hạng ASM',
@@ -26,27 +26,31 @@
         <div class="mac-body">
             <nav class="mac-sidebar">
                 <button class="mac-sidebar-close" id="sidebarClose" aria-label="Đóng menu">✕</button>
-                <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">
-                    <span class="nav-ico">🏠</span> Trang chủ
-                </a>
                 <a href="{{ url_for('context') }}" class="{{ 'active' if request.endpoint == 'context' else '' }}">
-                    <span class="nav-ico">🎯</span> Ngữ cảnh
+                    <span class="nav-ico">🎯</span> Giới thiệu đề tài
                 </a>
                 <a href="{{ url_for('business_description') }}" class="{{ 'active' if request.endpoint == 'business_description' else '' }}">
                     <span class="nav-ico">📖</span> Mô Tả Nghiệp Vụ
                 </a>
-                <a href="{{ url_for('summary_report') }}" class="{{ 'active' if request.endpoint == 'summary_report' else '' }}">
-                    <span class="nav-ico">📋</span> Báo cáo Tổng hợp
+                <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">
+                    <span class="nav-ico">🏠</span> Trung tâm báo cáo
                 </a>
-                <a href="{{ url_for('ranking_report') }}" class="{{ 'active' if request.endpoint == 'ranking_report' else '' }}">
-                    <span class="nav-ico">🏆</span> Báo cáo Xếp hạng ASM
-                </a>
-                <a href="{{ url_for('business_dashboard') }}" class="{{ 'active' if request.endpoint == 'business_dashboard' else '' }}">
-                    <span class="nav-ico">📊</span> Báo cáo Kinh doanh
-                </a>
-                <a href="{{ url_for('asm_evaluation') }}" class="{{ 'active' if request.endpoint == 'asm_evaluation' else '' }}">
-                    <span class="nav-ico">🥇</span> Đánh giá ASM
-                </a>
+                <div class="sidebar-report-group">
+                    <a href="{{ url_for('summary_report') }}" class="{{ 'active' if request.endpoint == 'summary_report' else '' }}">
+                        <span class="nav-ico">📋</span> Báo cáo Tổng hợp
+                    </a>
+                    <a href="{{ url_for('business_dashboard') }}" class="{{ 'active' if request.endpoint == 'business_dashboard' else '' }}">
+                        <span class="nav-ico">📊</span> Báo cáo Kinh doanh
+                    </a>
+                </div>
+                <div class="sidebar-report-group">
+                    <a href="{{ url_for('ranking_report') }}" class="{{ 'active' if request.endpoint == 'ranking_report' else '' }}">
+                        <span class="nav-ico">🏆</span> Báo cáo Xếp hạng ASM
+                    </a>
+                    <a href="{{ url_for('asm_evaluation') }}" class="{{ 'active' if request.endpoint == 'asm_evaluation' else '' }}">
+                        <span class="nav-ico">🥇</span> Đánh giá ASM
+                    </a>
+                </div>
             </nav>
 
             <div class="mac-scrim" id="sidebarScrim" hidden></div>
