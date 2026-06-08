@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Bảng điều khiển Báo cáo{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;📈&lt;/text&gt;&lt;/svg&gt;">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="mac-window">
         <div class="mac-titlebar">
+            <button class="mac-hamburger" id="sidebarToggle" aria-label="Mở menu" aria-expanded="false">☰</button>
             <div class="mac-traffic">
                 <span class="dot dot-red"></span>
                 <span class="dot dot-yellow"></span>
@@ -25,6 +27,7 @@
 
         <div class="mac-body">
             <nav class="mac-sidebar">
+                <button class="mac-sidebar-close" id="sidebarClose" aria-label="Đóng menu">✕</button>
                 <div class="mac-brand">
                     <span class="mac-brand-logo">📈</span>
                     <span class="mac-brand-name">FIN DASH</span>
@@ -48,6 +51,8 @@
                     <span class="nav-ico">📖</span> Mô Tả Nghiệp Vụ
                 </a>
             </nav>
+
+            <div class="mac-scrim" id="sidebarScrim" hidden></div>
 
             <main class="mac-main">
                 <div class="container">
@@ -132,6 +137,34 @@
                     if (!document.getElementById('reportSearch').contains(e.target)) {
                         searchResults.hidden = true;
                     }
+                });
+            }
+
+            // --- Mobile sidebar drawer ---
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarScrim = document.getElementById('sidebarScrim');
+            const macWindow = document.querySelector('.mac-window');
+            if (sidebarToggle && macWindow) {
+                const openSidebar = () => {
+                    macWindow.classList.add('sidebar-open');
+                    sidebarToggle.setAttribute('aria-expanded', 'true');
+                    if (sidebarScrim) sidebarScrim.hidden = false;
+                };
+                const closeSidebar = () => {
+                    macWindow.classList.remove('sidebar-open');
+                    sidebarToggle.setAttribute('aria-expanded', 'false');
+                    if (sidebarScrim) sidebarScrim.hidden = true;
+                };
+                sidebarToggle.addEventListener('click', () => {
+                    macWindow.classList.contains('sidebar-open') ? closeSidebar() : openSidebar();
+                });
+                if (sidebarScrim) sidebarScrim.addEventListener('click', closeSidebar);
+                const sidebarClose = document.getElementById('sidebarClose');
+                if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
+                document.querySelectorAll('.mac-sidebar a').forEach(link =>
+                    link.addEventListener('click', closeSidebar));
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && macWindow.classList.contains('sidebar-open')) closeSidebar();
                 });
             }
 

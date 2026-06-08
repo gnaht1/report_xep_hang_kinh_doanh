@@ -39,6 +39,70 @@ body {
     border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
+/* Hamburger button — hidden on desktop, revealed in the mobile media query */
+.mac-hamburger {
+    display: none;
+    border: none;
+    background: transparent;
+    font-size: 1.3em;
+    line-height: 1;
+    color: #444;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.mac-hamburger:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Drawer close button — macOS-style circular button, shown only on mobile */
+.mac-sidebar-close {
+    display: none;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px) saturate(160%);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    font-size: 0.85em;
+    line-height: 1;
+    color: #6e6e73;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.mac-sidebar-close:hover {
+    background: #ff5f57;
+    border-color: #ff5f57;
+    color: #fff;
+    transform: scale(1.08);
+}
+
+.mac-sidebar-close:active {
+    transform: scale(0.96);
+}
+
+/* Scrim behind the mobile drawer — hidden until the drawer opens */
+.mac-scrim {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 900;
+}
+
 .mac-traffic {
     display: flex;
     gap: 8px;
@@ -458,6 +522,7 @@ h2 {
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    font-size: 0.8em;
 }
 
 .summary-table th,
@@ -466,7 +531,7 @@ h2 {
 .ranking-table td {
     border-right: 1px solid rgba(0, 0, 0, 0.07);
     border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-    padding: 9px 10px;
+    padding: 5px 6px;
     text-align: center;
     white-space: nowrap;
 }
@@ -922,20 +987,33 @@ h2 {
     display: none;
     position: fixed;
     z-index: 1000;
-    padding-top: 100px;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+/* When open, center the image both axes */
+.modal[style*="block"] {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
 }
 
 .modal-content {
-    margin: auto;
     display: block;
-    width: 80%;
-    max-width: 700px;
+    width: auto;
+    max-width: 90%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     animation: zoom 0.3s;
 }
 
@@ -977,14 +1055,11 @@ h2 {
 }
 
 #modal-caption {
-    margin: auto;
-    display: block;
-    width: 80%;
+    width: 90%;
     max-width: 700px;
     text-align: center;
-    color: #ccc;
-    padding: 10px 0;
-    height: 150px;
+    color: #ddd;
+    padding: 14px 0 0;
 }
 
 .flowchart-debug-link a {
@@ -1288,5 +1363,170 @@ h2 {
 @media (max-width: 1100px) {
     .asm-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   Mobile / tablet — phones and small screens (<= 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .mac-window {
+        border-radius: 14px;
+    }
+
+    /* Show hamburger, hide the titlebar search */
+    .mac-hamburger {
+        display: inline-block;
+    }
+
+    .mac-search {
+        display: none;
+    }
+
+    .mac-title {
+        font-size: 0.85em;
+    }
+
+    /* Sidebar becomes a macOS vibrancy slide-in drawer */
+    .mac-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 260px;
+        z-index: 1000;
+        padding: 16px 12px;
+        transform: translateX(-100%);
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+        background: rgba(246, 246, 248, 0.75);
+        backdrop-filter: blur(40px) saturate(180%);
+        -webkit-backdrop-filter: blur(40px) saturate(180%);
+        border-right: 1px solid rgba(255, 255, 255, 0.5);
+        border-top-right-radius: 16px;
+        border-bottom-right-radius: 16px;
+        box-shadow: 12px 0 40px rgba(0, 0, 0, 0.22);
+        overflow-y: auto;
+    }
+
+    .mac-window.sidebar-open .mac-sidebar {
+        transform: translateX(0);
+    }
+
+    .mac-sidebar-close {
+        display: flex;
+    }
+
+    /* Leave room for the close button at the top of the drawer */
+    .mac-sidebar .mac-brand {
+        padding-right: 40px;
+    }
+
+    .mac-window.sidebar-open .mac-scrim {
+        display: block;
+    }
+
+    .mac-main {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .container {
+        padding: 1em;
+    }
+
+    /* Stack report header (title + email card) */
+    .content-header {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .email-section {
+        width: 100%;
+    }
+
+    .email-form input[type="email"] {
+        min-width: 0;
+    }
+
+    /* Stack dashboard header + make filters full width */
+    .dash-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dash-filters {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .dash-filters .select-container,
+    .controls .select-container {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Smooth horizontal scroll for wide tables (colors preserved, no squashing) */
+    .report,
+    .asm-scroll {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Shrink summary & ranking tables so more fits on screen */
+    .summary-table,
+    .ranking-table {
+        font-size: 0.72em;
+    }
+
+    .summary-table th,
+    .summary-table td,
+    .ranking-table th,
+    .ranking-table td {
+        padding: 5px 6px;
+    }
+
+    .welcome-header h1 {
+        font-size: 1.7em;
+    }
+
+    .context-section {
+        padding: 22px 18px;
+    }
+
+    /* Flowchart zoom modal — fit to screen on mobile */
+    .modal[style*="block"] {
+        padding: 20px 12px;
+    }
+
+    .modal-content {
+        max-width: 96%;
+        max-height: 78vh;
+    }
+
+    .close-modal {
+        position: fixed;
+        top: 10px;
+        right: 12px;
+        z-index: 1001;
+    }
+}
+
+/* Extra-small phones (<= 480px) — minor polish */
+@media (max-width: 480px) {
+    .welcome-header h1 {
+        font-size: 1.45em;
+    }
+
+    .report {
+        padding: 14px 12px;
+    }
+
+    .kpi-value {
+        font-size: 1.45em;
     }
 }
