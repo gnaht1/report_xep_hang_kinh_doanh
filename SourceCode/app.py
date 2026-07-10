@@ -10,11 +10,31 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 # Import custom modules for data fetching and email functionality
 from BaocaoTonghop_formatted import get_summary_data
 from BaocaoXepHangASM_formatted import get_ranking_data
+from BaocaoKinhDoanh import get_business_dashboard_data
+from DanhGiaASM import get_asm_evaluation_data
 from run_all_reports import send_email
 import config
 
 # Initialize the Flask application
 app = Flask(__name__)
+
+LATEST_REPORT_MONTH = "202505"
+REPORT_MONTHS = [
+    {"value": "202501", "text": "Tháng 1, 2025"},
+    {"value": "202502", "text": "Tháng 2, 2025"},
+    {"value": "202503", "text": "Tháng 3, 2025"},
+    {"value": "202504", "text": "Tháng 4, 2025"},
+    {"value": LATEST_REPORT_MONTH, "text": "Tháng 5, 2025"},
+]
+REPORT_MONTH_VALUES = {month["value"] for month in REPORT_MONTHS}
+
+
+def get_selected_report_month():
+    """Return the selected report month, defaulting invalid/missing values to the latest month."""
+    selected_month = request.args.get("month", LATEST_REPORT_MONTH)
+    if selected_month not in REPORT_MONTH_VALUES:
+        return LATEST_REPORT_MONTH
+    return selected_month
 
 
 # --- HTML TABLE CREATION FUNCTIONS ---
@@ -458,31 +478,27 @@ def home():
     return render_template("home.html")
 
 
+@app.route("/context")
+def context():
+    """Renders the project context page."""
+    return render_template("context.html")
+
+
 @app.route("/summary_report")
 def summary_report():
     """Renders the summary report page for a selected month."""
-    # Get the selected month from URL parameters, default to May 2025 for display
-    report_month_display = request.args.get("month", "202502")
+    report_month_display = get_selected_report_month()
     # The backend data uses '2023', so we replace '2025' for the data fetching part
     report_month_data = report_month_display.replace("2025", "2023")
 
     # Generate the HTML table
     summary_table_html = create_summary_html(report_month_data)
 
-    # Define the list of months for the dropdown menu
-    months = [
-        {"value": "202501", "text": "Tháng 1, 2025"},
-        {"value": "202502", "text": "Tháng 2, 2025"},
-        {"value": "202503", "text": "Tháng 3, 2025"},
-        {"value": "202504", "text": "Tháng 4, 2025"},
-        {"value": "202505", "text": "Tháng 5, 2025"},
-    ]
-
     # Render the template with the necessary data
     return render_template(
         "summary_report.html",
         summary_table_html=summary_table_html,
-        months=months,
+        months=REPORT_MONTHS,
         selected_month=report_month_display,
     )
 
@@ -490,23 +506,15 @@ def summary_report():
 @app.route("/ranking_report")
 def ranking_report():
     """Renders the ranking report page for a selected month."""
-    report_month_display = request.args.get("month", "202502")
+    report_month_display = get_selected_report_month()
     report_month_data = report_month_display.replace("2025", "2023")
 
     ranking_table_html = create_ranking_table(report_month_data)
 
-    months = [
-        {"value": "202501", "text": "Tháng 1, 2025"},
-        {"value": "202502", "text": "Tháng 2, 2025"},
-        {"value": "202503", "text": "Tháng 3, 2025"},
-        {"value": "202504", "text": "Tháng 4, 2025"},
-        {"value": "202505", "text": "Tháng 5, 2025"},
-    ]
-
     return render_template(
         "ranking_report.html",
         ranking_table_html=ranking_table_html,
-        months=months,
+        months=REPORT_MONTHS,
         selected_month=report_month_display,
     )
 
@@ -515,6 +523,58 @@ def ranking_report():
 def business_description():
     """Renders the business description page."""
     return render_template("business_description.html")
+
+
+@app.route("/business_dashboard")
+def business_dashboard():
+    """Renders the macOS-style business KPI dashboard for a selected month/area."""
+    report_month_display = get_selected_report_month()
+    selected_area = request.args.get("area", "ALL")
+    # Backend data uses '2023'; the UI displays '2025' (same convention as other reports).
+    report_month_data = report_month_display.replace("2025", "2023")
+
+    dashboard_data = get_business_dashboard_data(
+        report_month_data, selected_area, display_period=report_month_display
+    )
+
+    areas = [
+        {"value": "ALL", "text": "Tất cả"},
+        {"value": "B", "text": "Đông Bắc Bộ"},
+        {"value": "C", "text": "Tây Bắc Bộ"},
+        {"value": "D", "text": "Đồng Bằng Sông Hồng"},
+        {"value": "E", "text": "Bắc Trung Bộ"},
+        {"value": "F", "text": "Nam Trung Bộ"},
+        {"value": "G", "text": "Tây Nam Bộ"},
+        {"value": "H", "text": "Đông Nam Bộ"},
+    ]
+
+    return render_template(
+        "business_dashboard.html",
+        dashboard_data=dashboard_data,
+        months=REPORT_MONTHS,
+        areas=areas,
+        selected_month=report_month_display,
+        selected_area=selected_area,
+    )
+
+
+@app.route("/asm_evaluation")
+def asm_evaluation():
+    """Renders the macOS-style ASM evaluation dashboard for a selected month."""
+    report_month_display = get_selected_report_month()
+    # Backend data uses '2023'; the UI displays '2025' (same convention as other reports).
+    report_month_data = report_month_display.replace("2025", "2023")
+
+    dashboard_data = get_asm_evaluation_data(
+        report_month_data, display_period=report_month_display
+    )
+
+    return render_template(
+        "asm_evaluation.html",
+        dashboard_data=dashboard_data,
+        months=REPORT_MONTHS,
+        selected_month=report_month_display,
+    )
 
 
 @app.route("/send-approval-email", methods=["POST"])

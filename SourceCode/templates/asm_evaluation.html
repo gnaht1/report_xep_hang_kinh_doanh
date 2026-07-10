@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Đánh giá ASM{% endblock %}
+
+{% block content %}
+<div class="dash-header">
+    <h1>Đánh giá ASM</h1>
+    <form class="dash-filters" action="{{ url_for('asm_evaluation') }}" method="get">
+        <div class="select-container">
+            <label for="month">Tháng báo cáo:</label>
+            <select name="month" id="month" onchange="this.form.submit()">
+                {% for month in months %}
+                <option value="{{ month.value }}" {% if month.value == selected_month %}selected{% endif %}>
+                    {{ month.text }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <noscript><input type="submit" value="Xem"></noscript>
+    </form>
+</div>
+
+<div class="asm-grid">
+    <!-- Row 1, left: total-score ranking table -->
+    <div class="dash-card asm-rank">
+        <h3>Xếp hạng điểm tổng</h3>
+        <div class="asm-scroll">
+            <table class="asm-table">
+                <thead>
+                    <tr>
+                        <th class="asm-left">Email</th>
+                        {% for m in dashboard_data.rank_table.months %}
+                        <th>{{ m }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard_data.rank_table.rows %}
+                    <tr>
+                        <td class="asm-left asm-email">{{ row.email }}</td>
+                        {% for r in row.ranks %}
+                        <td>{{ r if r is not none else '-' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Row 1, center: headcount donut -->
+    <div class="dash-card asm-headcount">
+        <h3>Số nhân sự (Area Sale Manager)</h3>
+        <div class="chart-wrap"><canvas id="chartHeadcount"></canvas></div>
+    </div>
+
+    <!-- Row 1, right: month slicer -->
+    <div class="dash-card asm-slicer">
+        <h3>Tháng báo cáo</h3>
+        <div class="asm-month-buttons">
+            {% for month in months %}
+            <a class="asm-month-btn {{ 'active' if month.value == selected_month else '' }}"
+               href="{{ url_for('asm_evaluation', month=month.value) }}">
+                {{ month.text }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Row 2, left: top-10 indicators table -->
+    <div class="dash-card asm-top10">
+        <h3>Top 10 xếp hạng điểm tổng - các chỉ số</h3>
+        <div class="asm-scroll">
+            <table class="asm-table">
+                <thead>
+                    <tr>
+                        <th class="asm-left">Email</th>
+                        {% for h in dashboard_data.top10.headers %}
+                        <th>{{ h }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard_data.top10.rows %}
+                    <tr>
+                        <td class="asm-left asm-email">{{ row.email }}</td>
+                        {% for v in row['values'] %}
+                        <td>{{ v if v is not none else '-' }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    {% if dashboard_data.top10.rows %}
+                    <tr class="asm-total-row">
+                        <td class="asm-left">Total</td>
+                        {% for t in dashboard_data.top10.total %}
+                        <td>{{ t }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Row 2, center: top-10 region distribution bar -->
+    <div class="dash-card asm-regions">
+        <h3>Số ASM thuộc top 10 các khu vực</h3>
+        <div class="chart-wrap"><canvas id="chartTop10Regions"></canvas></div>
+    </div>
+
+    <!-- Row 2, right: insights -->
+    <div class="dash-insights asm-insights">
+        <h3>Nhận xét</h3>
+        <ul>
+            {% for line in dashboard_data.insights %}
+            <li>{{ line|safe }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+    const DASH = {{ dashboard_data | tojson }};
+
+    const PALETTE = ['#1d3a8a', '#0a84ff', '#7b1fa2', '#2196f3', '#26a69a',
+        '#90caf9', '#1a237e', '#5e5ce6', '#30b0c7'];
+
+    Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    Chart.defaults.color = '#3a3a3c';
+
+    // Headcount donut (with count + % tooltips)
+    const hc = DASH.headcount || { labels: [], data: [] };
+    if (hc.labels.length > 0) {
+        new Chart(document.getElementById('chartHeadcount'), {
+            type: 'doughnut',
+            data: {
+                labels: hc.labels,
+                datasets: [{ data: hc.data, backgroundColor: PALETTE }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' },
+                    tooltip: {
+                        callbacks: {
+                            label: (c) => {
+                                const total = c.dataset.data.reduce((a, b) => a + b, 0) || 1;
+                                const pct = (c.parsed / total * 100).toFixed(2);
+                                return `${c.label}: ${c.parsed} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Top-10 region distribution (bar, % of the 10 ASMs)
+    const tr = DASH.top10_regions || { labels: [], data: [] };
+    if (tr.labels.length > 0) {
+        new Chart(document.getElementById('chartTop10Regions'), {
+            type: 'bar',
+            data: {
+                labels: tr.labels,
+                datasets: [{
+                    data: tr.data, backgroundColor: '#1d3a8a', borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (c) => `${c.parsed.y}%` } }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: (v) => v + '%' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

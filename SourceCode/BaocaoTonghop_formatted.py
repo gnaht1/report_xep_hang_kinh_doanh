@@ -634,13 +634,7 @@ def export_postgres_to_excel(db_params, query, output_file):
 
 def generate_summary_report(report_period):  # Added parameter
     """Runs the entire process for the summary report for a given period."""
-    db_params = {
-        "host": "localhost",
-        "port": "5432",
-        "dbname": "final_project",
-        "user": "postgres",
-        "password": "1234",
-    }
+    db_params = config.DB_PARAMS
     # Use the parameter in the SQL query
     query = f"""
     SELECT * FROM fn_get_monthly_summary_report({report_period});
@@ -656,13 +650,7 @@ if __name__ == "__main__":
 
 def get_summary_data(report_period):
     """Chỉ lấy dữ liệu từ DB và trả về DataFrame."""
-    db_params = {
-        "host": "localhost",
-        "port": "5432",
-        "dbname": "final_project",
-        "user": "postgres",
-        "password": "1234",
-    }
+    db_params = config.DB_PARAMS
     query = f"SELECT * FROM fn_get_monthly_summary_report({report_period});"
     try:
         connection = psycopg2.connect(**db_params)

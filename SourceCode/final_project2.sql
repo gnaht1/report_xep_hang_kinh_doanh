@@ -681,3 +681,79 @@ END;
 $$ LANGUAGE plpgsql;
 
 select * from fn_get_asm_ranking_report(202302);
+
+--------------------------------------------------------------------------------
+-- HÀM CHO DASHBOARD BÁO CÁO KINH DOANH
+--------------------------------------------------------------------------------
+
+-- HÀM 1: Lấy các chỉ số KPI theo từng khu vực (A-H) cho một kỳ báo cáo.
+-- Pivot dữ liệu long-format trong fact_backdate_funding_monthly thành các cột chỉ số.
+-- Mapping funding_id:
+--   1  -> Lợi nhuận trước thuế   | 2  -> Số lượng nhân sự (ASM)
+--   4  -> Tổng thu nhập hoạt động | 5  -> Tổng chi phí hoạt động
+--   6  -> Chi phí dự phòng        | 29 -> CIR (%) | 30 -> Margin (%)
+DROP FUNCTION IF EXISTS fn_get_business_dashboard_kpi(BIGINT);
+CREATE OR REPLACE FUNCTION fn_get_business_dashboard_kpi(p_rp_month BIGINT)
+RETURNS TABLE (
+    area_code  VARCHAR(10),
+    area_name  VARCHAR(50),
+    doanh_thu  NUMERIC,
+    chi_phi    NUMERIC,
+    chi_phi_dp NUMERIC,
+    loi_nhuan  NUMERIC,
+    nhan_su    NUMERIC,
+    margin     NUMERIC,
+    cir        NUMERIC
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        f.area_code,
+        am.area_name,
+        COALESCE(SUM(CASE WHEN f.funding_id = 4  THEN f.amount END), 0) AS doanh_thu,
+        COALESCE(SUM(CASE WHEN f.funding_id = 5  THEN f.amount END), 0) AS chi_phi,
+        COALESCE(SUM(CASE WHEN f.funding_id = 6  THEN f.amount END), 0) AS chi_phi_dp,
+        COALESCE(SUM(CASE WHEN f.funding_id = 1  THEN f.amount END), 0) AS loi_nhuan,
+        COALESCE(SUM(CASE WHEN f.funding_id = 2  THEN f.amount END), 0) AS nhan_su,
+        COALESCE(SUM(CASE WHEN f.funding_id = 30 THEN f.amount END), 0) AS margin,
+        COALESCE(SUM(CASE WHEN f.funding_id = 29 THEN f.amount END), 0) AS cir
+    FROM fact_backdate_funding_monthly f
+    JOIN area_mapping am ON f.area_code = am.area_cde
+    WHERE f.month_key = p_rp_month
+    GROUP BY f.area_code, am.area_name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- HÀM 2: Lấy xu hướng Tổng thu nhập hoạt động (funding_id = 4) theo từng tháng
+-- từ tháng 01 cùng năm tới kỳ báo cáo, cho 7 khu vực mạng lưới (B-H).
+DROP FUNCTION IF EXISTS fn_get_business_dashboard_trend(BIGINT);
+CREATE OR REPLACE FUNCTION fn_get_business_dashboard_trend(p_rp_month BIGINT)
+RETURNS TABLE (
+    month_key     BIGINT,
+    area_code     VARCHAR(10),
+    area_name     VARCHAR(50),
+    tong_thu_nhap NUMERIC
+)
+AS $$
+DECLARE
+    v_start_month BIGINT := (p_rp_month / 100) * 100 + 1;   -- Tháng 01 cùng năm
+    v_end_month   BIGINT := (p_rp_month / 100) * 100 + 12;  -- Tháng 12 cùng năm
+BEGIN
+    RETURN QUERY
+    SELECT
+        f.month_key,
+        f.area_code,
+        am.area_name,
+        COALESCE(SUM(CASE WHEN f.funding_id = 4 THEN f.amount END), 0) AS tong_thu_nhap
+    FROM fact_backdate_funding_monthly f
+    JOIN area_mapping am ON f.area_code = am.area_cde
+    WHERE f.month_key BETWEEN v_start_month AND v_end_month
+      AND f.area_code <> 'A'
+    GROUP BY f.month_key, f.area_code, am.area_name
+    ORDER BY f.month_key, f.area_code;
+END;
+$$ LANGUAGE plpgsql;
+
+select * from fn_get_business_dashboard_kpi(202303);
+select * from fn_get_business_dashboard_trend(202303);

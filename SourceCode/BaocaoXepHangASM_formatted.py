@@ -402,13 +402,7 @@ def export_postgres_to_excel(db_params, query, output_file):
 
 def generate_ranking_report(report_period):  # Added parameter
     """Runs the entire process for the ASM ranking report for a given period."""
-    db_params = {
-        "host": "localhost",
-        "port": "5432",
-        "dbname": "final_project",
-        "user": "postgres",
-        "password": "1234",
-    }
+    db_params = config.DB_PARAMS
     # Use the parameter in the SQL query
     query = f"""
     select * from fn_get_asm_ranking_report({report_period});
@@ -425,13 +419,7 @@ if __name__ == "__main__":
 # Thêm hàm này vào BaocaoXepHangASM_formatted.py
 def get_ranking_data(report_period):
     """Chỉ lấy dữ liệu từ DB và trả về DataFrame."""
-    db_params = {
-        "host": "localhost",
-        "port": "5432",
-        "dbname": "final_project",
-        "user": "postgres",
-        "password": "1234",
-    }
+    db_params = config.DB_PARAMS
     query = f"select * from fn_get_asm_ranking_report({report_period});"
     try:
         connection = psycopg2.connect(**db_params)
