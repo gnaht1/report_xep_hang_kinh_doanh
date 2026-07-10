@@ -264,6 +264,10 @@ To enhance accessibility and data visualization, I developed an **Online reporti
   * The system can also send important reports or monitoring updates to users via **email notifications**.
   * The interface is intuitive and can be expanded in the future to include charts or interactive dashboards.
 
+<p align="center">
+  <img src="./Picture/webview_dash.png" alt="dashboard"/><br>
+  <b>Figure 9:</b> Webview Dashboard.<br>
+</p>
 
 
 # 3. Skills and Achievements After Completing the Project
